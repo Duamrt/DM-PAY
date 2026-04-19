@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="dmpay-data.js"></script>
   <script src="js/dashboard.js" defer></script>
   <style>
     :root {
@@ -112,7 +111,7 @@
     .ac-text b{color:var(--text)}
 
     /* Grid principal */
-    .main-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:22px}
+    .main-grid{display:grid;grid-template-columns:1fr;gap:18px;margin-bottom:22px}
     .card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
     .card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-soft)}
     .card-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
@@ -258,7 +257,7 @@
       <div class="hero">
         <div>
           <h1>Bom dia, Mikael</h1>
-          <p><span class="dot-success"></span> <b>sábado, 19 de abril de 2026</b> · iCommerce sincronizado há 4 min · 2 alertas críticos · DRE validando na segunda</p>
+          <p><span class="dot-success"></span> carregando…</p>
         </div>
         <div style="display:flex;gap:8px">
           <a class="btn btn-ghost" href="whatsapp-preview.html"><i data-lucide="message-circle"></i> Briefing WhatsApp</a>
@@ -273,8 +272,8 @@
             <div class="kpi-icon"><i data-lucide="wallet"></i></div>
             <span class="kpi-label">Saldo hoje</span>
           </div>
-          <div class="kpi-value">R$ 24.890</div>
-          <div class="kpi-delta"><span class="up">▲ R$ 1.230</span> vs ontem</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-delta">carregando…</div>
           <svg class="kpi-spark" viewBox="0 0 90 40" preserveAspectRatio="none"><path d="M0,30 L15,28 L30,25 L45,22 L60,18 L75,14 L90,10" stroke="var(--accent)" stroke-width="1.8" fill="none"/></svg>
         </a>
         <a class="kpi" href="vendas.html" style="text-decoration:none;color:inherit">
@@ -282,8 +281,8 @@
             <div class="kpi-icon success"><i data-lucide="shopping-cart"></i></div>
             <span class="kpi-label">Vendeu ontem</span>
           </div>
-          <div class="kpi-value">R$ 28.400</div>
-          <div class="kpi-delta"><span class="up">▲ 12%</span> vs média · estim. R$ 42.180</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-delta">carregando…</div>
           <svg class="kpi-spark" viewBox="0 0 90 40" preserveAspectRatio="none"><path d="M0,32 L15,28 L30,30 L45,22 L60,18 L75,16 L90,10" stroke="var(--success)" stroke-width="1.8" fill="none"/></svg>
         </a>
         <a class="kpi" href="contas-a-pagar.html" style="text-decoration:none;color:inherit">
@@ -291,8 +290,8 @@
             <div class="kpi-icon warn"><i data-lucide="receipt"></i></div>
             <span class="kpi-label">A pagar (7 dias)</span>
           </div>
-          <div class="kpi-value">R$ 52.340</div>
-          <div class="kpi-delta"><span class="down">▼ R$ 4.500 hoje</span> · 11 boletos</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-delta">carregando…</div>
           <svg class="kpi-spark" viewBox="0 0 90 40" preserveAspectRatio="none"><path d="M0,20 L15,18 L30,28 L45,22 L60,30 L75,20 L90,14" stroke="var(--warn)" stroke-width="1.8" fill="none"/></svg>
         </a>
         <a class="kpi" href="dre.html" style="text-decoration:none;color:inherit">
@@ -300,26 +299,26 @@
             <div class="kpi-icon success"><i data-lucide="trending-up"></i></div>
             <span class="kpi-label">Saldo projetado (30d)</span>
           </div>
-          <div class="kpi-value">R$ 0</div>
-          <div class="kpi-delta">projeção 30 dias</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-delta">carregando…</div>
           <svg class="kpi-spark" viewBox="0 0 90 40" preserveAspectRatio="none"><path d="M0,28 L15,24 L30,22 L45,20 L60,16 L75,14 L90,12" stroke="var(--success)" stroke-width="1.8" fill="none"/></svg>
         </a>
       </div>
 
       <!-- Alertas strip -->
       <div class="alerts-strip">
-        <a class="alert-card danger" href="fluxo-caixa.html" style="text-decoration:none;color:inherit">
+        <a class="alert-card danger" href="contas-a-pagar.html" style="text-decoration:none;color:inherit">
           <div class="ac-icon"><i data-lucide="alert-triangle"></i></div>
           <div>
-            <div class="ac-title">Saldo projetado negativo em 06/05</div>
-            <div class="ac-text">Folha + aluguel caem no dia 5, mas cartão só entra no dia 8. Projeção: <b style="color:var(--danger)">−R$ 2.340</b>. Dá pra evitar empurrando o aluguel 3 dias.</div>
+            <div class="ac-title">carregando…</div>
+            <div class="ac-text">—</div>
           </div>
         </a>
-        <a class="alert-card warn" href="fornecedores.html" style="text-decoration:none;color:inherit">
+        <a class="alert-card warn" href="contas-a-receber.html" style="text-decoration:none;color:inherit">
           <div class="ac-icon"><i data-lucide="trending-up"></i></div>
           <div>
-            <div class="ac-title">IMPACTO subiu preços 8% (últimos 90 dias)</div>
-            <div class="ac-text">5 produtos com reajuste acima da inflação. No volume atual, é <b>+R$ 1.476/mês</b> na conta. Vale cotar com PARATY e ATACADÃO antes da próxima NF.</div>
+            <div class="ac-title">carregando…</div>
+            <div class="ac-text">—</div>
           </div>
         </a>
       </div>
@@ -334,64 +333,34 @@
               <h3><i data-lucide="calendar-clock"></i> Próximos vencimentos</h3>
               <a href="contas-a-pagar.html">Ver todos 34 <i data-lucide="arrow-right"></i></a>
             </div>
-            <div class="venc-row">
-              <div class="venc-date today">
-                <div class="d">19</div>
-                <div class="m">Abr · HOJE</div>
-              </div>
-              <div class="venc-info">
-                <div class="name">IMPACTO Distribuidora · NF 348291</div>
-                <div class="meta"><i data-lucide="receipt"></i> Boleto · parcela 1/2</div>
-              </div>
-              <div class="venc-val">R$ 4.282,50<span class="tag">Hoje</span></div>
+            <div class="venc-row" style="display:none">
+              <div class="venc-date"><div class="d">—</div><div class="m">—</div></div>
+              <div class="venc-info"><div class="name">—</div><div class="meta">—</div></div>
+              <div class="venc-val">—</div>
               <button class="venc-pay"><i data-lucide="qr-code"></i> Pagar</button>
             </div>
-            <div class="venc-row">
-              <div class="venc-date soon">
-                <div class="d">20</div>
-                <div class="m">Abr · Seg</div>
-              </div>
-              <div class="venc-info">
-                <div class="name">Oi Fibra · Internet</div>
-                <div class="meta"><i data-lucide="receipt"></i> Boleto · recorrente</div>
-              </div>
-              <div class="venc-val">R$ 220,00<span class="tag">Amanhã</span></div>
+            <div class="venc-row" style="display:none">
+              <div class="venc-date"><div class="d">—</div><div class="m">—</div></div>
+              <div class="venc-info"><div class="name">—</div><div class="meta">—</div></div>
+              <div class="venc-val">—</div>
               <button class="venc-pay"><i data-lucide="qr-code"></i> Pagar</button>
             </div>
-            <div class="venc-row">
-              <div class="venc-date">
-                <div class="d">22</div>
-                <div class="m">Abr · Qua</div>
-              </div>
-              <div class="venc-info">
-                <div class="name">NESTLÉ Brasil · NF 102847</div>
-                <div class="meta"><i data-lucide="receipt"></i> Boleto · parcela 2/2</div>
-              </div>
-              <div class="venc-val">R$ 3.390,00<span class="tag">3 dias</span></div>
+            <div class="venc-row" style="display:none">
+              <div class="venc-date"><div class="d">—</div><div class="m">—</div></div>
+              <div class="venc-info"><div class="name">—</div><div class="meta">—</div></div>
+              <div class="venc-val">—</div>
               <button class="venc-pay"><i data-lucide="qr-code"></i> Pagar</button>
             </div>
-            <div class="venc-row">
-              <div class="venc-date">
-                <div class="d">25</div>
-                <div class="m">Abr · Sáb</div>
-              </div>
-              <div class="venc-info">
-                <div class="name">JBS Friboi · NF 667290</div>
-                <div class="meta"><i data-lucide="zap"></i> PIX · à vista</div>
-              </div>
-              <div class="venc-val">R$ 12.400,00<span class="tag">6 dias</span></div>
+            <div class="venc-row" style="display:none">
+              <div class="venc-date"><div class="d">—</div><div class="m">—</div></div>
+              <div class="venc-info"><div class="name">—</div><div class="meta">—</div></div>
+              <div class="venc-val">—</div>
               <button class="venc-pay"><i data-lucide="qr-code"></i> Pagar</button>
             </div>
-            <div class="venc-row">
-              <div class="venc-date">
-                <div class="d">28</div>
-                <div class="m">Abr · Ter</div>
-              </div>
-              <div class="venc-info">
-                <div class="name">CELPE · Energia abril</div>
-                <div class="meta"><i data-lucide="receipt"></i> Boleto · estimado</div>
-              </div>
-              <div class="venc-val">R$ 2.800,00<span class="tag">9 dias</span></div>
+            <div class="venc-row" style="display:none">
+              <div class="venc-date"><div class="d">—</div><div class="m">—</div></div>
+              <div class="venc-info"><div class="name">—</div><div class="meta">—</div></div>
+              <div class="venc-val">—</div>
               <button class="venc-pay"><i data-lucide="qr-code"></i> Pagar</button>
             </div>
           </div>
@@ -404,9 +373,9 @@
             </div>
             <div class="bar-meta">
               <div class="bar-meta-left">
-                <span class="bar-total"><b id="saldo-periodo">+R$ 379k</b> saldo do período</span>
-                <span class="bar-legend"><span class="legend-dot" style="background:var(--accent)"></span><span id="tot-entradas">Entradas R$ 961k</span></span>
-                <span class="bar-legend"><span class="legend-dot" style="background:var(--warn)"></span><span id="tot-saidas">Saídas R$ 582k</span></span>
+                <span class="bar-total"><b id="saldo-periodo">—</b> saldo do período</span>
+                <span class="bar-legend"><span class="legend-dot" style="background:var(--accent)"></span><span id="tot-entradas">Entradas —</span></span>
+                <span class="bar-legend"><span class="legend-dot" style="background:var(--warn)"></span><span id="tot-saidas">Saídas —</span></span>
               </div>
               <div class="tab-group" id="tabs-periodo">
                 <button class="tab" data-p="7">7D</button>
@@ -420,115 +389,6 @@
           </div>
         </div>
 
-        <!-- COLUNA DIREITA -->
-        <div style="display:flex;flex-direction:column;gap:18px">
-          <!-- DRE snapshot -->
-          <div class="card">
-            <div class="card-head">
-              <h3><i data-lucide="bar-chart-3"></i> DRE · abril</h3>
-              <a href="dre.html">Abrir <i data-lucide="arrow-right"></i></a>
-            </div>
-            <div class="dre-line">
-              <span class="k">Receita bruta</span>
-              <span class="v">R$ 960.000</span>
-            </div>
-            <div class="dre-line negative">
-              <span class="k">− Deduções (ICMS, PIS, COFINS)</span>
-              <span class="v">−R$ 160.550</span>
-            </div>
-            <div class="dre-line total">
-              <span class="k">Receita líquida</span>
-              <span class="v">R$ 799.450</span>
-            </div>
-            <div class="dre-line negative">
-              <span class="k">− CMV (compras)</span>
-              <span class="v">−R$ 576.000</span>
-            </div>
-            <div class="dre-line total">
-              <span class="k">Lucro bruto · 27,9%</span>
-              <span class="v">R$ 223.450</span>
-            </div>
-            <div class="dre-line negative">
-              <span class="k">− Despesas operacionais</span>
-              <span class="v">−R$ 34.450</span>
-            </div>
-            <div class="dre-line negative">
-              <span class="k">− IRPJ + CSLL</span>
-              <span class="v">−R$ 62.011</span>
-            </div>
-            <div class="dre-line grand">
-              <span class="k">Lucro líquido · 15,8%</span>
-              <span class="v">R$ 126.259</span>
-            </div>
-          </div>
-
-          <!-- Fornecedor watch -->
-          <div class="card">
-            <div class="card-head">
-              <h3><i data-lucide="trending-up"></i> Variação · top 3</h3>
-              <a href="fornecedores.html">Ver todos <i data-lucide="arrow-right"></i></a>
-            </div>
-            <div class="forn-watch">
-              <div class="fw-head">
-                <span class="fw-name"><span class="fw-dot up"></span> IMPACTO</span>
-                <span class="fw-var up">+8,0%</span>
-              </div>
-              <div class="fw-sub">Açúcar, arroz, farinha subindo há 3 meses</div>
-            </div>
-            <div class="forn-watch">
-              <div class="fw-head">
-                <span class="fw-name"><span class="fw-dot warn"></span> BIMBO</span>
-                <span class="fw-var warn">+3,1%</span>
-              </div>
-              <div class="fw-sub">Pães e bolos — dentro do esperado</div>
-            </div>
-            <div class="forn-watch">
-              <div class="fw-head">
-                <span class="fw-name"><span class="fw-dot stable"></span> CAFÉ 3 CORAÇÕES</span>
-                <span class="fw-var stable">−1,2%</span>
-              </div>
-              <div class="fw-sub">Estável — bom fornecedor pra manter</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Atividade recente -->
-      <div class="feed-card">
-        <div class="card-head">
-          <h3><i data-lucide="activity"></i> Atividade recente</h3>
-          <span class="sub">últimas 24h</span>
-        </div>
-        <div class="feed-row">
-          <div class="feed-icon green"><i data-lucide="shopping-cart"></i></div>
-          <div class="feed-text">iCommerce sincronizou <b>vendas do dia</b> — parcial <span class="money">R$ 28.400</span></div>
-          <div class="feed-time">há 4 min</div>
-        </div>
-        <div class="feed-row">
-          <div class="feed-icon blue"><i data-lucide="file-text"></i></div>
-          <div class="feed-text">NF-e <b>IMPACTO 348291</b> recebida por e-mail · <span class="money">R$ 8.565</span></div>
-          <div class="feed-time">há 1h 20min</div>
-        </div>
-        <div class="feed-row">
-          <div class="feed-icon purple"><i data-lucide="check-circle-2"></i></div>
-          <div class="feed-text"><b>Mikael</b> marcou <b>Aluguel</b> como pago · <span class="money">R$ 4.500</span></div>
-          <div class="feed-time">há 2h</div>
-        </div>
-        <div class="feed-row">
-          <div class="feed-icon orange"><i data-lucide="alert-triangle"></i></div>
-          <div class="feed-text">Alerta disparado: <b>Saldo projetado negativo em 06/05</b></div>
-          <div class="feed-time">há 3h</div>
-        </div>
-        <div class="feed-row">
-          <div class="feed-icon blue"><i data-lucide="message-circle"></i></div>
-          <div class="feed-text">Briefing WhatsApp enviado pra <b>Reginaldo</b> (06:15)</div>
-          <div class="feed-time">hoje 06:15</div>
-        </div>
-        <div class="feed-row">
-          <div class="feed-icon green"><i data-lucide="user-plus"></i></div>
-          <div class="feed-text">Convite enviado pra <b>Sr. João (contador)</b></div>
-          <div class="feed-time">ontem 15:42</div>
-        </div>
       </div>
     </main>
   </div>
@@ -544,9 +404,9 @@
     const saved = localStorage.getItem('dmpay-theme');
     if (saved) document.documentElement.setAttribute('data-theme', saved);
 
-    const DATA_LABELS  = ['21/3','22/3','23/3','24/3','25/3','26/3','27/3','28/3','29/3','30/3','31/3','1/4','2/4','3/4','4/4','5/4','6/4','7/4','8/4','9/4','10/4','11/4','12/4','13/4','14/4','15/4','16/4','17/4','18/4','19/4'];
-    const DATA_ENTRADAS = [26,28,24,32,27,48,44,25,28,30,32,30,44,47,26,27,31,33,26,40,30,27,26,42,47,25,29,30,29,28];
-    const DATA_SAIDAS   = [18,10,22,14,42,12,8,28,15,34,20,10,13,24,18,32,15,12,22,10,20,17,11,14,20,28,15,44,12,22];
+    window.DATA_LABELS  = [];
+    window.DATA_ENTRADAS = [];
+    window.DATA_SAIDAS   = [];
 
     let chart;
     let currentPeriod = 30;
@@ -615,97 +475,6 @@
     renderChart();
 
     lucide.createIcons();
-
-    // ============== DADOS REAIS/ESTIMADOS (override) ==============
-    (function aplicarDadosReais(){
-      const D = window.DMPAY_DATA; if (!D) return;
-      const E = D.ESTIMADO, S = D.SUMMARY;
-      function fmt(v){ return 'R$ ' + Math.round(v).toLocaleString('pt-BR'); }
-      function fmtK(v){ return 'R$ ' + Math.round(v/1000) + 'k'; }
-
-      // KPIs
-      const ks = document.querySelectorAll('.kpi-value');
-      if (ks[0]) ks[0].textContent = fmt(E.saldo_hoje);
-      if (ks[1]) ks[1].textContent = fmt(E.vendas_hoje_parcial);
-      if (ks[2]) ks[2].textContent = fmt(S.pendentes_7d);
-      if (ks[3]) ks[3].textContent = fmt(E.lucro_liquido_abr);
-
-      // KPI subtext (delta)
-      const deltas = document.querySelectorAll('.kpi-delta');
-      if (deltas[0]) deltas[0].innerHTML = `<span class="up">▲ ${fmt(E.saldo_hoje - 158000)}</span> vs ontem`;
-      if (deltas[1]) deltas[1].innerHTML = `<span class="up">▲ 12%</span> vs média · estim. ${fmt(E.vendas_hoje_projetado)}`;
-      if (deltas[2]) deltas[2].innerHTML = `<span class="down">▼ NORSA hoje</span> · ${S.pendentes_count} total`;
-      if (deltas[3]) deltas[3].innerHTML = `margem <b style="color:var(--success)">${E.margem_liq_pct}%</b> · abril/2026`;
-
-      // Hero
-      const heroP = document.querySelector('.hero p');
-      if (heroP) {
-        heroP.innerHTML = `<span class="dot-success"></span> <b>domingo, 19 de abril de 2026</b> · <b>dados reais do Mercadinho</b> · ${S.pendentes_count} boletos em aberto · DRE validando na segunda`;
-      }
-
-      // Alerta 1: dia mais pesado do mês (substitui alert de fluxo)
-      const alertDangers = document.querySelectorAll('.alert-card.danger');
-      if (alertDangers[0]) {
-        const title = alertDangers[0].querySelector('.ac-title');
-        const text = alertDangers[0].querySelector('.ac-text');
-        if (title) title.textContent = `${S.pendentes_count} boletos em aberto totalizam ${fmt(S.pendentes_total)}`;
-        if (text) text.innerHTML = `Sua planilha está acumulando pendências desde 2020. Só de <b>atrasados</b> são ${fmt(S.pendentes_atrasado)}. Precisa limpar o que já foi pago pra ter visão real.`;
-      }
-
-      // DRE snapshot
-      const dreLines = document.querySelectorAll('.dre-line .v');
-      const dreData = [
-        fmt(E.receita_bruta_abr),
-        '−' + fmt(E.deducoes_abr),
-        fmt(E.receita_liquida_abr),
-        '−' + fmt(E.cmv_abr),
-        fmt(E.lucro_bruto_abr),
-        '−' + fmt(E.despesas_oper_abr),
-        '−' + fmt(E.irpj_csll_abr),
-        fmt(E.lucro_liquido_abr)
-      ];
-      dreLines.forEach((el, i) => { if (dreData[i]) el.textContent = dreData[i]; });
-
-      // Atualizar labels específicos da DRE
-      const dreK = document.querySelectorAll('.dre-line .k');
-      if (dreK[4]) dreK[4].textContent = `Lucro bruto · ${E.margem_bruta_pct}%`;
-      if (dreK[7]) dreK[7].textContent = `Lucro líquido · ${E.margem_liq_pct}%`;
-
-      // Próximos vencimentos — substitui pelos 5 mais próximos reais
-      const vencRows = document.querySelectorAll('.venc-row');
-      const pendPorVenc = (D.PENDENTES||[]).filter(p => p.vencimento).slice(0, 5);
-      vencRows.forEach((row, i) => {
-        const p = pendPorVenc[i]; if (!p) { row.style.display = 'none'; return; }
-        const [y,m,d] = p.vencimento.split('-');
-        const dateEl = row.querySelector('.venc-date');
-        const dNum = dateEl.querySelector('.d');
-        const dMes = dateEl.querySelector('.m');
-        if (dNum) dNum.textContent = d;
-        if (dMes) {
-          const diasNomes = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-          const dt = new Date(p.vencimento + 'T00:00:00');
-          const mesAbr = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(m)-1];
-          dMes.textContent = `${mesAbr} · ${diasNomes[dt.getDay()]}`;
-        }
-        const diffDias = Math.round((new Date(p.vencimento+'T00:00:00') - new Date('2026-04-19T00:00:00'))/86400000);
-        dateEl.classList.remove('today','soon');
-        if (diffDias === 0) dateEl.classList.add('today');
-        else if (diffDias <= 2) dateEl.classList.add('soon');
-
-        const name = row.querySelector('.venc-info .name');
-        const meta = row.querySelector('.venc-info .meta');
-        const val = row.querySelector('.venc-val');
-        const tag = row.querySelector('.venc-val .tag');
-        if (name) name.textContent = p.fornecedor.length > 32 ? p.fornecedor.slice(0,30)+'…' : p.fornecedor + (p.nf ? ` · NF ${p.nf}` : '');
-        if (meta) meta.innerHTML = `<i data-lucide="receipt"></i> Boleto · ${diffDias < 0 ? 'atrasado' : 'pendente'}`;
-        if (val) {
-          const tagTxt = diffDias < 0 ? `${-diffDias}d atraso` : diffDias === 0 ? 'Hoje' : diffDias === 1 ? 'Amanhã' : `${diffDias} dias`;
-          val.innerHTML = fmt(p.valor) + `<span class="tag">${tagTxt}</span>`;
-        }
-      });
-
-      lucide.createIcons();
-    })();
   </script>
 </body>
 </html>

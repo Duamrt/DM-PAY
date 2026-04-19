@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <script src="dmpay-data.js"></script>
   <script src="js/calendario.js" defer></script>
   <style>
     :root {
@@ -455,7 +454,7 @@
   </div>
 
   <!-- Drawer -->
-  <aside class="drawer open" id="drawer">
+  <aside class="drawer" id="drawer">
     <div class="drawer-head">
       <div>
         <h2>Segunda, 20 de abril</h2>
@@ -776,138 +775,6 @@
     });
 
     lucide.createIcons();
-
-    // ============== DADOS REAIS (override) ==============
-    (function popularCalendarioReal(){
-      const D = window.DMPAY_DATA; if (!D) return;
-      const HOJE = new Date('2026-04-19T00:00:00');
-
-      // Agrupa pendentes por dia do mês de abril 2026
-      const porDiaAbr = {};  // { 22: { total: X, count: Y } }
-      const porDiaMai = {};
-      let totalMesAbr = 0, totalMesMai = 0;
-      (D.PENDENTES || []).forEach(p => {
-        if (!p.vencimento) return;
-        const [y, m, d] = p.vencimento.split('-').map(Number);
-        if (y === 2026 && m === 4) {
-          if (!porDiaAbr[d]) porDiaAbr[d] = { total:0, count:0 };
-          porDiaAbr[d].total += p.valor;
-          porDiaAbr[d].count += 1;
-          totalMesAbr += p.valor;
-        } else if (y === 2026 && m === 5) {
-          if (!porDiaMai[d]) porDiaMai[d] = { total:0, count:0 };
-          porDiaMai[d].total += p.valor;
-          porDiaMai[d].count += 1;
-          totalMesMai += p.valor;
-        }
-      });
-
-      // Total pagos em abril
-      let pagosAbr = 0, pagosCount = 0;
-      (D.PAGOS_2026 || []).forEach(p => {
-        if (p.pagamento && p.pagamento.startsWith('2026-04')) {
-          pagosAbr += p.valor;
-          pagosCount += 1;
-        }
-      });
-
-      function fmt(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}); }
-
-      // Itera em cada célula do calendário abril (não empty, não weekend-vazio)
-      const dias = document.querySelectorAll('.cal-grid .cal-day');
-      dias.forEach(cell => {
-        if (cell.classList.contains('empty')) return;
-        const numEl = cell.querySelector('.cal-day-num');
-        if (!numEl) return;
-        const diaNum = parseInt(numEl.textContent);
-        if (!diaNum) return;
-
-        // Limpa chips/total existentes, mantendo só o número
-        cell.querySelectorAll('.cal-day-total, .cal-day-chips').forEach(e => e.remove());
-        cell.classList.remove('critical', 'heavy', 'today', 'selected');
-
-        // Marca HOJE (dia 19)
-        if (diaNum === 19 && !cell.classList.contains('empty')) {
-          cell.classList.add('today');
-          const tot = document.createElement('span');
-          tot.className = 'cal-day-total';
-          tot.style.cssText = 'font-size:11px;color:var(--accent);font-weight:500';
-          tot.textContent = 'Hoje';
-          cell.appendChild(tot);
-          return;
-        }
-
-        // Dia com pendências
-        const agg = porDiaAbr[diaNum];
-        if (agg && agg.total > 0) {
-          const tot = document.createElement('span');
-          tot.className = 'cal-day-total';
-          tot.textContent = fmt(agg.total);
-          cell.appendChild(tot);
-
-          const chips = document.createElement('div');
-          chips.className = 'cal-day-chips';
-          const dots = Math.min(agg.count, 3);
-          for (let i = 0; i < dots; i++) {
-            const d = document.createElement('span');
-            d.className = 'cal-dot open';
-            chips.appendChild(d);
-          }
-          const cnt = document.createElement('span');
-          cnt.className = 'cal-day-count';
-          cnt.textContent = agg.count + (agg.count > 1 ? ' aberto' : ' aberto');
-          if (agg.count > 1) cnt.textContent = agg.count + ' abertos';
-          chips.appendChild(cnt);
-          cell.appendChild(chips);
-
-          // Classes visuais: >R$ 50k = critical, >R$ 20k = heavy
-          if (agg.total > 50000) cell.classList.add('critical');
-          else if (agg.total > 20000) cell.classList.add('heavy');
-        }
-      });
-
-      // Atualiza KPIs
-      const ks = document.querySelectorAll('.kpi-value');
-      if (ks[0]) ks[0].textContent = fmt(totalMesAbr);  // Total abril
-      // próximos 7 dias (19-26)
-      let prox7 = 0;
-      for (let d = 20; d <= 26; d++) if (porDiaAbr[d]) prox7 += porDiaAbr[d].total;
-      if (ks[1]) {
-        ks[1].textContent = fmt(prox7);
-        ks[1].style.color = '';
-      }
-      if (ks[2]) ks[2].textContent = fmt(pagosAbr);  // Já pagos abril
-      if (ks[3]) ks[3].textContent = fmt(totalMesMai);  // Vence maio
-
-      const kpiMetas = document.querySelectorAll('.kpi-sub');
-      // Legendas já estão OK, só atualizar subtítulo
-
-      // Subtítulo do hero
-      const heroSub = document.querySelector('.hero-sub');
-      if (heroSub) heroSub.innerHTML = `Abril/2026 · <b>dados reais</b> do Mercadinho · ${Object.keys(porDiaAbr).length} dias com vencimento`;
-
-      // Alerta do topo: pior dia do mês
-      let piorDia = null, piorValor = 0;
-      Object.entries(porDiaAbr).forEach(([d, agg]) => {
-        if (agg.total > piorValor) { piorValor = agg.total; piorDia = parseInt(d); }
-      });
-      if (piorDia) {
-        const alertText = document.querySelector('.alert-text');
-        if (alertText) alertText.innerHTML = `Dia <b>${piorDia}/04</b> concentra <b style="color:var(--danger)">${fmt(piorValor)}</b> em vencimentos — pior dia do mês. Vale antecipar compras com prazo maior pra suavizar.`;
-      }
-
-      // Atualiza o drawer com os boletos reais do dia 20 (próximo com pendências)
-      const proxDiaPend = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].find(d => porDiaAbr[d]);
-      if (proxDiaPend) {
-        const drawerHead = document.querySelector('.drawer-head h2');
-        const drawerP = document.querySelector('.drawer-head p');
-        if (drawerHead) drawerHead.textContent = `Dia ${proxDiaPend} de abril`;
-        if (drawerP) {
-          const agg = porDiaAbr[proxDiaPend];
-          drawerP.innerHTML = `${agg.count} boleto${agg.count>1?'s':''} · <b style="color:var(--danger)">${fmt(agg.total)}</b>`;
-        }
-      }
-    })();
   </script>
 </body>
 </html>

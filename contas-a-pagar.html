@@ -11,7 +11,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11/dist/JsBarcode.all.min.js"></script>
-<script src="dmpay-data.js"></script>
 <script src="js/contas-pagar.js" defer></script>
 <style>
 /* ========================= TOKENS ========================= */
@@ -328,8 +327,8 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
       <!-- HERO -->
       <section class="hero">
         <div>
-          <h1>Contas a pagar <span class="count-chip">34 em aberto</span></h1>
-          <div class="sub">Mercadinho Liberato · abril/2026 · próximo vencimento hoje</div>
+          <h1>Contas a pagar <span class="count-chip">—</span></h1>
+          <div class="sub">carregando…</div>
         </div>
         <div class="hero-actions">
           <button class="btn btn-ghost"><i data-lucide="sliders-horizontal" class="icon"></i>Filtros avançados</button>
@@ -343,23 +342,23 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
       <section class="kpi-row">
         <div class="kpi-card">
           <div class="kpi-label"><i data-lucide="clock" class="icon"></i>Total em aberto</div>
-          <div class="kpi-value num">R$ 489.399</div>
-          <div class="kpi-meta"><strong>34</strong> boletos · próximos 30 dias</div>
+          <div class="kpi-value num">—</div>
+          <div class="kpi-meta">carregando…</div>
         </div>
         <div class="kpi-card tone-warn">
           <div class="kpi-label"><i data-lucide="calendar-clock" class="icon"></i>Vencem esta semana</div>
-          <div class="kpi-value num" style="color:var(--warning)">R$ 127.490</div>
-          <div class="kpi-meta"><strong>8</strong> hoje · <strong>5</strong> até sábado</div>
+          <div class="kpi-value num" style="color:var(--warning)">—</div>
+          <div class="kpi-meta">carregando…</div>
         </div>
         <div class="kpi-card tone-danger">
           <div class="kpi-label"><i data-lucide="alert-circle" class="icon"></i>Atrasados</div>
-          <div class="kpi-value num" style="color:var(--danger)">R$ 6.247</div>
-          <div class="kpi-meta"><strong>2</strong> boletos · média 3 dias</div>
+          <div class="kpi-value num" style="color:var(--danger)">—</div>
+          <div class="kpi-meta">carregando…</div>
         </div>
         <div class="kpi-card tone-success">
           <div class="kpi-label"><i data-lucide="check-circle-2" class="icon"></i>Pagos no mês</div>
-          <div class="kpi-value num" style="color:var(--success)">R$ 489.399</div>
-          <div class="kpi-meta"><strong>147</strong> boletos · 96% no prazo</div>
+          <div class="kpi-value num" style="color:var(--success)">—</div>
+          <div class="kpi-meta">carregando…</div>
         </div>
       </section>
 
@@ -367,11 +366,11 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
       <section class="panel">
         <div class="table-toolbar">
           <div class="filter-chips">
-            <button class="chip active"><i data-lucide="list" class="icon"></i>Todos <span style="opacity:.65">(34)</span></button>
-            <button class="chip"><i data-lucide="calendar-clock" class="icon"></i>Hoje <span style="opacity:.65">(8)</span></button>
-            <button class="chip"><i data-lucide="alert-circle" class="icon"></i>Atrasados <span style="opacity:.65">(2)</span></button>
-            <button class="chip"><i data-lucide="clock" class="icon"></i>Semana <span style="opacity:.65">(13)</span></button>
-            <button class="chip"><i data-lucide="check-circle-2" class="icon"></i>Pagos <span style="opacity:.65">(147)</span></button>
+            <button class="chip active" data-filter="todos"><i data-lucide="list" class="icon"></i>Todos</button>
+            <button class="chip" data-filter="hoje"><i data-lucide="calendar-clock" class="icon"></i>Hoje</button>
+            <button class="chip" data-filter="atrasados"><i data-lucide="alert-circle" class="icon"></i>Atrasados</button>
+            <button class="chip" data-filter="semana"><i data-lucide="clock" class="icon"></i>Semana</button>
+            <button class="chip" data-filter="pagos"><i data-lucide="check-circle-2" class="icon"></i>Pagos</button>
           </div>
           <div class="toolbar-right">
             <div class="input-with-icon" style="width:240px">
@@ -405,7 +404,7 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
 
         <!-- PAGINATION -->
         <div class="pagination">
-          <div class="pag-info">Mostrando <strong>1–10</strong> de <strong>34</strong> boletos</div>
+          <div class="pag-info">carregando…</div>
           <div class="pag-controls">
             <button class="pag-btn" disabled><i data-lucide="chevron-left" class="icon"></i></button>
             <button class="pag-btn active">1</button>
@@ -451,122 +450,7 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
 </aside>
 
 <script>
-// ========================= DADOS REAIS — Mercadinho Liberato =========================
-// Fonte: CONTROLE DE PAGAMENTO - BOLETOS.xlsx (2026) via dmpay-data.js
-const HOJE = new Date('2026-04-19T00:00:00');
-
-function _iniciais(nome) {
-  const w = nome.replace(/[^\wÀ-ÿ ]/g,'').trim().split(/\s+/);
-  return ((w[0]||'')[0] + (w[1]||'')[0] || (w[0]||'??').slice(0,2)).toUpperCase();
-}
-function _toneOf(nome) {
-  let h = 0; for (let i = 0; i < nome.length; i++) h = (h*31 + nome.charCodeAt(i)) | 0;
-  return (Math.abs(h) % 5) + 1;
-}
-function _brDate(iso) {
-  if (!iso) return '—';
-  const [y,m,d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
-function _diffDays(d1iso, d2) {
-  const d1 = new Date(d1iso + 'T00:00:00');
-  return Math.round((d1 - d2) / 86400000);
-}
-// Linha digitável gerada a partir do valor (mock FEBRABAN — só pra renderizar o barcode)
-function _genLinha(valor) {
-  const cents = Math.round(valor * 100).toString().padStart(10, '0');
-  return `23793.38128 00000.000000 00000.000000 1 9990${cents}`;
-}
-
-function _statusFrom(item) {
-  if (item.status === 'PAGO') return { s: 'paid', overdue: 0 };
-  if (!item.vencimento) return { s: 'open', overdue: 0 };
-  const diff = _diffDays(item.vencimento, HOJE);
-  if (diff < 0) return { s: 'overdue', overdue: -diff };
-  if (diff === 0) return { s: 'today', overdue: 0 };
-  return { s: 'open', overdue: 0 };
-}
-
-// Monta PAYABLES a partir dos dados reais — pega 80 próximos pendentes por vencimento + 20 pagos recentes
-const _src = (window.DMPAY_DATA?.PENDENTES || []).slice(0, 80)
-  .concat((window.DMPAY_DATA?.PAGOS_2026 || []).slice(-20));
-
-const PAYABLES = _src.map((item, i) => {
-  const sup = item.fornecedor;
-  const st = _statusFrom(item);
-  return {
-    id: 'p' + (i + 1),
-    sup: sup.length > 38 ? sup.slice(0, 35) + '…' : sup,
-    ini: _iniciais(sup),
-    tone: _toneOf(sup),
-    nf: item.nf || '—',
-    emi: _brDate(item.emissao),
-    due: _brDate(item.vencimento),
-    cat: 'Mercadoria',
-    amt: item.valor,
-    status: st.s,
-    line: _genLinha(item.valor),
-    overdue: st.overdue
-  };
-});
-
-// Atualiza KPIs com números reais
-(function atualizaKPIs() {
-  const s = window.DMPAY_DATA?.SUMMARY; if (!s) return;
-  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  const ks = document.querySelectorAll('.kpi-value.num');
-  if (ks[0]) ks[0].textContent = fmt(s.pendentes_total);
-  if (ks[1]) ks[1].textContent = fmt(s.pendentes_7d);
-  if (ks[2]) ks[2].textContent = fmt(s.pendentes_atrasado);
-  if (ks[3]) ks[3].textContent = fmt(s.compras_abril);
-  const metas = document.querySelectorAll('.kpi-card .kpi-meta');
-  if (metas[0]) metas[0].innerHTML = `<strong>${s.pendentes_count}</strong> boletos em aberto · 2026`;
-  if (metas[1]) metas[1].innerHTML = `próximos <strong>7</strong> dias · NORSA, OI, NESTLÉ, JBS...`;
-  if (metas[2]) metas[2].innerHTML = `<strong>planilha desatualizada</strong> · revisar`;
-  if (metas[3]) metas[3].innerHTML = `compras · abril/2026`;
-  // Count chip + pag info
-  const chip = document.querySelector('.count-chip');
-  if (chip) chip.textContent = s.pendentes_count + ' em aberto';
-  const chipTodos = document.querySelector('.chip.active');
-  if (chipTodos) chipTodos.innerHTML = `<i data-lucide="list" class="icon"></i>Todos <span style="opacity:.65">(${s.pendentes_count})</span>`;
-  const pagInfo = document.querySelector('.pag-info');
-  if (pagInfo) pagInfo.innerHTML = `Mostrando <strong>1–${Math.min(PAYABLES.length, 80)}</strong> de <strong>${s.pendentes_count}</strong> boletos`;
-  // Subtítulo hero
-  const sub = document.querySelector('.hero .sub');
-  if (sub) sub.textContent = `Mercadinho Liberato · 2026 · dados reais · hoje 19/04/2026`;
-})();
-
-const BADGE_MAP = {
-  paid:    { cls:'badge-paid',    label:'pago' },
-  open:    { cls:'badge-open',    label:'em aberto' },
-  overdue: { cls:'badge-overdue', label: d => 'atrasado ' + d + 'd' },
-  today:   { cls:'badge-today',   label:'vence hoje' },
-  new:     { cls:'badge-new',     label:'novo fornecedor' }
-};
-
-function fmtBRL(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-
-// ========================= RENDER TABELA =========================
-const tbody = document.getElementById('tbody');
-PAYABLES.forEach(p => {
-  const b = BADGE_MAP[p.status];
-  const label = typeof b.label === 'function' ? b.label(p.overdue) : b.label;
-  const tr = document.createElement('tr');
-  tr.dataset.id = p.id;
-  tr.innerHTML = `
-    <td><span class="check" data-row="${p.id}" onclick="event.stopPropagation(); toggleRow('${p.id}', this)"></span></td>
-    <td><div class="supplier"><span class="supplier-avatar tone-${p.tone}">${p.ini}</span><span class="supplier-name">${p.sup}</span></div></td>
-    <td class="mono">${p.nf}</td>
-    <td class="date">${p.emi}</td>
-    <td class="date">${p.due}</td>
-    <td>${p.cat}</td>
-    <td class="money">${fmtBRL(p.amt)}</td>
-    <td><span class="badge ${b.cls}">${label}</span></td>
-    <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none" onclick="event.stopPropagation()"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
-  `;
-  tr.addEventListener('click', () => openDrawer(p));
-  tbody.appendChild(tr);
-});
+// Render da tabela e KPIs é feito por js/contas-pagar.js (dados reais do Supabase)
 
 // ========================= SELECTION =========================
 const selected = new Set();
@@ -611,95 +495,10 @@ document.addEventListener('click', e => {
   }
 });
 
-// ========================= DRAWER =========================
-function daysBetween(d1, d2) {
-  const [a,b,c] = d1.split('/').map(Number);
-  const [d,e,f] = d2.split('/').map(Number);
-  const t1 = new Date(c, b-1, a), t2 = new Date(f, e-1, d);
-  return Math.round((t2-t1) / (1000*60*60*24));
-}
-
-function openDrawer(p) {
-  document.getElementById('drawerNF').textContent = 'NF ' + p.nf;
-  const elapsed = daysBetween(p.emi, '18/04/2026');
-  const total = daysBetween(p.emi, p.due);
-  const pct = Math.min(100, Math.max(0, Math.round(elapsed/Math.max(total,1)*100)));
-  const body = document.getElementById('drawerBody');
-  body.innerHTML = `
-    <div class="drawer-section">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-        <div class="supplier-avatar tone-${p.tone}" style="width:44px;height:44px;font-size:15px;border-radius:10px">${p.ini}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:600">${p.sup}</div>
-          <div style="font-size:12px;color:var(--text-muted)">${p.cat} · NF <span class="mono">${p.nf}</span></div>
-        </div>
-        <span class="badge ${BADGE_MAP[p.status].cls}">${typeof BADGE_MAP[p.status].label === 'function' ? BADGE_MAP[p.status].label(p.overdue) : BADGE_MAP[p.status].label}</span>
-      </div>
-      <div style="font-size:36px;font-weight:700;letter-spacing:-.025em" class="num">${fmtBRL(p.amt)}</div>
-    </div>
-
-    <div class="drawer-section">
-      <h4>Vencimento</h4>
-      <div class="field-row"><span class="k">Emitido em</span><span class="v">${p.emi}</span></div>
-      <div class="field-row"><span class="k">Vence em</span><span class="v">${p.due}</span></div>
-      <div class="due-progress">
-        <div class="due-bar"><div class="due-fill" style="width:${pct}%"></div></div>
-        <div class="due-meta"><span>emissão</span><span>${pct}%</span><span>vencimento</span></div>
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <h4>Detalhes</h4>
-      <div class="field-row"><span class="k">Forma</span><span class="v">Boleto bancário</span></div>
-      <div class="field-row"><span class="k">Categoria</span><span class="v">${p.cat}</span></div>
-      <div class="field-row"><span class="k">Status</span><span class="v">${typeof BADGE_MAP[p.status].label === 'function' ? BADGE_MAP[p.status].label(p.overdue) : BADGE_MAP[p.status].label}</span></div>
-    </div>
-
-    <div class="drawer-section">
-      <div style="background:var(--bg-elevated);border:1px dashed var(--border);border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
-        <i data-lucide="scan-line" style="width:18px;height:18px;color:var(--accent);flex-shrink:0;margin-top:2px"></i>
-        <div style="font-size:12.5px;line-height:1.55;color:var(--text-secondary)">
-          <b style="color:var(--text-primary)">Código de barras não capturado.</b><br>
-          Quando o DM Pay estiver ligado ao e-mail do Mercadinho, o XML da NF-e + o boleto anexo são lidos automaticamente — com código de barras pronto pra pagar no app do banco.
-        </div>
-      </div>
-    </div>
-
-    <div class="drawer-section">
-      <h4>Origem</h4>
-      <div class="field-row"><span class="k">Fonte</span><span class="v">Planilha de controle · importado</span></div>
-      <div class="field-row"><span class="k">NF importada em</span><span class="v">${p.emi}</span></div>
-      <div class="field-row"><span class="k">Vencimento</span><span class="v">${p.due}</span></div>
-    </div>
-  `;
-  document.getElementById('drawerOverlay').classList.add('open');
-  document.getElementById('drawer').classList.add('open');
-  if (window.lucide) lucide.createIcons();
-}
-
-/**
- * Converte linha digitável FEBRABAN (47 chars) em código de barras (44 chars).
- * Padrão: boleto bancário — tipo 1 (banco+moeda começa com 1-8).
- * Para arrecadação (energia, água — começa com 8) a regra é diferente.
- */
-function lineToBarcode44(linha) {
-  const d = String(linha).replace(/\D/g, '');
-  if (d.length === 44) return d; // já é barcode
-  if (d.length !== 47) throw new Error('Linha digitável inválida: ' + d.length + ' dígitos');
-  // Posições da linha digitável boleto bancário:
-  // 0..3   = banco(3) + moeda(1)
-  // 4..8   = campo 1 — 5 dígitos (sem DV na pos 9)
-  // 10..19 = campo 2 — 10 dígitos (sem DV na pos 20)
-  // 21..30 = campo 3 — 10 dígitos (sem DV na pos 31)
-  // 32     = DV geral
-  // 33..46 = fator vencimento (4) + valor (10)
-  return d.substr(0,4) + d.substr(32,1) + d.substr(33,14) + d.substr(4,5) + d.substr(10,10) + d.substr(21,10);
-}
-function closeDrawer() {
-  document.getElementById('drawerOverlay').classList.remove('open');
-  document.getElementById('drawer').classList.remove('open');
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+// Drawer (openDrawer/closeDrawer) gerenciado por js/contas-pagar.js — expõe DMPAY_CP.closeDrawer
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && window.DMPAY_CP?.closeDrawer) window.DMPAY_CP.closeDrawer();
+});
 
 // ========================= TEMA =========================
 const THEME_KEY = 'dmpay-theme';

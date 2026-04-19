@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="dmpay-data.js"></script>
   <style>
     :root {
       --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
@@ -267,8 +266,8 @@
     <main>
       <div class="hero">
         <div>
-          <h1>DRE gerencial <span class="preview-pill">Preview · validar segunda</span></h1>
-          <p>Demonstrativo do Resultado — mostra quanto o mercadinho <b>ganhou</b> e quanto <b>sobrou de fato</b> no mês. Números abaixo são esqueleto com padrões do Lucro Real — valores reais entram depois da conversa com contador dia 20/04.</p>
+          <h1>DRE gerencial <span class="preview-pill">Em construção</span></h1>
+          <p>Demonstrativo do Resultado. <b>Só a Receita Bruta tem dados reais</b> (vindos do iCommerce). Deduções fiscais, CMV e despesas exigem integração com XML de compras e lançamento de despesas — em construção.</p>
         </div>
         <div class="hero-actions">
           <div class="mode-toggle">
@@ -287,40 +286,15 @@
       </div>
 
       <!-- Disclaimer -->
-      <div class="disclaimer">
-        <i data-lucide="info"></i>
+      <div class="disclaimer" style="background:var(--warn-soft);border:1px solid var(--warn);border-left-width:4px">
+        <i data-lucide="alert-triangle"></i>
         <div>
-          <b>DRE gerencial — não substitui demonstrativo contábil oficial.</b>
-          Estimativa gerencial pra tomada de decisão do dono. Apuração formal é responsabilidade do contador.
-          <a href="configuracoes.html#dre">Ajustar disclaimer</a>
+          <b>Módulo em construção.</b>
+          Apenas <b>Receita Bruta</b> é calculada com dados reais do PDV.
+          Todos os outros valores (ICMS, PIS, COFINS, CMV, despesas, folha, aluguel) aparecem como <b>—</b> até que você lance despesas no módulo ou importe XML de NF-e de compras.
         </div>
       </div>
 
-      <!-- Reconciliação cruzada -->
-      <div class="recon">
-        <div class="recon-title">
-          <h3><i data-lucide="shield-check"></i> Reconciliação cruzada do mês</h3>
-          <span class="status-pill"><span class="status-pill-dot"></span>Os 3 bateram (tolerância R$ 10)</span>
-        </div>
-        <div class="recon-grid">
-          <div class="recon-box">
-            <div class="recon-label"><i data-lucide="wallet"></i>Saldo final de caixa</div>
-            <div class="recon-val">R$ 18.340,00</div>
-            <div class="recon-sub">Santander + BB em 18/04</div>
-          </div>
-          <div class="recon-eq">=</div>
-          <div class="recon-box">
-            <div class="recon-label"><i data-lucide="bar-chart-3"></i>Lucro DRE (modo caixa)</div>
-            <div class="recon-val">R$ 18.338,00</div>
-            <div class="recon-sub">Calculado pela apuração</div>
-          </div>
-          <div class="recon-box">
-            <div class="recon-label"><i data-lucide="arrow-right-left"></i>Variação extrato</div>
-            <div class="recon-val">R$ 18.345,00</div>
-            <div class="recon-sub">Entradas − saídas do banco</div>
-          </div>
-        </div>
-      </div>
 
       <!-- DRE cascata + painel lateral -->
       <div class="cascade-grid">
@@ -835,6 +809,33 @@
       });
     }
     renderChart();
+
+    // ============== LIMPEZA: zera valores fake e calcula Receita Bruta REAL ==============
+    (async function dreReal() {
+      // Zera todos os valores do DRE (aguardando integração)
+      document.querySelectorAll('.cas-val').forEach(el => { el.textContent = '—'; el.style.opacity = '0.5'; });
+      document.querySelectorAll('.cas-pct').forEach(el => { el.textContent = '—'; el.style.opacity = '0.5'; });
+      document.querySelectorAll('.margem-bench').forEach(el => { el.textContent = '—'; });
+
+      // Espera supabase + DMPAY_COMPANY
+      let tries = 0;
+      while ((!window.sb || !window.DMPAY_COMPANY) && tries++ < 50) await new Promise(r=>setTimeout(r,100));
+      if (!window.sb || !window.DMPAY_COMPANY) return;
+
+      const hoje = new Date();
+      const inicioMes = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-01`;
+      const { data: sales } = await sb.from('daily_sales')
+        .select('amount')
+        .eq('company_id', window.DMPAY_COMPANY.id)
+        .gte('sale_date', inicioMes)
+        .limit(3000);
+      const receita = (sales||[]).reduce((s,v)=>s+Number(v.amount), 0);
+      const fmt = v => Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+      // Preenche só a Receita Bruta (primeira linha com classe cas-val plus)
+      const receitaEl = document.querySelector('.cas-row .cas-val.plus');
+      if (receitaEl) { receitaEl.textContent = fmt(receita); receitaEl.style.opacity = '1'; }
+    })();
   </script>
 </body>
 </html>

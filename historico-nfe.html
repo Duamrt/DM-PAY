@@ -9,8 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="dmpay-data.js"></script>
-  <style>
+    <style>
     :root {
       --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
       --border:#E5E7EB; --border-strong:#D1D5DB;
@@ -824,95 +823,13 @@
       b.addEventListener('click', e => e.stopPropagation());
     });
 
-    // ============== DADOS REAIS (override) ==============
-    (function popularNFsReais(){
-      const D = window.DMPAY_DATA; if (!D) return;
-      const HOJE = new Date('2026-04-19T00:00:00');
-      const NFS = (D.NFS_2026 || []).slice(0, 100);
-      const PAGOS_IDS = new Set((D.PAGOS_2026 || []).map(p => (p.nf||'').toString()));
-
-      function ini(nome){
-        const w = nome.replace(/[^\wÀ-ÿ ]/g,'').trim().split(/\s+/);
-        return ((w[0]||'')[0] + (w[1]||'')[0] || (w[0]||'??').slice(0,2)).toUpperCase();
-      }
-      function tone(nome){
-        let h=0; for (let i=0;i<nome.length;i++) h = (h*31 + nome.charCodeAt(i))|0;
-        const cores = ['#DC2626','#D97706','#7C3AED','#2563EB','#EA580C','#0891B2','#10B981','#4B5563'];
-        return cores[Math.abs(h)%cores.length];
-      }
-      function brDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
-      function diasAtras(iso){
-        const d = new Date(iso+'T00:00:00');
-        const diff = Math.round((HOJE - d)/86400000);
-        if (diff === 0) return 'hoje';
-        if (diff === 1) return 'ontem';
-        if (diff < 7) return `há ${diff} dias`;
-        if (diff < 31) return `há ${Math.floor(diff/7)} sem`;
-        return `há ${Math.floor(diff/30)} mês`;
-      }
-      function fmt(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-      function chaveMock(nf, iso){
-        const [y,m,d] = iso.split('-');
-        return `3524 ${m}${y.slice(2)} ... ${String(nf).slice(-4).padStart(4,'0')}`;
-      }
-
-      const tbody = document.getElementById('nfTable');
-      if (!tbody) return;
-      tbody.innerHTML = NFS.map(nf => {
-        const pago = PAGOS_IDS.has((nf.nf||'').toString());
-        const st = pago ? 'pago' : 'aberto';
-        const stLabel = pago ? 'Pago' : 'Aberta';
-        const color = tone(nf.fornecedor);
-        return `
-          <tr data-status="${st}" onclick="openDrawer(this)">
-            <td>
-              <div class="nf-num">${nf.nf || '—'}</div>
-              <div class="nf-chave chave-col">${chaveMock(nf.nf, nf.emissao)}</div>
-            </td>
-            <td>
-              <div class="forn-cell">
-                <div class="forn-avatar" style="background:${color};color:white">${ini(nf.fornecedor)}</div>
-                <div>
-                  <div class="forn-name">${nf.fornecedor.length > 36 ? nf.fornecedor.slice(0,33)+'…' : nf.fornecedor}</div>
-                  <div class="forn-cnpj">${nf.natureza} · CNPJ pendente</div>
-                </div>
-              </div>
-            </td>
-            <td>
-              <div class="date-main">${brDate(nf.emissao)}</div>
-              <div class="date-hint">${diasAtras(nf.emissao)}</div>
-            </td>
-            <td class="ctr"><span class="parc-badge">1×</span></td>
-            <td class="num">${fmt(nf.valor)}</td>
-            <td class="ctr"><span class="status-badge ${st}"><span class="status-badge-dot"></span>${stLabel}</span></td>
-            <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-            <td>
-              <div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div>
-            </td>
-          </tr>`;
-      }).join('');
-
-      // KPIs reais
-      const totalMes = NFS.filter(n => n.emissao.startsWith('2026-04'));
-      const totalAbrVal = totalMes.reduce((s,n)=>s+n.valor, 0);
-      const automaticas = Math.round(NFS.length * 0.93); // 93% vem por e-mail automático
-      const pagas = NFS.filter(n => PAGOS_IDS.has((n.nf||'').toString())).length;
-
-      const ks = document.querySelectorAll('.kpi-value');
-      if (ks[0]) ks[0].textContent = D.SUMMARY.nfs_2026 || NFS.length;
-      if (ks[1]) ks[1].textContent = fmt(totalAbrVal);
-      if (ks[2]) ks[2].textContent = Math.round(automaticas / NFS.length * 100) + '%';
-      if (ks[3]) ks[3].textContent = NFS.length - pagas;
-
-      // Subtítulo + count
+    // Módulo em construção — tabela e KPIs vazios até integração de e-mail/SEFAZ
+    (function emConstrucao(){
+      document.querySelectorAll('.kpi-value').forEach(el => { el.textContent = '—'; });
       const sub = document.querySelector('.hero p');
-      if (sub) sub.innerHTML = `Dados reais do Mercadinho — <b>${D.SUMMARY.nfs_2026} NFs</b> recebidas em 2026 (março+abril), importadas do e-mail e SEFAZ. Busca, filtra e reenvia pro contador com 1 clique.`;
-
-      lucide.createIcons();
+      if (sub) sub.innerHTML = `<b>Módulo em construção.</b> NFs de compras aparecem aqui quando a integração com e-mail ou SEFAZ estiver ligada.`;
+      const tbody = document.getElementById('nfTable');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted)">Nenhuma NFe sincronizada ainda.</td></tr>`;
     })();
   </script>
 </body>

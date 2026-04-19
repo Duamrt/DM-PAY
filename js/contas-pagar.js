@@ -341,53 +341,6 @@
     await loadPayables(); render();
   }
 
-  // ==================== IMPORTAR HISTÓRICO (seed real) ====================
-  async function importHistory() {
-    if (!window.DMPAY_DATA) { alert('Histórico não carregado'); return; }
-    if (!confirm(`Importar ${window.DMPAY_DATA.PENDENTES.length} pendências reais do Mercadinho Liberato pra seu banco?\n\nIsso é só pra demonstração. Pode excluir todas depois.`)) return;
-
-    const COMPANY_ID = window.DMPAY_COMPANY.id;
-    const btnImport = document.getElementById('btn-import');
-    if (btnImport) { btnImport.disabled = true; btnImport.textContent = 'Importando...'; }
-
-    // 1. Cria fornecedores únicos primeiro
-    const fornUnicos = {};
-    window.DMPAY_DATA.PENDENTES.forEach(p => { if (!fornUnicos[p.fornecedor]) fornUnicos[p.fornecedor] = true; });
-    const supRows = Object.keys(fornUnicos).map(nome => ({
-      company_id: COMPANY_ID,
-      legal_name: nome,
-      cnpj: 'demo-' + Math.random().toString(36).slice(2,10) // CNPJ fake únicos pra evitar conflito
-    }));
-
-    const { data: supsCreated, error: e1 } = await sb.from('suppliers').upsert(supRows, { onConflict: 'company_id,cnpj' }).select();
-    if (e1) { alert('Erro ao criar fornecedores: '+e1.message); if (btnImport){btnImport.disabled=false;btnImport.textContent='Importar histórico';} return; }
-    const supByName = {};
-    (supsCreated || []).forEach(s => { supByName[s.legal_name] = s.id; });
-
-    // 2. Insere pendências em batches
-    const batches = [];
-    const BATCH_SIZE = 100;
-    const all = window.DMPAY_DATA.PENDENTES.map(p => ({
-      company_id: COMPANY_ID,
-      supplier_id: supByName[p.fornecedor] || null,
-      description: `NF ${p.nf || '—'} ${p.fornecedor}`,
-      amount: p.valor,
-      due_date: p.vencimento,
-      payment_method: 'outro',  // sem linha digitavel = nao pode ser 'boleto' (constraint migration 004)
-      status: 'open'
-    }));
-    for (let i = 0; i < all.length; i += BATCH_SIZE) batches.push(all.slice(i, i+BATCH_SIZE));
-
-    for (const batch of batches) {
-      const { error: e2 } = await sb.from('payables').insert(batch);
-      if (e2) { alert('Erro ao importar: '+e2.message); if (btnImport){btnImport.disabled=false;btnImport.textContent='Importar histórico';} return; }
-    }
-
-    if (btnImport) { btnImport.style.display='none'; }
-    await loadPayables(); render();
-    alert(`✓ ${all.length} contas importadas!`);
-  }
-
   // ==================== INIT ====================
   async function init() {
     if (!window.sb || !window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
@@ -418,21 +371,6 @@
 
     await loadPayables();
     render();
-
-    // Se vazio, mostra botão Importar histórico no toolbar
-    if (PAYABLES.length === 0) {
-      const tool = document.querySelector('.table-toolbar .toolbar-right');
-      if (tool && !document.getElementById('btn-import')) {
-        const btn = document.createElement('button');
-        btn.id = 'btn-import';
-        btn.className = 'btn btn-secondary btn-sm';
-        btn.style.cssText = 'background:var(--accent-soft);color:var(--accent);border-color:var(--accent)';
-        btn.innerHTML = '<i data-lucide="download"></i> Importar histórico (demo)';
-        btn.onclick = importHistory;
-        tool.appendChild(btn);
-        lucide.createIcons();
-      }
-    }
   }
 
   // Expoe API

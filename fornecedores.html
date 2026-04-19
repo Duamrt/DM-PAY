@@ -9,8 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="dmpay-data.js"></script>
-  <style>
+    <style>
     :root {
       --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
       --border:#E5E7EB; --border-strong:#D1D5DB;
@@ -764,137 +763,18 @@
 
     lucide.createIcons();
 
-    // ============== DADOS REAIS (override) ==============
-    (function popularFornReais(){
-      const D = window.DMPAY_DATA; if (!D) return;
-      const TOP = (D.FORNECEDORES || []).slice(0, 40);
-      const HOJE = new Date('2026-04-19T00:00:00');
-
-      function iniciais(nome){
-        const w = nome.replace(/[^\wÀ-ÿ ]/g,'').trim().split(/\s+/);
-        return ((w[0]||'')[0] + (w[1]||'')[0] || (w[0]||'??').slice(0,2)).toUpperCase();
-      }
-      function cor(nome){
-        let h=0; for (let i=0;i<nome.length;i++) h=(h*31+nome.charCodeAt(i))|0;
-        const paleta=['#DC2626','#D97706','#7C3AED','#2563EB','#EA580C','#0891B2','#10B981','#4B5563','#EC4899','#14B8A6'];
-        return paleta[Math.abs(h)%paleta.length];
-      }
-      function brDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
-      function diasAtras(iso){
-        if(!iso) return '—';
-        const d = new Date(iso+'T00:00:00');
-        const diff = Math.round((HOJE-d)/86400000);
-        if (diff === 0) return 'hoje';
-        if (diff === 1) return 'ontem';
-        if (diff < 31) return `há ${diff} dias`;
-        return `há ${Math.floor(diff/30)} mês`;
-      }
-      function fmt(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}); }
-
-      // Categorização heurística por palavra-chave
-      function categorizar(nome){
-        const n = nome.toUpperCase();
-        if (/FRIGORIFICO|FRANGO|CARNE|AURORA|SEARA|BRF|JBS|SADIA|FRIBOI/.test(n)) return {cat:'Carnes', cls:'cat-carnes'};
-        if (/LATICINIOS|LEITE|QUEIJO|NESTLE|ITAMBE|VIGOR|DANONE/.test(n)) return {cat:'Laticínios', cls:'cat-laticinios'};
-        if (/BEBIDAS|REFRIGERANT|NORSA|COCA|AMBEV|HEINEKEN|SOUZA CRUZ|CERVEJA|PARATY|GBIER/.test(n)) return {cat:'Bebidas', cls:'cat-bebidas'};
-        if (/PAO|PADARIA|BISCOIT|BOLACHA|BIMBO|M\. DIAS/.test(n)) return {cat:'Pães/Bolos', cls:'cat-paes'};
-        if (/LIMPEZA|HIGIENE|CARDEAL|DCL|DETERGENTE|SABAO/.test(n)) return {cat:'Limpeza', cls:'cat-limpeza'};
-        if (/ATACADO|DISTRIBU|LOGISTICA|CENTRAL|CEREAL|ESTIVA|PARATY|MARTINS|IMPACTO/.test(n)) return {cat:'Mercearia', cls:'cat-mercearia'};
-        return {cat:'Diversos', cls:'cat-diversos'};
-      }
-
-      // Variação simulada com base no tamanho — fornecedores maiores tendem a ter variação mais estável
-      function variacao(total, count){
-        const hash = Math.abs(total * 7 + count * 13) % 100;
-        if (hash < 5) return { pct: '+' + (8 + (hash%4)) + ',0%', sev: 'up' };     // 5% alerta
-        if (hash < 25) return { pct: '+' + (3 + (hash%3)) + ',' + (hash%10) + '%', sev: 'up-warn' };  // 20% atenção
-        if (hash < 65) return { pct: '+' + (hash%3) + ',' + (hash%10) + '%', sev: 'stable' };
-        if (hash < 85) return { pct: '−' + (hash%2) + ',' + (hash%10) + '%', sev: 'down' };
-        return { pct: '+' + (hash%3) + ',' + (hash%10) + '%', sev: 'stable' };
-      }
-      function sparkPath(sev){
-        const paths = {
-          'up':       'M0,18 L16,16 L32,15 L48,10 L64,6 L80,3',
-          'up-warn':  'M0,16 L16,15 L32,14 L48,13 L64,12 L80,11',
-          'stable':   'M0,13 L16,12 L32,13 L48,12 L64,13 L80,12',
-          'down':     'M0,10 L16,11 L32,13 L48,14 L64,15 L80,16'
-        };
-        return paths[sev] || paths['stable'];
-      }
-      function arrowIcon(sev){
-        if (sev === 'up' || sev === 'up-warn') return 'arrow-up';
-        if (sev === 'down') return 'arrow-down';
-        return 'minus';
-      }
-
-      const tbody = document.getElementById('fornTable');
-      if (!tbody) return;
-
-      tbody.innerHTML = TOP.map((f, i) => {
-        const nome = f.nome;
-        const cat = categorizar(nome);
-        const v = variacao(f.total_2026, f.compras);
-        const destacar = v.sev === 'up' && i < 5; // highlight primeiros 5 com variação alta
-        const mes30 = Math.round(f.total_2026 / 4); // média mensal aproximada (4 meses de 2026)
-        const nomeCurto = nome.length > 38 ? nome.slice(0,35) + '…' : nome;
-
-        return `
-          <tr ${destacar ? 'class="highlight"' : ''} onclick="openDrawer('${'f'+i}')">
-            <td>
-              <div class="forn-cell">
-                <div class="forn-avatar" style="background:${cor(nome)}">${iniciais(nome)}</div>
-                <div>
-                  <div class="forn-name">${nomeCurto}</div>
-                  <div class="forn-cnpj">${f.compras}x compras · ticket ${fmt(f.ticket_medio)}</div>
-                </div>
-              </div>
-            </td>
-            <td><span class="cat-chip ${cat.cls}">${cat.cat}</span></td>
-            <td>
-              <div>${fmt(f.total_2026)}</div>
-              <div class="tiny-date">${brDate(f.ultima_compra)} · ${diasAtras(f.ultima_compra)}</div>
-            </td>
-            <td class="num">${fmt(mes30)}</td>
-            <td class="ctr"><span class="var-pill ${v.sev}"><i data-lucide="${arrowIcon(v.sev)}"></i> ${v.pct}</span></td>
-            <td class="ctr">
-              <svg class="spark ${v.sev}" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="${sparkPath(v.sev)}"/></svg>
-            </td>
-          </tr>`;
-      }).join('');
-
-      // KPIs reais
-      const total2026 = TOP.reduce((s,f)=>s+f.total_2026, 0);
-      const comprasMensais = Math.round(total2026 / 4);
-      const top3Sum = TOP.slice(0,3).reduce((s,f)=>s+f.total_2026, 0);
-      const concentracaoTop3 = Math.round(top3Sum / total2026 * 100);
-      const qtdAltaVar = TOP.filter(f => variacao(f.total_2026, f.compras).sev === 'up').length;
-
-      const ks = document.querySelectorAll('.kpi-value');
-      if (ks[0]) ks[0].textContent = D.SUMMARY.fornecedores_2026 || TOP.length;
-      if (ks[1]) ks[1].textContent = fmt(comprasMensais);
-      if (ks[2]) ks[2].textContent = '+2,4%';
-      if (ks[3]) ks[3].textContent = concentracaoTop3 + '%';
-
-      const metasDivs = document.querySelectorAll('.kpi-sub');
-      if (metasDivs[0]) metasDivs[0].innerHTML = `${TOP.length} mais ativos · ${D.SUMMARY.fornecedores_2026 - TOP.length} ocasionais`;
-      if (metasDivs[1]) metasDivs[1].innerHTML = `média 2026 · <b>${fmt(total2026)}</b> total`;
-      if (metasDivs[2]) metasDivs[2].innerHTML = `<b>${qtdAltaVar}</b> com variação <b style="color:var(--danger)">&gt;5%</b>`;
-      if (metasDivs[3]) metasDivs[3].innerHTML = `${TOP[0].nome.split(' ')[0]} + ${TOP[1].nome.split(' ')[0]} + ${TOP[2].nome.split(' ')[0]}`;
-
-      // Subtítulo hero
+    // Módulo em construção — tabela e KPIs vazios até sincronização de NFe de compras
+    (function emConstrucao(){
+      document.querySelectorAll('.kpi-value').forEach(el => { el.textContent = '—'; });
+      document.querySelectorAll('.kpi-sub').forEach(el => { el.textContent = 'aguardando integração'; });
       const sub = document.querySelector('.hero p');
-      if (sub) sub.innerHTML = `Dados reais do Mercadinho — <b>${D.SUMMARY.fornecedores_2026} fornecedores</b> únicos em 2026, <b>${fmt(total2026)}</b> comprados. Rastreia variação de preço por produto e identifica reajuste abusivo antes da margem derreter.`;
-
-      // Alerta IMPACTO → trocar pelo fornecedor real com maior variação
-      const maiorVar = TOP.find(f => variacao(f.total_2026, f.compras).sev === 'up');
-      if (maiorVar) {
-        const alertTitle = document.querySelector('.alert-title');
-        const alertText = document.querySelector('.alert-text');
-        if (alertTitle) alertTitle.textContent = `${maiorVar.nome} subiu preços nos últimos 90 dias`;
-        if (alertText) alertText.innerHTML = `Esse fornecedor representa <b>${fmt(maiorVar.total_2026)}</b> das compras de 2026 (${maiorVar.compras} NFs). Vale cotar alternativas antes da próxima NF.`;
-      }
-
-      lucide.createIcons();
+      if (sub) sub.innerHTML = `<b>Módulo em construção.</b> Fornecedores serão listados aqui quando o módulo de compras (NFe XML) estiver integrado.`;
+      const tbody = document.getElementById('fornTable');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted)">Nenhum fornecedor sincronizado ainda.</td></tr>`;
+      const alertTitle = document.querySelector('.alert-title');
+      const alertText = document.querySelector('.alert-text');
+      if (alertTitle) alertTitle.textContent = 'Módulo em construção';
+      if (alertText) alertText.textContent = 'Quando o DM Pay ler os XMLs das NFs de compra, variações de preço e alertas aparecem aqui.';
     })();
   </script>
 </body>
