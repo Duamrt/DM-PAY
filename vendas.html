@@ -330,9 +330,14 @@
           <h1>Vendas diárias</h1>
           <p>Fechamento do dia por forma de pagamento. O sistema soma dinheiro do caixa, Z das maquininhas, PIX recebidos e fiado — e mostra <b>se o dia veio forte ou fraco em tempo real</b>, comparado com o mesmo dia da semana anterior.</p>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost"><i data-lucide="calendar"></i> Abril / 2026</button>
-          <button class="btn btn-ghost" onclick="openImport()"><i data-lucide="upload"></i> Importar manual</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:3px">
+            <button class="btn btn-ghost" onclick="DMPAY_VENDAS?.nav(-1)" style="padding:6px 10px" title="Mês anterior"><i data-lucide="chevron-left"></i></button>
+            <span id="vendas-periodo" style="font-size:13px;font-weight:600;padding:0 10px;min-width:140px;text-align:center">—</span>
+            <button class="btn btn-ghost" onclick="DMPAY_VENDAS?.nav(1)" style="padding:6px 10px" title="Próximo mês"><i data-lucide="chevron-right"></i></button>
+            <button class="btn btn-ghost" onclick="DMPAY_VENDAS?.navHoje()" style="padding:6px 12px;color:var(--accent);font-size:12px" title="Voltar pra hoje">Hoje</button>
+          </div>
+          <button class="btn btn-ghost" onclick="openImport()"><i data-lucide="upload"></i> Importar</button>
           <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar</button>
         </div>
       </div>

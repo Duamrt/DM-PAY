@@ -139,7 +139,7 @@
 
     /* Tabela despesas */
     .expenses{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-    .exp-row{display:grid;grid-template-columns:32px 1fr 140px 120px 120px 120px 80px;gap:16px;padding:14px 18px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+    .exp-row{display:grid;grid-template-columns:36px 1fr 90px 130px 72px;gap:12px;padding:10px 14px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;min-height:52px}
     .exp-row:hover{background:var(--bg-hover)}
     .exp-row:last-child{border-bottom:none}
     .exp-row.head{background:var(--bg-soft);font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;cursor:default}
@@ -237,15 +237,14 @@
     .replicar-block b{color:var(--success);font-weight:600}
 
     @media (max-width:1200px){
-      .exp-row{grid-template-columns:32px 1fr 120px 100px 100px 80px}
-      .exp-row .exp-payment{display:none}
+      .exp-row{grid-template-columns:36px 1fr 80px 110px 64px;gap:10px;padding:10px 12px}
     }
     @media (max-width:860px){
       body{grid-template-columns:1fr}
       .sidebar{display:none}
       .kpi-grid{grid-template-columns:repeat(2,1fr)}
-      .exp-row{grid-template-columns:32px 1fr 100px 80px}
-      .exp-row .exp-cat-pill,.exp-row .exp-day,.exp-row .exp-payment{display:none}
+      .exp-row{grid-template-columns:32px 1fr 100px;gap:8px;padding:10px}
+      .exp-row .exp-day,.exp-row .exp-actions{display:none}
     }
   </style>
   <script src="dmpay-version.js"></script>
@@ -361,11 +360,9 @@
       <div class="expenses">
         <div class="exp-row head">
           <div></div>
-          <div>Despesa</div>
-          <div>Categoria</div>
-          <div style="text-align:center">Vence dia</div>
-          <div>Forma</div>
-          <div style="text-align:right">Valor médio</div>
+          <div>Despesa · Categoria</div>
+          <div style="text-align:center">Dia</div>
+          <div style="text-align:right">Valor</div>
           <div style="text-align:right">Ações</div>
         </div>
 <div><span class="exp-cat-pill cat-geral">Geral</span></div>

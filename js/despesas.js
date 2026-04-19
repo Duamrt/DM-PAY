@@ -120,15 +120,13 @@
         <div class="exp-ico" style="background:${color}22;color:${color}"><i data-lucide="${icon}"></i></div>
         <div>
           <div class="exp-name">${escapeHtml(e.description || '—')}</div>
-          <div class="exp-sub">—</div>
+          <div class="exp-sub" style="display:flex;align-items:center;gap:6px"><span class="exp-cat-pill" style="background:${color}22;color:${color};font-size:10px;padding:2px 7px;border-radius:999px;font-weight:600">${cat}</span></div>
         </div>
-        <div><span class="exp-cat-pill" style="background:${color}22;color:${color}">${cat}</span></div>
-        <div class="exp-day"><b>${String(e.due_day).padStart(2,'0')}</b></div>
-        <div class="exp-payment"><i data-lucide="circle"></i> —</div>
+        <div class="exp-day" style="text-align:center"><b>${String(e.due_day).padStart(2,'0')}</b></div>
         <div class="exp-val">${fmtBRL(e.amount)}</div>
-        <div class="exp-actions">
-          <button class="icon-btn" title="Editar" onclick="DMPAY_DESP.editar('${e.id}')"><i data-lucide="pencil"></i></button>
-          <button class="icon-btn" title="Desativar" onclick="DMPAY_DESP.desativar('${e.id}')"><i data-lucide="pause"></i></button>
+        <div class="exp-actions" style="display:flex;gap:4px;justify-content:flex-end">
+          <button class="icon-btn" style="width:26px;height:26px" title="Editar" onclick="event.stopPropagation();DMPAY_DESP.editar('${e.id}')"><i data-lucide="pencil" style="width:12px;height:12px"></i></button>
+          <button class="icon-btn" style="width:26px;height:26px" title="Desativar" onclick="event.stopPropagation();DMPAY_DESP.desativar('${e.id}')"><i data-lucide="pause" style="width:12px;height:12px"></i></button>
         </div>`;
       head ? head.after(row) : container.insertBefore(row, rodape);
     });

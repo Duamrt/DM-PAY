@@ -389,7 +389,6 @@
     markPaid: markPaid,
     markOpen: markOpen,
     removePayable: removePayable,
-    importHistory: importHistory,
     refresh: () => loadPayables().then(render)
   };
 

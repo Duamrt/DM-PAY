@@ -1,17 +1,33 @@
 // DM Pay — Vendas com dados reais (daily_sales)
 (function() {
   const HOJE = new Date(); HOJE.setHours(0,0,0,0);
-  const MES = HOJE.getMonth();
-  const ANO = HOJE.getFullYear();
-  const MES_NUM = MES + 1;
+  let MES = HOJE.getMonth();
+  let ANO = HOJE.getFullYear();
+  let MES_NUM = MES + 1;
+  const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
   function fmtBRL(v){ return 'R$ ' + Math.round(Number(v||0)).toLocaleString('pt-BR'); }
   function fmtBRLfull(v){ return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function diasNoMes(y,m){ return new Date(y, m+1, 0).getDate(); }
 
+  async function nav(delta) {
+    MES += delta;
+    if (MES < 0) { MES = 11; ANO--; }
+    else if (MES > 11) { MES = 0; ANO++; }
+    MES_NUM = MES + 1;
+    await init();
+  }
+  function navHoje() {
+    MES = HOJE.getMonth(); ANO = HOJE.getFullYear(); MES_NUM = MES + 1;
+    init();
+  }
+  window.DMPAY_VENDAS = { nav, navHoje };
+
   async function init() {
     if (!window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
     const COMPANY_ID = window.DMPAY_COMPANY.id;
+    const periodoEl = document.getElementById('vendas-periodo');
+    if (periodoEl) periodoEl.textContent = `${MESES[MES]} / ${String(ANO).slice(2)}`;
 
     const inicioMes = `${ANO}-${String(MES_NUM).padStart(2,'0')}-01`;
     const inicioAnoPassado = `${ANO-1}-01-01`;
