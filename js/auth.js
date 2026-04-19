@@ -53,7 +53,9 @@ window.DMPAY = (function() {
       location.replace('wizard.html');
       return null;
     }
-    if (!s.company || !s.company.cnpj) {
+    // Platform admin (DM Stack Master) nao precisa passar pelo wizard
+    const isPlatformAdmin = s.company && s.company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
+    if (!isPlatformAdmin && (!s.company || !s.company.cnpj)) {
       // wizard ainda nao foi concluido
       if (path !== 'wizard.html') {
         location.replace('wizard.html');

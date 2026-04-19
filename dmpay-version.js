@@ -1,5 +1,5 @@
 // DM Pay · versao atual
-window.DMPAY_VERSION = 'v04190913';
+window.DMPAY_VERSION = 'v04190920';
 console.log('%cDM Pay ' + window.DMPAY_VERSION, 'background:#2563EB;color:white;padding:4px 8px;border-radius:4px;font-weight:600;font-family:monospace');
 (function() {
   var el = document.createElement('div');
