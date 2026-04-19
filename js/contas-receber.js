@@ -39,14 +39,31 @@
   };
 
   async function load() {
-    const { data, error } = await sb
-      .from('receivables')
-      .select(`*, customers(name, cpf_cnpj)`)
-      .eq('company_id', window.DMPAY_COMPANY.id)
-      .order('due_date', { ascending: true })
-      .limit(500);
-    if (error) { console.error(error); return; }
-    RECVS = data;
+    // Abertas (open + overdue) sem limite prático + recebidas dos últimos 3 meses
+    const inicioJanela = new Date(HOJE); inicioJanela.setMonth(inicioJanela.getMonth() - 3);
+    const inicioISO = inicioJanela.toISOString().slice(0,10);
+    const COMPANY_ID = window.DMPAY_COMPANY.id;
+
+    const [abertasR, recebidasR] = await Promise.all([
+      sb.from('receivables')
+        .select(`*, customers(name, cpf_cnpj)`)
+        .eq('company_id', COMPANY_ID)
+        .in('status', ['open','overdue'])
+        .order('due_date', { ascending: true })
+        .limit(2000),
+      sb.from('receivables')
+        .select(`*, customers(name, cpf_cnpj)`)
+        .eq('company_id', COMPANY_ID)
+        .eq('status', 'received')
+        .gte('received_at', inicioISO)
+        .order('received_at', { ascending: false })
+        .limit(1000)
+    ]);
+    if (abertasR.error || recebidasR.error) {
+      console.error('CR load error', abertasR.error || recebidasR.error);
+      return;
+    }
+    RECVS = [...(abertasR.data||[]), ...(recebidasR.data||[])];
   }
 
   async function loadCustomers(force) {
@@ -62,7 +79,8 @@
 
   function applyFilter(list) {
     let out = list;
-    if (FILTRO === 'open') out = out.filter(r => r.status === 'open');
+    // "Em aberto" agrupa open + overdue (vencidas que ainda não pagaram continuam em aberto)
+    if (FILTRO === 'open') out = out.filter(r => r.status === 'open' || r.status === 'overdue');
     if (FILTRO === 'overdue') out = out.filter(r => statusOf(r).s === 'overdue');
     if (FILTRO === 'received') out = out.filter(r => r.status === 'received');
     if (FILTRO === 'today') out = out.filter(r => statusOf(r).s === 'today');
@@ -95,16 +113,21 @@
 
     tbody.innerHTML = list.map(r => {
       const st = statusOf(r);
-      const cliente = r.customers?.name || r.description || 'Sem cliente';
+      const hasCustomer = !!r.customers?.name;
+      const genericDesc = r.description && /^Doc\s+.*parc\s+\d+$/i.test(r.description.trim());
+      const cliente = hasCustomer ? r.customers.name : (genericDesc ? 'Cliente não identificado' : (r.description || 'Sem cliente'));
+      const meta = hasCustomer
+        ? (r.description || (r.origin === 'sale' ? 'Venda fiado' : 'Lançamento manual'))
+        : (genericDesc ? `Fiado importado sem cliente · ${r.description}` : (r.origin === 'sale' ? 'Venda fiado' : 'Lançamento manual'));
       const labelDate = st.s === 'overdue' ? `${st.overdue}d atraso` : (st.s === 'today' ? 'Hoje' : '');
       return `
         <tr onclick="DMPAY_CR.openDrawer('${r.id}')" style="cursor:pointer">
           <td>
             <div class="cr-cell">
-              <div class="cr-avatar" style="background:${tone(cliente)}">${iniciais(cliente)}</div>
+              <div class="cr-avatar" style="background:${tone(cliente)}${hasCustomer ? '' : ';opacity:.5'}">${hasCustomer ? iniciais(cliente) : '?'}</div>
               <div>
-                <div class="cr-name">${cliente}</div>
-                <div class="cr-meta">${r.description || (r.origin === 'sale' ? 'Venda fiado' : 'Lançamento manual')}</div>
+                <div class="cr-name" ${hasCustomer ? '' : 'style="color:var(--text-muted);font-style:italic"'}>${cliente}</div>
+                <div class="cr-meta">${meta}</div>
               </div>
             </div>
           </td>
@@ -126,10 +149,11 @@
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
   function atualizaKPIs() {
-    const opens = RECVS.filter(r => r.status === 'open');
-    const totalOpen = opens.reduce((s,r)=>s+Number(r.amount), 0);
-    const overdue = opens.filter(r => diffDays(r.due_date) < 0).reduce((s,r)=>s+Number(r.amount), 0);
-    const next7 = opens.filter(r => { const dd = diffDays(r.due_date); return dd >= 0 && dd <= 7; }).reduce((s,r)=>s+Number(r.amount), 0);
+    const abertas = RECVS.filter(r => r.status === 'open' || r.status === 'overdue');
+    const totalOpen = abertas.reduce((s,r)=>s+Number(r.amount), 0);
+    const atrasadas = abertas.filter(r => diffDays(r.due_date) < 0);
+    const overdue = atrasadas.reduce((s,r)=>s+Number(r.amount), 0);
+    const next7 = abertas.filter(r => { const dd = diffDays(r.due_date); return dd >= 0 && dd <= 7; }).reduce((s,r)=>s+Number(r.amount), 0);
     const ymThis = isoToday().slice(0,7);
     const recvMes = RECVS.filter(r => r.status === 'received' && r.received_at && r.received_at.startsWith(ymThis)).reduce((s,r)=>s+Number(r.amount), 0);
 
@@ -140,9 +164,9 @@
     if (ks[3]) ks[3].textContent = fmtBRL(recvMes);
 
     const subs = document.querySelectorAll('.kpi-sub');
-    if (subs[0]) subs[0].innerHTML = `<b>${opens.length}</b> em aberto`;
+    if (subs[0]) subs[0].innerHTML = `<b>${abertas.length}</b> em aberto`;
     if (subs[1]) subs[1].innerHTML = `próximos <b>7</b> dias`;
-    if (subs[2]) subs[2].innerHTML = `<b style="color:var(--danger)">${opens.filter(r => diffDays(r.due_date) < 0).length}</b> em atraso`;
+    if (subs[2]) subs[2].innerHTML = `<b style="color:var(--danger)">${atrasadas.length}</b> em atraso`;
     if (subs[3]) subs[3].innerHTML = `recebido este mês`;
 
     const heroSub = document.querySelector('.hero p');
@@ -151,9 +175,9 @@
 
   function atualizaChips() {
     const counts = {
-      open: RECVS.filter(r => r.status === 'open').length,
+      open: RECVS.filter(r => r.status === 'open' || r.status === 'overdue').length,
       today: RECVS.filter(r => statusOf(r).s === 'today').length,
-      overdue: RECVS.filter(r => statusOf(r).s === 'overdue').length,
+      overdue: RECVS.filter(r => r.status === 'overdue').length,
       received: RECVS.filter(r => r.status === 'received').length
     };
     document.querySelectorAll('.status-chip').forEach(c => {
