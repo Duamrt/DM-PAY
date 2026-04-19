@@ -373,7 +373,7 @@
       description: `NF ${p.nf || '—'} ${p.fornecedor}`,
       amount: p.valor,
       due_date: p.vencimento,
-      payment_method: 'boleto',
+      payment_method: 'outro',  // sem linha digitavel = nao pode ser 'boleto' (constraint migration 004)
       status: 'open'
     }));
     for (let i = 0; i < all.length; i += BATCH_SIZE) batches.push(all.slice(i, i+BATCH_SIZE));
