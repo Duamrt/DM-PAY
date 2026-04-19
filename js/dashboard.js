@@ -34,17 +34,26 @@
     const fim7 = new Date(HOJE); fim7.setDate(fim7.getDate() + 7);
     const fim30 = new Date(HOJE); fim30.setDate(fim30.getDate() + 30);
 
-    const [pagsR, recsR] = await Promise.all([
+    const inicio30 = new Date(HOJE); inicio30.setDate(inicio30.getDate() - 30);
+    const inicio30iso = inicio30.toISOString().slice(0,10);
+
+    const [pagsR, recsR, salesR, sangR] = await Promise.all([
       sb.from('payables').select('id, amount, due_date, paid_at, status, description, suppliers(legal_name)')
         .eq('company_id', COMPANY_ID).limit(2000),
       sb.from('receivables').select('id, amount, due_date, received_at, status')
-        .eq('company_id', COMPANY_ID).limit(2000)
+        .eq('company_id', COMPANY_ID).limit(20000),
+      sb.from('daily_sales').select('sale_date, payment_method, amount')
+        .eq('company_id', COMPANY_ID).gte('sale_date', inicio30iso).limit(2000),
+      sb.from('cash_withdrawals').select('withdrawal_date, amount')
+        .eq('company_id', COMPANY_ID).gte('withdrawal_date', inicio30iso).limit(500)
     ]);
     const PAGS = pagsR.data || [];
     const RECS = recsR.data || [];
+    const SALES = salesR.data || [];
+    const SANG = sangR.data || [];
 
     // Se não tem dados, mostra banner (mantém os mocks visuais como teaser)
-    if (PAGS.length === 0 && RECS.length === 0 && !document.getElementById('demo-banner')) {
+    if (PAGS.length === 0 && RECS.length === 0 && SALES.length === 0 && !document.getElementById('demo-banner')) {
       const main = document.querySelector('main');
       if (main) {
         const banner = document.createElement('div');
@@ -76,7 +85,8 @@
     const a_pagar_hoje = opens.filter(p => diffDays(p.due_date) === 0).reduce((s,p) => s + Number(p.amount), 0);
     const atrasado = opens.filter(p => diffDays(p.due_date) < 0).reduce((s,p) => s + Number(p.amount), 0);
 
-    const recsOpen = RECS.filter(r => r.status === 'open');
+    // Em aberto = open + overdue (atrasadas continuam pendentes de cobrança)
+    const recsOpen = RECS.filter(r => r.status === 'open' || r.status === 'overdue');
     const totalReceber = recsOpen.reduce((s,r) => s + Number(r.amount), 0);
     const receber_7d = recsOpen.filter(r => { const dd = diffDays(r.due_date); return dd >= 0 && dd <= 7; }).reduce((s,r) => s + Number(r.amount), 0);
 
@@ -85,26 +95,48 @@
     const pag30d = opens.filter(p => diffDays(p.due_date) >= 0 && diffDays(p.due_date) <= 30).reduce((s,p)=>s+Number(p.amount), 0);
     const saldoProjetado = saldoInicial + recv30d - pag30d;
 
-    // KPI 1: Saldo hoje
-    // KPI 2: A receber (próximos 7 dias) — mais útil que vendas hoje (sem iCommerce)
-    // KPI 3: A pagar (7 dias)
+    // === VENDAS REAIS (daily_sales agregado) ===
+    const ontem = new Date(HOJE); ontem.setDate(ontem.getDate() - 1);
+    const ontemIso = ontem.toISOString().slice(0,10);
+    const inicioSemana = new Date(HOJE); inicioSemana.setDate(inicioSemana.getDate() - 7);
+    const inicioSemanaIso = inicioSemana.toISOString().slice(0,10);
+    const inicioMes = new Date(HOJE.getFullYear(), HOJE.getMonth(), 1).toISOString().slice(0,10);
+
+    const vendeuOntem = SALES.filter(s => s.sale_date === ontemIso).reduce((s,v) => s + Number(v.amount), 0);
+    const vendeuSemana = SALES.filter(s => s.sale_date >= inicioSemanaIso).reduce((s,v) => s + Number(v.amount), 0);
+    const vendeuMes = SALES.filter(s => s.sale_date >= inicioMes).reduce((s,v) => s + Number(v.amount), 0);
+
+    // Forma top de ontem (pra delta)
+    const formasOntem = {};
+    SALES.filter(s => s.sale_date === ontemIso).forEach(s => {
+      formasOntem[s.payment_method] = (formasOntem[s.payment_method] || 0) + Number(s.amount);
+    });
+    const formaTop = Object.entries(formasOntem).sort((a,b) => b[1] - a[1])[0];
+
+    // KPI 1: Saldo (manual)
+    // KPI 2: Vendeu ontem (real, do iCommerce)
+    // KPI 3: A pagar 7d
     // KPI 4: Saldo projetado 30d
     const ks = document.querySelectorAll('.kpi-value');
     if (ks[0]) ks[0].textContent = fmtBRL(saldoInicial);
-    if (ks[1]) ks[1].textContent = fmtBRL(receber_7d);
+    if (ks[1]) ks[1].textContent = fmtBRL(vendeuOntem);
     if (ks[2]) ks[2].textContent = fmtBRL(a_pagar_7d);
     if (ks[3]) ks[3].textContent = fmtBRL(saldoProjetado);
 
-    // KPI labels (renomeia o 2º card pra refletir realidade)
     const labels = document.querySelectorAll('.kpi-label');
-    if (labels[1]) labels[1].textContent = 'A receber (7 dias)';
+    if (labels[1]) labels[1].textContent = 'Vendeu ontem';
 
-    // KPI deltas
     const deltas = document.querySelectorAll('.kpi-delta');
     if (deltas[0]) deltas[0].innerHTML = `<a href="#" onclick="DMPAY_DASH.editSaldo();return false" style="color:var(--accent);font-size:11.5px;text-decoration:none">editar saldo inicial</a>`;
-    if (deltas[1]) deltas[1].innerHTML = `<b style="color:var(--success)">${recsOpen.length}</b> contas a receber em aberto`;
+    if (deltas[1]) {
+      if (formaTop) {
+        deltas[1].innerHTML = `<b>${formaTop[0]}</b> liderou (${fmtBRL(formaTop[1])}) · semana <b>${fmtBRL(vendeuSemana)}</b>`;
+      } else {
+        deltas[1].innerHTML = `sem vendas ontem · semana <b>${fmtBRL(vendeuSemana)}</b>`;
+      }
+    }
     if (deltas[2]) deltas[2].innerHTML = a_pagar_hoje > 0 ? `<span class="down">▼ ${fmtBRL(a_pagar_hoje)} hoje</span> · ${opens.length} boletos` : `${opens.length} boletos em aberto`;
-    if (deltas[3]) deltas[3].innerHTML = saldoProjetado < 0 ? `<b style="color:var(--danger)">⚠ negativo</b> em 30d` : 'projeção 30 dias';
+    if (deltas[3]) deltas[3].innerHTML = saldoProjetado < 0 ? `<b style="color:var(--danger)">⚠ negativo</b> em 30d` : `mês: <b>${fmtBRL(vendeuMes)}</b> em vendas`;
 
     // Cor da quarta KPI baseada em projeção
     const kpiCards = document.querySelectorAll('.kpi');
@@ -182,14 +214,18 @@
 
     // === ENTRADAS X SAÍDAS CHART (real, últimos 30 dias) ===
     if (typeof Chart !== 'undefined' && document.getElementById('chart-entradas-saidas')) {
-      // Histórico real dos últimos 30 dias
+      // Histórico real dos últimos 30 dias — entrada = vendas (daily_sales) + receivables recebidos; saída = payables pagos + sangrias
       const labels30 = []; const ent30 = []; const sai30 = [];
       for (let i = 29; i >= 0; i--) {
         const d = new Date(HOJE); d.setDate(d.getDate() - i);
         const iso = d.toISOString().slice(0,10);
         labels30.push(d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}));
-        const ent = RECS.filter(r => r.received_at?.slice(0,10) === iso || (r.due_date === iso && r.status === 'received')).reduce((s,r)=>s+Number(r.amount), 0);
-        const sai = PAGS.filter(p => p.paid_at?.slice(0,10) === iso || (p.due_date === iso && p.status === 'paid')).reduce((s,p)=>s+Number(p.amount), 0);
+        const vendasDia = SALES.filter(s => s.sale_date === iso).reduce((s,v)=>s+Number(v.amount), 0);
+        const recebDia = RECS.filter(r => r.received_at?.slice(0,10) === iso).reduce((s,r)=>s+Number(r.amount), 0);
+        const ent = vendasDia + recebDia;
+        const pagDia = PAGS.filter(p => p.paid_at?.slice(0,10) === iso || (p.due_date === iso && p.status === 'paid')).reduce((s,p)=>s+Number(p.amount), 0);
+        const sangDia = SANG.filter(w => w.withdrawal_date === iso).reduce((s,w)=>s+Number(w.amount), 0);
+        const sai = pagDia + sangDia;
         ent30.push(ent / 1000);
         sai30.push(sai / 1000);
       }
