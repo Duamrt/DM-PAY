@@ -186,6 +186,84 @@
       if (window.lucide) lucide.createIcons();
       setTimeout(() => { saveBtn.innerHTML = '<i data-lucide="check"></i> Salvar'; if (window.lucide) lucide.createIcons(); }, 1800);
     };
+
+    // Botão "Testar envio agora" — gera briefing e abre wa.me
+    const testBtn = [...document.querySelectorAll('.bottom-actions .btn-ghost, .btn.btn-ghost')].find(b => /testar/i.test(b.textContent||''));
+    if (testBtn) testBtn.onclick = async () => {
+      const ativos = SETTINGS.recipients.filter(r => r.active !== false);
+      if (ativos.length === 0) { alert('Adicione pelo menos 1 destinatário ativo antes de testar.'); return; }
+      const opcoes = ativos.map((r, i) => `${i+1}. ${r.name} — ${r.phone}`).join('\n');
+      const r = await window.DMPAY_UI.open({
+        title: 'Testar envio agora',
+        desc: `Vai abrir o WhatsApp Web com o briefing pronto — você só clica em enviar. Destinatários ativos:\n${opcoes}`,
+        fields: [{ key:'destino', label:'Qual destinatário?', value:'1', placeholder:'1', hint:'Digite o número da lista acima.' }],
+        submitLabel: 'Gerar e abrir WhatsApp',
+        onSubmit: async (v) => {
+          const idx = parseInt(v.destino, 10) - 1;
+          if (isNaN(idx) || idx < 0 || idx >= ativos.length) throw new Error('Número inválido.');
+          const alvo = ativos[idx];
+          const texto = await gerarBriefing();
+          const fone = String(alvo.phone || '').replace(/\D/g, '');
+          if (fone.length < 10) throw new Error('Telefone inválido do destinatário.');
+          const url = `https://wa.me/${fone}?text=${encodeURIComponent(texto)}`;
+          window.open(url, '_blank');
+        }
+      });
+    };
+  }
+
+  // Gera o texto do briefing (mesma lógica do whatsapp-preview.js mas standalone)
+  async function gerarBriefing() {
+    const COMPANY_ID = window.DMPAY_COMPANY.id;
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const dow = hoje.getDay();
+    let inicio = new Date(hoje), fim = new Date(hoje);
+    if (dow === 1) inicio.setDate(inicio.getDate() - 2);
+    if (dow === 6 || dow === 0) { while (fim.getDay() !== 1) fim.setDate(fim.getDate() + 1); inicio = new Date(fim); inicio.setDate(fim.getDate() - 2); }
+    const iso = d => { const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dd}`; };
+    const fmt = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const [donoR, pagsR, bankR, salesR] = await Promise.all([
+      sb.from('profiles').select('name').eq('company_id', COMPANY_ID).eq('role','dono').limit(1).maybeSingle(),
+      sb.from('payables').select('amount, description, suppliers(legal_name, trade_name)').eq('company_id', COMPANY_ID).eq('status','open').gte('due_date', iso(inicio)).lte('due_date', iso(fim)).order('amount',{ascending:false}).limit(100),
+      sb.from('bank_accounts').select('balance').eq('company_id', COMPANY_ID).eq('active',true),
+      sb.from('daily_sales').select('amount').eq('company_id', COMPANY_ID).gte('sale_date', iso(new Date(Date.now() - 3*86400000)))
+    ]);
+    const nome = (donoR?.data?.name || 'dono').split(' ')[0];
+    const pags = pagsR.data || []; const banks = bankR.data || []; const sales = salesR.data || [];
+    const total = pags.reduce((s,p)=>s+Number(p.amount),0);
+    const saldo = banks.reduce((s,b)=>s+Number(b.balance||0),0);
+    const vendas3d = sales.reduce((s,v)=>s+Number(v.amount),0);
+    const dataStr = fim.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+    const flags = SETTINGS.content_flags || {};
+    const linhas = [];
+    const h = new Date().getHours();
+    const saud = h<12?'Bom dia':(h<18?'Boa tarde':'Boa noite');
+    linhas.push(`🌅 ${saud}, ${nome}!`);
+    linhas.push(dataStr.charAt(0).toUpperCase() + dataStr.slice(1) + '.');
+    linhas.push('');
+    if (flags.vencimentos !== false) {
+      linhas.push('*Resumo do dia*');
+      if (pags.length === 0) linhas.push('✅ Nenhum boleto vencendo hoje.');
+      else {
+        linhas.push(`💰 A pagar: *${fmt(total)}* (${pags.length} boleto${pags.length>1?'s':''})`);
+        linhas.push('');
+        linhas.push('Top ' + Math.min(5, pags.length) + ':');
+        pags.slice(0,5).forEach(p => {
+          const n = p.suppliers?.trade_name || p.suppliers?.legal_name || p.description || '—';
+          linhas.push(`• ${n} — ${fmt(p.amount)}`);
+        });
+        if (pags.length > 5) linhas.push(`• +${pags.length-5} boleto${pags.length-5>1?'s':''} menores`);
+      }
+      linhas.push('');
+    }
+    if (flags.saldo !== false) {
+      linhas.push(`📊 Saldo: ${fmt(saldo)}`);
+      if (total > 0) linhas.push(`Após pagar tudo: ${fmt(saldo - total)}`);
+      if (flags.vendas_ontem) linhas.push(`Vendas últimos 3 dias: ${fmt(vendas3d)}`);
+      linhas.push('');
+    }
+    linhas.push('— DM Pay');
+    return linhas.join('\n');
   }
 
   async function init() {
