@@ -423,56 +423,96 @@
           </div>
 
           <div class="cas-row total">
-            <div class="cas-label total"><span class="op">=</span>Lucro Operacional (EBITDA)</div>
+            <div class="cas-label total"><span class="op">=</span>Resultado Operacional (EBIT)</div>
             <div class="cas-val total">160.018,00</div>
             <div class="cas-pct bright">24,3%</div>
           </div>
 
-          <!-- Resultado financeiro -->
-          <div class="cas-row" onclick="drill('fin','Resultado financeiro','−730,00')">
-            <div class="cas-label minus"><span class="op">±</span>Resultado financeiro líquido</div>
-            <div class="cas-val minus">−730,00</div>
-            <div class="cas-pct">−0,1%</div>
+          <!-- Receitas financeiras -->
+          <div class="cas-row" onclick="drill('rec-fin','Receitas Financeiras','2.250,00')">
+            <div class="cas-label plus"><span class="op">+</span>Receitas Financeiras</div>
+            <div class="cas-val plus">2.250,00</div>
+            <div class="cas-pct">0,3%</div>
           </div>
           <div class="cas-row sub">
-            <div class="cas-label"><span class="op">•</span>Juros e tarifas bancárias</div>
-            <div class="cas-val">−850,00</div>
-            <div class="cas-pct">−0,1%</div>
+            <div class="cas-label"><span class="op">•</span>Descontos obtidos à vista (Nestlé, BRF)</div>
+            <div class="cas-val">1.800,00</div>
+            <div class="cas-pct">0,3%</div>
           </div>
           <div class="cas-row sub">
-            <div class="cas-label plus"><span class="op">+</span>Rendimento aplicação</div>
-            <div class="cas-val plus">120,00</div>
-            <div class="cas-pct">0,0%</div>
+            <div class="cas-label"><span class="op">•</span>Rendimento aplicação (CDB Santander)</div>
+            <div class="cas-val">450,00</div>
+            <div class="cas-pct">0,1%</div>
+          </div>
+
+          <!-- Despesas financeiras -->
+          <div class="cas-row" onclick="drill('desp-fin','Despesas Financeiras','3.960,00')">
+            <div class="cas-label minus"><span class="op">−</span>Despesas Financeiras</div>
+            <div class="cas-val minus">3.960,00</div>
+            <div class="cas-pct">0,6%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Tarifas bancárias (BB + Santander)</div>
+            <div class="cas-val">2.980,00</div>
+            <div class="cas-pct">0,5%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Juros de mora em boletos atrasados</div>
+            <div class="cas-val">420,00</div>
+            <div class="cas-pct">0,1%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Antecipação de recebíveis Cielo</div>
+            <div class="cas-val">560,00</div>
+            <div class="cas-pct">0,1%</div>
           </div>
 
           <div class="cas-row total">
-            <div class="cas-label total"><span class="op">=</span>Lucro Antes do IR (LAIR)</div>
-            <div class="cas-val total">160.018,00</div>
-            <div class="cas-pct bright">24,3%</div>
+            <div class="cas-label total"><span class="op">±</span>Resultado Financeiro Líquido</div>
+            <div class="cas-val minus">−1.710,00</div>
+            <div class="cas-pct">−0,3%</div>
+          </div>
+
+          <!-- Outras Receitas e Despesas (não operacionais) -->
+          <div class="cas-row" onclick="drill('outras','Outras Receitas/Despesas','820,00')">
+            <div class="cas-label plus"><span class="op">±</span>Outras Receitas e Despesas</div>
+            <div class="cas-val plus">820,00</div>
+            <div class="cas-pct">0,1%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label plus"><span class="op">+</span>Reembolso seguro (incidente 12/04)</div>
+            <div class="cas-val plus">820,00</div>
+            <div class="cas-pct">0,1%</div>
+          </div>
+
+          <div class="cas-row total">
+            <div class="cas-label total"><span class="op">=</span>Resultado antes dos Impostos (EBT)</div>
+            <div class="cas-val total">159.128,00</div>
+            <div class="cas-pct bright">24,1%</div>
           </div>
 
           <!-- Impostos sobre lucro -->
-          <div class="cas-row" onclick="drill('irpj-base','IRPJ base 15%','24.003,00')">
+          <div class="cas-row" onclick="drill('irpj-base','IRPJ base 15%','23.869,00')">
             <div class="cas-label minus"><span class="op">−</span>IRPJ (15%)</div>
-            <div class="cas-val minus">24.003,00</div>
-            <div class="cas-pct">3,5%</div>
+            <div class="cas-val minus">23.869,00</div>
+            <div class="cas-pct">3,6%</div>
           </div>
-          <div class="cas-row" onclick="drill('irpj-ad','IRPJ adicional 10%','14.002,00')">
+          <div class="cas-row" onclick="drill('irpj-ad','IRPJ adicional 10%','13.913,00')">
             <div class="cas-label minus"><span class="op">−</span>IRPJ adicional (10%)</div>
-            <div class="cas-val minus">14.002,00</div>
+            <div class="cas-val minus">13.913,00</div>
             <div class="cas-pct">2,1%</div>
           </div>
-          <div class="cas-row" onclick="drill('csll','CSLL 9%','14.402,00')">
+          <div class="cas-row" onclick="drill('csll','CSLL 9%','14.322,00')">
             <div class="cas-label minus"><span class="op">−</span>CSLL (9%)</div>
-            <div class="cas-val minus">14.402,00</div>
-            <div class="cas-pct">2,1%</div>
+            <div class="cas-val minus">14.322,00</div>
+            <div class="cas-pct">2,2%</div>
           </div>
 
           <!-- RESULTADO FINAL -->
           <div class="cas-row grand">
-            <div class="cas-label grand"><span class="op">=</span>LUCRO LÍQUIDO</div>
-            <div class="cas-val grand">107.612,00</div>
-            <div class="cas-pct bright">16,3% <span class="cas-delta up">+R$ 8.230</span></div>
+            <div class="cas-label grand"><span class="op">=</span>LUCRO LÍQUIDO DO PERÍODO</div>
+            <div class="cas-val grand">107.024,00</div>
+            <div class="cas-pct bright">16,2% <span class="cas-delta up">+R$ 7.642</span></div>
           </div>
 
           <!-- Não-operacionais (abaixo da linha) -->
@@ -512,7 +552,7 @@
                 <div class="margem-label">Margem Líquida</div>
                 <div class="margem-bench">Benchmark: 3-8% · mercadinho</div>
               </div>
-              <div class="margem-val good" style="text-align:right">16,3%</div>
+              <div class="margem-val good" style="text-align:right">16,2%</div>
             </div>
           </div>
 
@@ -529,7 +569,7 @@
             </div>
             <div class="alert-mini warn">
               <i data-lucide="alert-triangle"></i>
-              <span><b>Margem líquida 16,3%</b> está acima do benchmark típico (3-8%). Revisar alíquotas tributárias no fechamento — pode estar subestimada.</span>
+              <span><b>Margem líquida 16,2%</b> está acima do benchmark típico (3-8%). Revisar alíquotas tributárias no fechamento — pode estar subestimada.</span>
             </div>
           </div>
 
@@ -704,9 +744,12 @@
       'icms': {desc: 'ICMS débito (17% PE) líquido de créditos', items:[['Débito sobre vendas','R$ 163.200,00'],['Crédito sobre compras','R$ 88.200,00']]},
       'pis': {desc: 'PIS não-cumulativo 1,65% · validar com contador', items:[['Débito sobre vendas','R$ 15.840,00'],['Crédito sobre compras','R$ 990,00']]},
       'cofins': {desc: 'COFINS não-cumulativo 7,60% · validar com contador', items:[['Débito sobre vendas','R$ 72.960,00'],['Crédito sobre compras','R$ 4.560,00']]},
-      'irpj-base': {desc: '15% sobre LAIR', items:[['LAIR × 15%','R$ 24.003,00']]},
-      'irpj-ad': {desc: 'Adicional 10% sobre LAIR excedente a R$ 20k/mês', items:[['(LAIR − 20.000) × 10%','R$ 14.002,00']]},
-      'csll': {desc: '9% sobre LAIR', items:[['LAIR × 9%','R$ 14.402,00']]},
+      'irpj-base': {desc: '15% sobre EBT (Lucro antes dos impostos)', items:[['EBT × 15%','R$ 23.869,00']]},
+      'irpj-ad': {desc: 'Adicional 10% sobre EBT excedente a R$ 20k/mês', items:[['(EBT − 20.000) × 10%','R$ 13.913,00']]},
+      'csll': {desc: '9% sobre EBT', items:[['EBT × 9%','R$ 14.322,00']]},
+      'rec-fin': {desc: 'Receitas financeiras do mês', items:[['Descontos obtidos (Nestlé 2%, BRF 1,5%)','R$ 1.800,00'],['Rendimento CDB Santander','R$ 450,00']]},
+      'desp-fin': {desc: 'Despesas financeiras do mês', items:[['Tarifas bancárias BB + Santander','R$ 2.980,00'],['Juros de mora (2 boletos atrasados)','R$ 420,00'],['Antecipação Cielo (taxa)','R$ 560,00']]},
+      'outras': {desc: 'Receitas e despesas não operacionais', items:[['Reembolso seguro (incidente 12/04)','R$ 820,00']]},
       'dev': {desc: 'Produtos devolvidos pelos clientes', items:[['Devoluções abril','R$ 2.021,00']]}
     };
 
