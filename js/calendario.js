@@ -172,7 +172,9 @@
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
             <span class="badge" style="font-size:10px;padding:2px 7px;border-radius:999px;background:${isPago?'var(--success-soft)':'var(--warn-soft)'};color:${isPago?'var(--success)':'var(--warn)'};font-weight:600;text-transform:uppercase;letter-spacing:.04em">${isPago?'Pago':'Em aberto'}</span>
             <div style="display:flex;gap:6px">
-              ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.pagar('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h2v2H7zm0 4h2v2H7zm4-4h2v2h-2zm4 0h2v2h-2zm0 4h2v2h-2z"/></svg> Pagar com código</button>` : ''}
+              ${!isPago && !temBoleto ? `<button onclick="DMPAY_CAL.colarCodigo('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn);border-radius:6px;cursor:pointer;font-weight:600">📋 Colar código</button>` : ''}
+              ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.copiarCodigo('${p.id}', this)" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:6px;cursor:pointer;font-weight:600">📋 Copiar código</button>` : ''}
+              ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.pagar('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Pagar com QR</button>` : ''}
               ${!isPago ? `<button onclick="DMPAY_CAL.marcarPago('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--success);border:1px solid var(--success);border-radius:6px;cursor:pointer;font-weight:600">✓ Marcar pago</button>` : ''}
             </div>
           </div>
@@ -215,6 +217,53 @@
     await load(); render();
   }
 
+  async function colarCodigo(id) {
+    const p = PAYABLES.find(x => x.id === id); if (!p) return;
+    const v = prompt(`Código de barras do boleto (linha digitável ou 44 dígitos):\nFornecedor: ${p.suppliers?.legal_name || p.description || ''}\nValor: ${fmtBRLfull(p.amount)}`, p.boleto_line || '');
+    if (v === null) return;
+    const digits = String(v).replace(/\D/g, '');
+    if (digits.length !== 44 && digits.length !== 47) {
+      alert(`Código inválido: ${digits.length} dígitos encontrados.\nPrecisa ter 44 (barcode puro) ou 47 (linha digitável com DVs).`);
+      return;
+    }
+    const { error } = await sb.from('payables').update({
+      boleto_line: String(v).trim(),
+      payment_method: 'boleto'
+    }).eq('id', id);
+    if (error) { alert('Erro ao salvar: ' + error.message); return; }
+    const dia = new Date(p.due_date + 'T00:00:00').getDate();
+    await load();
+    render();
+    openDia(dia);
+  }
+
+  async function copiarCodigo(id, btn) {
+    const p = PAYABLES.find(x => x.id === id); if (!p?.boleto_line) return;
+    const text = p.boleto_line;
+    const feedback = (ok) => {
+      if (!btn) { alert(ok ? 'Código copiado!' : 'Não foi possível copiar'); return; }
+      const orig = btn.innerHTML;
+      btn.innerHTML = ok ? '✓ Copiado!' : '⚠ Falhou';
+      btn.style.background = ok ? 'var(--success)' : 'var(--danger)';
+      btn.style.color = 'white';
+      btn.style.borderColor = ok ? 'var(--success)' : 'var(--danger)';
+      setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = ''; }, 1500);
+    };
+    try {
+      await navigator.clipboard.writeText(text);
+      feedback(true);
+    } catch(e) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        feedback(ok);
+      } catch(e2) { feedback(false); }
+    }
+  }
+
   async function nav(direction) {
     if (direction === 'today') {
       MES_REF = HOJE.getMonth(); ANO_REF = HOJE.getFullYear();
@@ -239,7 +288,7 @@
     await load(); render();
   }
 
-  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago };
+  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago, colarCodigo: colarCodigo, copiarCodigo: copiarCodigo };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
