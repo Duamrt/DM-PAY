@@ -133,9 +133,9 @@
       return `
         <tr class="${trCls.trim()}">
           <td>${s.dia.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short' })} ${tag}</td>
-          <td class="num pos">${s.entrada > 0 ? fmtBRLshort(s.entrada) : '—'}</td>
-          <td class="num neg">${s.saida > 0 ? '−' + fmtBRLshort(s.saida) : '—'}</td>
-          <td class="num saldo ${s.criticoNeg ? 'neg' : ''}">${fmtBRLshort(s.saldo)}</td>
+          <td class="num pos">${s.entrada > 0 ? fmtBRL(s.entrada) : '—'}</td>
+          <td class="num neg">${s.saida > 0 ? fmtBRL(-s.saida) : '—'}</td>
+          <td class="num saldo ${s.criticoNeg ? 'neg' : ''}">${fmtBRL(s.saldo)}</td>
         </tr>`;
     }).join('');
   }
@@ -174,7 +174,7 @@
       <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-weight:600;font-size:13px">${s.dia.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'long'})}</div>
-          <div style="font-size:11.5px;color:var(--text-muted)">saída ${fmtBRLshort(s.saida)} · entrada ${fmtBRLshort(s.entrada)}</div>
+          <div style="font-size:11.5px;color:var(--text-muted)">saída ${fmtBRL(s.saida)} · entrada ${fmtBRL(s.entrada)}</div>
         </div>
         <div style="font-family:'Geist Mono',monospace;font-weight:700;color:var(--danger)">${fmtBRL(s.saldo)}</div>
       </div>`).join('');

@@ -2,10 +2,18 @@
 (function() {
   const HOJE = new Date(); HOJE.setHours(0,0,0,0);
 
+  // fmtBRL = KPI agregado (sem centavos). fmtBRLfull = valor individual (sempre 2 casas)
   function fmtBRL(v){ return 'R$ ' + Math.round(Number(v||0)).toLocaleString('pt-BR'); }
   function fmtBRLfull(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function brDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('T')[0].split('-'); return `${d}/${m}/${y}`; }
   function diffDays(iso){ if(!iso) return 0; const d = new Date(iso); d.setHours(0,0,0,0); return Math.round((d-HOJE)/86400000); }
+  // Regra fim de semana: boleto só vira "atrasado" depois do próximo dia útil
+  function isOverdue(iso){ return window.DMPAY_DIAUTIL ? window.DMPAY_DIAUTIL.atrasado(iso) : diffDays(iso) < 0; }
+  function diasAtraso(iso){
+    if (!window.DMPAY_DIAUTIL) return Math.max(-diffDays(iso), 0);
+    const efetivo = window.DMPAY_DIAUTIL.proximo(iso);
+    return Math.max(Math.round((HOJE - efetivo) / 86400000), 0);
+  }
   function ymThis(){ return HOJE.toISOString().slice(0,7); }
 
   async function init() {
@@ -83,7 +91,7 @@
     const totalOpen = opens.reduce((s,p) => s + Number(p.amount), 0);
     const a_pagar_7d = opens.filter(p => { const dd = diffDays(p.due_date); return dd >= 0 && dd <= 7; }).reduce((s,p) => s + Number(p.amount), 0);
     const a_pagar_hoje = opens.filter(p => diffDays(p.due_date) === 0).reduce((s,p) => s + Number(p.amount), 0);
-    const atrasado = opens.filter(p => diffDays(p.due_date) < 0).reduce((s,p) => s + Number(p.amount), 0);
+    const atrasado = opens.filter(p => isOverdue(p.due_date)).reduce((s,p) => s + Number(p.amount), 0);
 
     // Em aberto = open + overdue (atrasadas continuam pendentes de cobrança)
     const recsOpen = RECS.filter(r => r.status === 'open' || r.status === 'overdue');
@@ -150,7 +158,7 @@
       const title = alertCards[0].querySelector('.ac-title');
       const text = alertCards[0].querySelector('.ac-text');
       if (atrasado > 0) {
-        if (title) title.textContent = `${opens.filter(p => diffDays(p.due_date) < 0).length} boletos em atraso totalizam ${fmtBRL(atrasado)}`;
+        if (title) title.textContent = `${opens.filter(p => isOverdue(p.due_date)).length} boletos em atraso totalizam ${fmtBRLfull(atrasado)}`;
         if (text) text.innerHTML = `Liquidar urgente — taxas e juros corroem margem. <a href="contas-a-pagar.html?filter=overdue" style="color:var(--accent);text-decoration:underline">Ver atrasados</a>`;
         alertCards[0].href = 'contas-a-pagar.html';
       } else if (saldoProjetado < 0) {
@@ -197,6 +205,7 @@
         dMes.textContent = `${mesAbr} · ${diasNomes[dt.getDay()]}`;
       }
       const dd = diffDays(p.due_date);
+      const atrasado = isOverdue(p.due_date);
       dateEl?.classList.remove('today','soon');
       if (dd === 0) dateEl?.classList.add('today');
       else if (dd <= 2 && dd >= 0) dateEl?.classList.add('soon');
@@ -205,10 +214,11 @@
       const meta = row.querySelector('.venc-info .meta');
       const val = row.querySelector('.venc-val');
       if (name) name.textContent = sup.length > 40 ? sup.slice(0,37)+'…' : sup;
-      if (meta) meta.innerHTML = `<i data-lucide="receipt"></i> ${dd < 0 ? 'atrasado' : (dd === 0 ? 'vence hoje' : 'pendente')}`;
+      if (meta) meta.innerHTML = `<i data-lucide="receipt"></i> ${atrasado ? 'atrasado' : (dd === 0 ? 'vence hoje' : (dd < 0 ? 'vence seg' : 'pendente'))}`;
       if (val) {
-        const tagTxt = dd < 0 ? `${-dd}d atraso` : dd === 0 ? 'Hoje' : dd === 1 ? 'Amanhã' : `${dd} dias`;
-        val.innerHTML = fmtBRL(p.amount) + `<span class="tag">${tagTxt}</span>`;
+        const atr = diasAtraso(p.due_date);
+        const tagTxt = atrasado ? `${atr}d atraso` : (dd === 0 ? 'Hoje' : (dd < 0 ? 'Seg' : (dd === 1 ? 'Amanhã' : `${dd} dias`)));
+        val.innerHTML = fmtBRLfull(p.amount) + `<span class="tag">${tagTxt}</span>`;
       }
     });
 

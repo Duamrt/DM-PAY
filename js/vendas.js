@@ -87,7 +87,7 @@
         const valMain = rows[i].querySelector('.pay-val-main');
         const valPct = rows[i].querySelector('.pay-val-pct');
         const barFill = rows[i].querySelector('.pay-bar-fill');
-        if (valMain) valMain.textContent = fmtBRL(v);
+        if (valMain) valMain.textContent = 'R$ ' + fmtBRLfull(v);
         if (valPct) valPct.textContent = pct.toFixed(1) + '%';
         if (barFill) barFill.style.width = Math.max(pct, 0) + '%';
       });
@@ -95,7 +95,7 @@
       if (totalBox) {
         const [y,m,d] = ultimoDia.split('-');
         totalBox.querySelector('span:first-child').textContent = `Total · ${d}/${m}`;
-        totalBox.querySelector('.pay-total-val').textContent = fmtBRL(totalDia);
+        totalBox.querySelector('.pay-total-val').textContent = 'R$ ' + fmtBRLfull(totalDia);
       }
       // Atualiza título do card pra refletir o dia exibido
       const payTitle = document.querySelector('.pay-card h3');
@@ -172,11 +172,11 @@
               <div class="pay-mix-seg fiado" style="flex:${mixPct(fiado)}"></div>
             </div>
           </td>
-          <td class="num">${fmtBRL(dinh)}</td>
-          <td class="num">${fmtBRL(cred)}</td>
-          <td class="num">${fmtBRL(deb)}</td>
-          <td class="num">${fmtBRL(pix)}</td>
-          <td class="num" style="color:var(--accent)">${fmtBRL(total)}</td>`;
+          <td class="num">${fmtBRLfull(dinh)}</td>
+          <td class="num">${fmtBRLfull(cred)}</td>
+          <td class="num">${fmtBRLfull(deb)}</td>
+          <td class="num">${fmtBRLfull(pix)}</td>
+          <td class="num" style="color:var(--accent)"><b>${fmtBRLfull(total)}</b></td>`;
         tbody.appendChild(tr);
       });
     }
