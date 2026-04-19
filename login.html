@@ -94,6 +94,9 @@
           <button class="btn" type="submit">
             <i data-lucide="log-in"></i> Entrar
           </button>
+          <div style="text-align:right;margin-top:8px">
+            <a style="font-size:12px;color:var(--text-muted);text-decoration:none;cursor:pointer" onclick="resetPassword()">Esqueci a senha</a>
+          </div>
         </form>
 
         <div class="foot">
@@ -140,11 +143,25 @@
   </div>
 
   <script>
-    function showAlert(msg) {
+    function showAlert(msg, kind) {
       const a = document.getElementById('alert');
       document.getElementById('alert-msg').textContent = msg;
       a.classList.remove('hidden');
+      a.style.background = kind === 'success' ? '#D1FAE5' : '';
+      a.style.borderColor = kind === 'success' ? '#10B981' : '';
+      a.style.color = kind === 'success' ? '#065F46' : '';
       setTimeout(function() { a.classList.add('hidden'); }, 8000);
+    }
+
+    async function resetPassword() {
+      const email = document.querySelector('#form-login [name=email]').value.trim();
+      if (!email) { showAlert('Digite seu e-mail no campo acima primeiro'); return; }
+      await DMPAY.ready();
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: location.origin + location.pathname.replace(/[^/]*$/, 'login.html')
+      });
+      if (error) { showAlert(error.message); return; }
+      showAlert('Link de reset enviado pra ' + email + '. Confira o e-mail.', 'success');
     }
 
     function switchTab(name) {
