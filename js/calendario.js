@@ -4,6 +4,7 @@
   let MES_REF = HOJE.getMonth(); // 0-11
   let ANO_REF = HOJE.getFullYear();
   let PAYABLES = [];
+  let RECEIVABLES = [];
   const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
   function fmtBRL(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}); }
@@ -13,16 +14,24 @@
 
   async function load() {
     const inicio = new Date(ANO_REF, MES_REF, 1).toISOString().slice(0,10);
-    const fim = new Date(ANO_REF, MES_REF + 2, 0).toISOString().slice(0,10); // pega ate fim do mês seguinte tambem
-    const { data, error } = await sb
-      .from('payables')
-      .select('id, amount, due_date, status, paid_at, description, payment_method, boleto_line, suppliers(legal_name, cnpj)')
-      .eq('company_id', window.DMPAY_COMPANY.id)
-      .gte('due_date', inicio)
-      .lte('due_date', fim)
-      .limit(2000);
-    if (error) { console.error(error); return; }
-    PAYABLES = data;
+    const fim = new Date(ANO_REF, MES_REF + 2, 0).toISOString().slice(0,10);
+    const COMPANY_ID = window.DMPAY_COMPANY.id;
+
+    const [pagsR, recsR] = await Promise.all([
+      sb.from('payables')
+        .select('id, amount, due_date, status, paid_at, description, payment_method, boleto_line, suppliers(legal_name, cnpj)')
+        .eq('company_id', COMPANY_ID)
+        .gte('due_date', inicio).lte('due_date', fim)
+        .limit(2000),
+      sb.from('receivables')
+        .select('id, amount, due_date, status, received_at, description, customers(name, cpf_cnpj)')
+        .eq('company_id', COMPANY_ID)
+        .gte('due_date', inicio).lte('due_date', fim)
+        .limit(5000)
+    ]);
+    if (pagsR.error || recsR.error) { console.error(pagsR.error || recsR.error); return; }
+    PAYABLES = pagsR.data || [];
+    RECEIVABLES = recsR.data || [];
   }
 
   function render() {
@@ -39,17 +48,29 @@
     const ultimoDia = new Date(ANO_REF, MES_REF + 1, 0);
     const diaSemPrim = primeiroDia.getDay(); // 0=dom
 
-    // Agrega por dia
+    // Agrega por dia — SAÍDAS (payables) e ENTRADAS (receivables)
     const porDia = {};
+    function bucket(dia) {
+      if (!porDia[dia]) porDia[dia] = { total:0, count:0, paid:0, items:[], entrada:0, entradaCount:0, recebidos:0 };
+      return porDia[dia];
+    }
     PAYABLES.forEach(p => {
       const d = new Date(p.due_date + 'T00:00:00');
       if (d.getMonth() === MES_REF && d.getFullYear() === ANO_REF) {
-        const dia = d.getDate();
-        if (!porDia[dia]) porDia[dia] = { total:0, count:0, paid:0, items:[] };
-        porDia[dia].total += Number(p.amount);
-        porDia[dia].count += 1;
-        if (p.status === 'paid') porDia[dia].paid += 1;
-        porDia[dia].items.push(p);
+        const b = bucket(d.getDate());
+        b.total += Number(p.amount);
+        b.count += 1;
+        if (p.status === 'paid') b.paid += 1;
+        b.items.push(p);
+      }
+    });
+    RECEIVABLES.forEach(r => {
+      const d = new Date(r.due_date + 'T00:00:00');
+      if (d.getMonth() === MES_REF && d.getFullYear() === ANO_REF) {
+        const b = bucket(d.getDate());
+        b.entrada += Number(r.amount);
+        b.entradaCount += 1;
+        if (r.status === 'received') b.recebidos += 1;
       }
     });
 
@@ -72,17 +93,27 @@
       const agg = porDia[dia];
       let html = `<div class="cal-day${isWk?' weekend':''}${isHoje?' today':''}" onclick="DMPAY_CAL.openDia(${dia})">`;
       html += `<span class="cal-day-num">${dia}</span>`;
+      const temAlgo = agg && (agg.total > 0 || agg.entrada > 0);
       if (isHoje) {
         html += `<span class="cal-day-total" style="font-size:11px;color:var(--accent);font-weight:600">Hoje</span>`;
-      } else if (agg && agg.total > 0) {
-        html += `<span class="cal-day-total">${fmtBRL(agg.total)}</span>`;
-        const dots = Math.min(agg.count, 3);
+      } else if (temAlgo) {
+        // Saída principal, entrada abaixo (se houver)
+        if (agg.total > 0) {
+          html += `<span class="cal-day-total" style="color:var(--danger)">−${fmtBRL(agg.total)}</span>`;
+        }
+        if (agg.entrada > 0) {
+          html += `<span class="cal-day-total" style="color:var(--success);font-size:11px">+${fmtBRL(agg.entrada)}</span>`;
+        }
+        const dots = Math.min((agg.count || 0) + (agg.entradaCount || 0), 3);
         let chips = '<div class="cal-day-chips">';
         for (let i = 0; i < dots; i++) {
-          const cls = agg.paid === agg.count ? 'paid' : (diffDays(dt.toISOString().slice(0,10)) < 0 ? 'late' : 'open');
+          let cls = 'open';
+          if (i < agg.count) cls = agg.paid === agg.count ? 'paid' : (diffDays(dt.toISOString().slice(0,10)) < 0 ? 'late' : 'open');
+          else cls = 'paid'; // entrada representada em verde (paid)
           chips += `<span class="cal-dot ${cls}"></span>`;
         }
-        const cnt = agg.count > 1 ? `${agg.count} contas` : '1 conta';
+        const totalContas = (agg.count || 0) + (agg.entradaCount || 0);
+        const cnt = totalContas > 1 ? `${totalContas} mov.` : '1 mov.';
         chips += `<span class="cal-day-count">${cnt}</span></div>`;
         html += chips;
         if (agg.total > 50000) html = html.replace('cal-day', 'cal-day critical');
@@ -131,19 +162,52 @@
 
   function openDia(dia) {
     const dt = new Date(ANO_REF, MES_REF, dia);
-    const items = PAYABLES.filter(p => {
+    const saidas = PAYABLES.filter(p => {
       const d = new Date(p.due_date + 'T00:00:00');
       return d.getDate() === dia && d.getMonth() === MES_REF && d.getFullYear() === ANO_REF;
     });
-    const total = items.reduce((s,p)=>s+Number(p.amount), 0);
+    const entradas = RECEIVABLES.filter(r => {
+      const d = new Date(r.due_date + 'T00:00:00');
+      return d.getDate() === dia && d.getMonth() === MES_REF && d.getFullYear() === ANO_REF;
+    });
+    const totalSaida = saidas.reduce((s,p)=>s+Number(p.amount), 0);
+    const totalEntrada = entradas.reduce((s,r)=>s+Number(r.amount), 0);
+    const saldo = totalEntrada - totalSaida;
     const drawerHead = document.querySelector('.drawer-head h2');
     const drawerP = document.querySelector('.drawer-head p');
     if (drawerHead) drawerHead.textContent = `${dt.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long'})}`;
-    if (drawerP) drawerP.innerHTML = `${items.length} boleto${items.length !== 1 ? 's' : ''} · <b>${fmtBRLfull(total)}</b>`;
-    // Substitui boletos no drawer
+    if (drawerP) {
+      const parts = [];
+      if (saidas.length) parts.push(`<span style="color:var(--danger)">−${fmtBRLfull(totalSaida)} <small>(${saidas.length} boleto${saidas.length!==1?'s':''})</small></span>`);
+      if (entradas.length) parts.push(`<span style="color:var(--success)">+${fmtBRLfull(totalEntrada)} <small>(${entradas.length} fiado${entradas.length!==1?'s':''})</small></span>`);
+      if (saidas.length && entradas.length) parts.push(`<b style="color:${saldo>=0?'var(--success)':'var(--danger)'}">saldo ${saldo>=0?'+':'−'}${fmtBRLfull(Math.abs(saldo))}</b>`);
+      drawerP.innerHTML = parts.join(' · ') || '<i>Sem movimentos</i>';
+    }
     const boletosArea = document.querySelector('.drawer-body');
-    if (boletosArea && items.length > 0) {
-      boletosArea.innerHTML = items.map(p => {
+    if (!boletosArea) { document.getElementById('drawer')?.classList.add('open'); return; }
+
+    let htmlOut = '';
+    if (entradas.length > 0) {
+      htmlOut += `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--success);font-weight:600;margin:4px 0 8px">↓ A receber</div>`;
+      htmlOut += entradas.map(r => {
+        const isRecv = r.status === 'received';
+        const cliente = r.customers?.name || (r.description && /^Doc\s+.*parc\s+\d+$/i.test(r.description) ? 'Cliente não identificado' : (r.description || 'Sem cliente'));
+        return `
+          <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:13px">${cliente}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${r.description || 'Fiado'}</div>
+              </div>
+              <div style="font-family:'Geist Mono',monospace;font-weight:700;font-size:14px;color:var(--success);white-space:nowrap">+${fmtBRLfull(r.amount)}</div>
+            </div>
+            <div style="margin-top:6px"><span class="badge" style="font-size:10px;padding:2px 7px;border-radius:999px;background:${isRecv?'var(--success-soft)':'var(--warn-soft)'};color:${isRecv?'var(--success)':'var(--warn)'};font-weight:600;text-transform:uppercase;letter-spacing:.04em">${isRecv?'Recebido':'Em aberto'}</span></div>
+          </div>`;
+      }).join('');
+    }
+    if (saidas.length > 0) {
+      htmlOut += `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--danger);font-weight:600;margin:14px 0 8px">↑ A pagar</div>`;
+      htmlOut += saidas.map(p => {
         const temBoleto = p.payment_method === 'boleto' && p.boleto_line && p.boleto_line.replace(/\D/g,'').length >= 44;
         const isPago = p.status === 'paid';
         return `
@@ -164,7 +228,10 @@
           </div>
         </div>`;
       }).join('');
-    } else if (boletosArea) {
+    }
+    if (htmlOut) {
+      boletosArea.innerHTML = htmlOut;
+    } else {
       boletosArea.innerHTML = '<p style="text-align:center;padding:30px 20px;color:var(--text-muted)">Nenhum vencimento neste dia</p>';
     }
     document.getElementById('drawer')?.classList.add('open');
