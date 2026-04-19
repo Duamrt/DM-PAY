@@ -169,26 +169,50 @@ def update_sync_state(cfg, company_id, entity, last_external_id, rows_synced, dr
 def job_daily_sales(cfg, cn, company_id, days, dry_run):
     """Agrega CUPOM_FISCAL_RECEBIMENTOS (NFCe do PDV) por dia/forma. Idempotente (UPSERT).
 
-    Mudança 2026-04-19: VENDAS no iCommerce parou em 06/01/2023.
-    Vendas atuais do mercado (NFCe/PDV) vão direto pra CUPOM_FISCAL_RECEBIMENTOS.
+    Notas:
+      - VENDAS no iCommerce parou em 06/01/2023. Vendas atuais (NFCe/PDV) vão pra CFR.
+      - CFR_TROCO é o troco devolvido ao cliente (sai do dinheiro). Vai como linha
+        separada (payment_method='troco', amount NEGATIVO) pra que SUM(amount) por dia
+        bata com o "Total das Vendas" do relatório iCommerce.
     """
     cutoff = datetime.now() - timedelta(days=days)
-    sql = """
+
+    # Query 1: recebimentos por (dia, forma) — filtrando cupons NÃO cancelados
+    sql_receb = """
         SELECT
-            CONVERT(date, CFR_DATA) AS dia,
-            CFR_COD_FORMA_PGTO AS frp,
-            SUM(CFR_VALOR) AS total
-        FROM CUPOM_FISCAL_RECEBIMENTOS WITH (NOLOCK)
-        WHERE CFR_DATA >= ?
-        GROUP BY CONVERT(date, CFR_DATA), CFR_COD_FORMA_PGTO
+            CONVERT(date, CFR.CFR_DATA) AS dia,
+            CFR.CFR_COD_FORMA_PGTO AS frp,
+            SUM(CFR.CFR_VALOR) AS total_recebido
+        FROM CUPOM_FISCAL_RECEBIMENTOS CFR WITH (NOLOCK)
+        LEFT JOIN CUPOM_FISCAL CUP WITH (NOLOCK) ON CUP.CUP_CODIGO = CFR.CFR_CODIGO_CUPOM
+        WHERE CFR.CFR_DATA >= ?
+          AND ISNULL(CUP.CUP_SITUACAO, 'N') <> 'C'
+        GROUP BY CONVERT(date, CFR.CFR_DATA), CFR.CFR_COD_FORMA_PGTO
     """
-    rows = cn.cursor().execute(sql, cutoff).fetchall()
-    # Consolida por (dia, método) — mistura PIX (8+9), CARTAO genérico+CREDITO (3+7) etc
+    rows_receb = cn.cursor().execute(sql_receb, cutoff).fetchall()
+
+    # Query 2: troco por dia — direto da header CUPOM_FISCAL
+    sql_troco = """
+        SELECT
+            CONVERT(date, CUP_EMISSAO) AS dia,
+            SUM(ISNULL(CUP_TROCO, 0)) AS troco
+        FROM CUPOM_FISCAL WITH (NOLOCK)
+        WHERE CUP_EMISSAO >= ?
+          AND ISNULL(CUP_SITUACAO, 'N') <> 'C'
+        GROUP BY CONVERT(date, CUP_EMISSAO)
+        HAVING SUM(ISNULL(CUP_TROCO, 0)) > 0
+    """
+    rows_troco = cn.cursor().execute(sql_troco, cutoff).fetchall()
+
+    # Consolida por (dia, método) — mistura PIX (8+9), CARTAO 3+7 etc
     bucket = {}
-    for dia, frp, total in rows:
-        method = FRP_TO_METHOD.get(int(frp), "outros")
-        key = (to_iso_date(dia), method)
-        bucket[key] = bucket.get(key, 0) + float(total or 0)
+    troco_por_dia = {}
+    for dia, frp, total_recebido in rows_receb:
+        method = FRP_TO_METHOD.get(int(frp), "outro")
+        dia_iso = to_iso_date(dia)
+        bucket[(dia_iso, method)] = bucket.get((dia_iso, method), 0) + float(total_recebido or 0)
+    for dia, troco in rows_troco:
+        troco_por_dia[to_iso_date(dia)] = float(troco or 0)
 
     payload = [{
         "company_id": company_id,
@@ -198,10 +222,22 @@ def job_daily_sales(cfg, cn, company_id, days, dry_run):
         "source": SOURCE,
     } for (d, m), v in bucket.items()]
 
+    # Adiciona linha de troco por dia (negativa) — apenas onde há troco
+    for d, t in troco_por_dia.items():
+        if t > 0:
+            payload.append({
+                "company_id": company_id,
+                "sale_date": d,
+                "payment_method": "troco",
+                "amount": round(-t, 2),
+                "source": SOURCE,
+            })
+
     sent = sb_upsert(cfg, "daily_sales", payload,
                      on_conflict="company_id,sale_date,payment_method,source",
                      dry_run=dry_run)
-    LOG.info("daily_sales: %d linhas (%d dias x metodos)", sent, len({k[0] for k in bucket}))
+    LOG.info("daily_sales: %d linhas (%d dias x metodos + %d trocos)",
+             sent, len({k[0] for k in bucket}), len(troco_por_dia))
     return sent
 
 
