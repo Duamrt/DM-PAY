@@ -16,7 +16,7 @@
     const fim = new Date(ANO_REF, MES_REF + 2, 0).toISOString().slice(0,10); // pega ate fim do mês seguinte tambem
     const { data, error } = await sb
       .from('payables')
-      .select('id, amount, due_date, status, paid_at, description, suppliers(legal_name)')
+      .select('id, amount, due_date, status, paid_at, description, payment_method, boleto_line, suppliers(legal_name, cnpj)')
       .eq('company_id', window.DMPAY_COMPANY.id)
       .gte('due_date', inicio)
       .lte('due_date', fim)
@@ -143,21 +143,59 @@
     // Substitui boletos no drawer
     const boletosArea = document.querySelector('.drawer-body');
     if (boletosArea && items.length > 0) {
-      boletosArea.innerHTML = items.map(p => `
+      boletosArea.innerHTML = items.map(p => {
+        const temBoleto = p.payment_method === 'boleto' && p.boleto_line && p.boleto_line.replace(/\D/g,'').length >= 44;
+        const isPago = p.status === 'paid';
+        return `
         <div style="padding:14px 0;border-bottom:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-            <div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:10px">
+            <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13.5px">${p.suppliers?.legal_name || p.description || '—'}</div>
-              <div style="font-size:11.5px;color:var(--text-muted)">${p.description || ''}</div>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">${p.description || ''}</div>
             </div>
-            <div style="font-family:'Geist Mono',monospace;font-weight:700;font-size:14px">${fmtBRLfull(p.amount)}</div>
+            <div style="font-family:'Geist Mono',monospace;font-weight:700;font-size:14px;white-space:nowrap">${fmtBRLfull(p.amount)}</div>
           </div>
-          <span class="badge" style="font-size:10px;padding:2px 7px;border-radius:999px;background:${p.status==='paid'?'var(--success-soft)':'var(--warn-soft)'};color:${p.status==='paid'?'var(--success)':'var(--warn)'};font-weight:600;text-transform:uppercase;letter-spacing:.04em">${p.status==='paid'?'Pago':'Em aberto'}</span>
-        </div>`).join('');
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="badge" style="font-size:10px;padding:2px 7px;border-radius:999px;background:${isPago?'var(--success-soft)':'var(--warn-soft)'};color:${isPago?'var(--success)':'var(--warn)'};font-weight:600;text-transform:uppercase;letter-spacing:.04em">${isPago?'Pago':'Em aberto'}</span>
+            <div style="display:flex;gap:6px">
+              ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.pagar('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h2v2H7zm0 4h2v2H7zm4-4h2v2h-2zm4 0h2v2h-2zm0 4h2v2h-2z"/></svg> Pagar com código</button>` : ''}
+              ${!isPago ? `<button onclick="DMPAY_CAL.marcarPago('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--success);border:1px solid var(--success);border-radius:6px;cursor:pointer;font-weight:600">✓ Marcar pago</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
     } else if (boletosArea) {
       boletosArea.innerHTML = '<p style="text-align:center;padding:30px 20px;color:var(--text-muted)">Nenhum vencimento neste dia</p>';
     }
     document.getElementById('drawer')?.classList.add('open');
+  }
+
+  // Abrir modal de pagamento com barcode (reutiliza payModal do HTML)
+  function pagar(id) {
+    const p = PAYABLES.find(x => x.id === id); if (!p) return;
+    const modal = document.getElementById('payModal');
+    if (!modal) { alert('Modal de pagamento não disponível'); return; }
+    document.getElementById('paySupplier').textContent = p.suppliers?.legal_name || p.description || 'Boleto';
+    document.getElementById('payNfInfo').textContent = p.description || '—';
+    document.getElementById('payAmount').textContent = fmtBRLfull(p.amount);
+    document.getElementById('payLineText').textContent = p.boleto_line;
+    // Renderiza barcode
+    try {
+      const digits = p.boleto_line.replace(/\D/g,'');
+      let barcode44;
+      if (digits.length === 44) barcode44 = digits;
+      else if (digits.length === 47) barcode44 = digits.substr(0,4) + digits.substr(32,1) + digits.substr(33,14) + digits.substr(4,5) + digits.substr(10,10) + digits.substr(21,10);
+      else barcode44 = digits.substr(0,44);
+      JsBarcode('#payBarcode', barcode44, { format:'ITF', width:1.6, height:70, displayValue:false, margin:0, background:'#fff', lineColor:'#000' });
+    } catch(e) { console.warn('barcode:', e); }
+    modal.classList.add('open');
+  }
+
+  async function marcarPago(id) {
+    const { error } = await sb.from('payables').update({ status:'paid', paid_at: new Date().toISOString() }).eq('id', id);
+    if (error) { alert(error.message); return; }
+    document.getElementById('drawer')?.classList.remove('open');
+    await load(); render();
   }
 
   async function nav(direction) {
@@ -184,7 +222,7 @@
     await load(); render();
   }
 
-  window.DMPAY_CAL = { openDia: openDia, nav: nav };
+  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
