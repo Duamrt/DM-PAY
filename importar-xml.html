@@ -421,18 +421,9 @@
   </div>
 
   <script>
-    // Tema dual-mode
-    const root = document.documentElement;
-    const saved = localStorage.getItem('dmp-theme');
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    root.setAttribute('data-theme', saved || (systemDark ? 'dark' : 'light'));
+    // Tema — usa DMPAY_THEME global (js/theme.js)
     const themeBtn = document.getElementById('theme-toggle');
-    themeBtn.addEventListener('click', () => {
-      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      root.setAttribute('data-theme', next);
-      localStorage.setItem('dmp-theme', next);
-      lucide.createIcons();
-    });
+    if (themeBtn) themeBtn.addEventListener('click', () => { window.DMPAY_THEME?.toggle(); lucide.createIcons(); });
 
     // Dropzone — interação (parse real entra na integração Supabase v0.3)
     const dz = document.getElementById('dropzone');

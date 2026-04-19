@@ -778,9 +778,7 @@ function toggleTheme() {
 }
 (function initTheme() {
   const saved = localStorage.getItem(THEME_KEY);
-  if (saved) { applyTheme(saved); return; }
-  const prefers = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  applyTheme(prefers);
+  applyTheme(saved === 'dark' || saved === 'light' ? saved : 'light');
 })();
 
 // =============== LUCIDE ICONS ===============

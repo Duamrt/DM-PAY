@@ -29,8 +29,14 @@
   }
   function statusOf(p) {
     if (p.status === 'paid') return { s:'paid', overdue:0 };
+    // Regra: sáb/dom estende pro próximo dia útil. Só vira "overdue" depois do dia útil efetivo.
+    const atrasado = window.DMPAY_DIAUTIL ? window.DMPAY_DIAUTIL.atrasado(p.due_date) : diffDays(p.due_date) < 0;
+    if (atrasado) {
+      const efetivo = window.DMPAY_DIAUTIL ? window.DMPAY_DIAUTIL.proximo(p.due_date) : new Date(p.due_date);
+      const dias = Math.round((new Date(new Date().setHours(0,0,0,0)) - efetivo) / 86400000);
+      return { s:'overdue', overdue: Math.max(dias, 1) };
+    }
     const dd = diffDays(p.due_date);
-    if (dd < 0) return { s:'overdue', overdue:-dd };
     if (dd === 0) return { s:'today', overdue:0 };
     return { s:'open', overdue:0 };
   }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%232563EB%27/><text x=%2716%27 y=%2722%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2718%27>D</text></svg>">
@@ -250,6 +250,8 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/auth-guard.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/util-diautil.js"></script>
 </head>
 <body>
 
@@ -518,9 +520,7 @@ function toggleTheme() {
 }
 (function initTheme() {
   const saved = localStorage.getItem(THEME_KEY);
-  if (saved) { applyTheme(saved); return; }
-  const prefers = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  applyTheme(prefers);
+  applyTheme(saved === 'dark' || saved === 'light' ? saved : 'light');
 })();
 
 // ========================= ICONES =========================

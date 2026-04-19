@@ -224,6 +224,8 @@
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/auth-guard.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/util-diautil.js"></script>
 </head>
 <body>
   <!-- Sidebar padronizado -->
@@ -581,15 +583,14 @@
   </div>
 
   <script>
-    // Tema dual-mode
+    // Tema dual-mode (mesma chave do resto do app: dmpay-theme)
     const root = document.documentElement;
-    const saved = localStorage.getItem('dmp-theme');
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    root.setAttribute('data-theme', saved || (systemDark ? 'dark' : 'light'));
+    const saved = localStorage.getItem('dmpay-theme');
+    root.setAttribute('data-theme', saved || 'light');
     document.getElementById('theme-toggle').addEventListener('click', () => {
       const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
-      localStorage.setItem('dmp-theme', next);
+      localStorage.setItem('dmpay-theme', next);
       lucide.createIcons();
     });
 
