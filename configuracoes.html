@@ -340,25 +340,25 @@
               <div class="form-row form-row-2">
                 <div class="field">
                   <label>Razão social</label>
-                  <input type="text" value="MERCADINHO LIBERATO LTDA">
+                  <input type="text" id="emp-legal_name" placeholder="">
                 </div>
                 <div class="field">
                   <label>Nome fantasia</label>
-                  <input type="text" value="Mercadinho Liberato">
+                  <input type="text" id="emp-trade_name" placeholder="">
                 </div>
               </div>
               <div class="form-row form-row-3">
                 <div class="field mono">
                   <label>CNPJ</label>
-                  <input type="text" value="01.056.558/0001-51">
+                  <input type="text" id="emp-cnpj" placeholder="">
                 </div>
                 <div class="field">
-                  <label>Inscrição estadual (PE)</label>
-                  <input type="text" value="0234567-89">
+                  <label>Inscrição estadual</label>
+                  <input type="text" id="emp-ie" placeholder="">
                 </div>
                 <div class="field">
                   <label>Inscrição municipal</label>
-                  <input type="text" placeholder="(se aplicável)">
+                  <input type="text" id="emp-im" placeholder="(se aplicável)">
                 </div>
               </div>
 
@@ -366,21 +366,21 @@
               <div class="form-row">
                 <div class="field">
                   <label>Logradouro</label>
-                  <input type="text" value="Rua Principal, 123 — Centro">
+                  <input type="text" id="emp-address" placeholder="">
                 </div>
               </div>
               <div class="form-row form-row-3">
                 <div class="field">
                   <label>Cidade</label>
-                  <input type="text" value="Jupi">
+                  <input type="text" id="emp-city" placeholder="">
                 </div>
                 <div class="field">
                   <label>UF</label>
-                  <input type="text" value="PE" maxlength="2">
+                  <input type="text" id="emp-state" maxlength="2" placeholder="">
                 </div>
                 <div class="field">
                   <label>CEP</label>
-                  <input type="text" value="55345-000">
+                  <input type="text" id="emp-zip" placeholder="">
                 </div>
               </div>
 
@@ -388,17 +388,17 @@
               <div class="form-row form-row-2">
                 <div class="field">
                   <label>Telefone / WhatsApp</label>
-                  <input type="text" value="+55 87 98888-1234">
+                  <input type="text" id="emp-phone" placeholder="">
                 </div>
                 <div class="field">
                   <label>E-mail</label>
-                  <input type="email" value="contato@mercadinholiberato.com.br">
+                  <input type="email" id="emp-email" placeholder="">
                 </div>
               </div>
             </div>
             <div class="panel-foot">
-              <button class="btn btn-ghost">Cancelar</button>
-              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
+              <button class="btn btn-ghost" onclick="DMPAY_EMP?.reload()">Cancelar</button>
+              <button class="btn btn-primary" onclick="DMPAY_EMP?.salvar()"><i data-lucide="check"></i> Salvar</button>
             </div>
           </div>
 
@@ -919,5 +919,6 @@
     }
   </script>
   <script src="js/configuracoes-bancos.js" defer></script>
+  <script src="js/configuracoes-empresa.js" defer></script>
 </body>
 </html>

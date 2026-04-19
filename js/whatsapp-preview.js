@@ -24,10 +24,10 @@
     if (!window.sb || !window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
     const COMPANY_ID = window.DMPAY_COMPANY.id;
     const { inicioIso, fimIso, dataRef } = rangeBancarioHoje();
-    const nomeDono = (window.DMPAY_PROFILE?.name || '').split(' ')[0] || 'Reginaldo';
 
-    // Busca paralela: boletos do range + vendas últimos 3 dias + saldo bancos
-    const [pagsR, salesR, bankR] = await Promise.all([
+    // Busca paralela: dono da empresa + boletos + vendas + saldos
+    const [donoR, pagsR, salesR, bankR] = await Promise.all([
+      sb.from('profiles').select('name').eq('company_id', COMPANY_ID).eq('role', 'dono').limit(1).maybeSingle(),
       sb.from('payables').select('amount, due_date, description, suppliers(legal_name, trade_name)')
         .eq('company_id', COMPANY_ID).eq('status', 'open')
         .gte('due_date', inicioIso).lte('due_date', fimIso)
@@ -39,6 +39,7 @@
         .limit(500),
       sb.from('bank_accounts').select('balance').eq('company_id', COMPANY_ID).eq('active', true)
     ]);
+    const nomeDono = (donoR?.data?.name || '').split(' ')[0] || 'dono';
     const pags = pagsR.data || [];
     const sales = salesR.data || [];
     const banks = bankR.data || [];
