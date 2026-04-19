@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="dmpay-version.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <style>
+    :root {
+      --bg:#F9FAFB; --bg-card:#FFFFFF; --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 20px 50px rgba(0,0,0,.12),0 4px 12px rgba(0,0,0,.06);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;height:100%}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;place-items:center;min-height:100vh;padding:20px}
+
+    .auth-wrap{display:flex;flex-direction:column;align-items:center;width:100%;max-width:420px}
+    .brand{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+    .brand-logo{width:40px;height:40px;border-radius:9px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:18px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:20px;letter-spacing:-.01em}
+
+    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:32px 28px;width:100%;box-shadow:var(--shadow-lg)}
+    .card h1{margin:0 0 6px;font-size:22px;font-weight:600;letter-spacing:-.02em}
+    .card .sub{margin:0 0 24px;color:var(--text-muted);font-size:13.5px}
+
+    .tabs{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:22px}
+    .tab{flex:1;padding:8px;background:transparent;border:none;border-radius:6px;color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:.15s}
+    .tab.active{background:var(--bg-card);color:var(--text);box-shadow:var(--shadow)}
+
+    .field{margin-bottom:14px}
+    .field label{display:block;font-size:12.5px;font-weight:500;color:var(--text-muted);margin-bottom:6px}
+    .field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:.12s}
+    .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+    .btn{width:100%;padding:11px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:.15s;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn:hover{background:var(--accent-hover)}
+    .btn:disabled{opacity:.6;cursor:wait}
+    .btn svg{width:15px;height:15px}
+
+    .alert{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:var(--danger-soft);border:1px solid var(--danger);color:var(--danger);border-radius:8px;font-size:12.5px;margin-bottom:14px}
+    .alert svg{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+    .alert.hidden{display:none}
+
+    .foot{font-size:12px;color:var(--text-soft);text-align:center;margin-top:18px}
+    .foot a{color:var(--accent);text-decoration:none;font-weight:500;cursor:pointer}
+    .foot a:hover{text-decoration:underline}
+
+    .panel{display:none}
+    .panel.active{display:block}
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="brand">
+      <div class="brand-logo">D</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" data-tab="login">Entrar</button>
+        <button class="tab" data-tab="signup">Criar conta</button>
+      </div>
+
+      <div id="alert" class="alert hidden">
+        <i data-lucide="alert-circle"></i>
+        <span id="alert-msg">Erro</span>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="panel active" id="panel-login">
+        <h1>Entrar no DM Pay</h1>
+        <p class="sub">Acesse com seu e-mail e senha.</p>
+
+        <form id="form-login">
+          <div class="field">
+            <label>E-mail</label>
+            <input type="email" name="email" required autocomplete="email" placeholder="seu@empresa.com.br">
+          </div>
+          <div class="field">
+            <label>Senha</label>
+            <input type="password" name="password" required autocomplete="current-password" minlength="6">
+          </div>
+          <button class="btn" type="submit">
+            <i data-lucide="log-in"></i> Entrar
+          </button>
+        </form>
+
+        <div class="foot">
+          Não tem conta? <a onclick="switchTab('signup')">Criar conta grátis</a>
+        </div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div class="panel" id="panel-signup">
+        <h1>Criar conta DM Pay</h1>
+        <p class="sub">14 dias grátis. Sem cartão de crédito.</p>
+
+        <form id="form-signup">
+          <div class="field">
+            <label>Seu nome</label>
+            <input type="text" name="name" required placeholder="Mikael Silva" autocomplete="name">
+          </div>
+          <div class="field">
+            <label>Empresa</label>
+            <input type="text" name="company" required placeholder="Mercadinho Liberato" autocomplete="organization">
+          </div>
+          <div class="field">
+            <label>E-mail</label>
+            <input type="email" name="email" required placeholder="seu@empresa.com.br" autocomplete="email">
+          </div>
+          <div class="field">
+            <label>Senha (mín. 8 caracteres)</label>
+            <input type="password" name="password" required minlength="8" autocomplete="new-password">
+          </div>
+          <button class="btn" type="submit">
+            <i data-lucide="user-plus"></i> Criar minha conta
+          </button>
+        </form>
+
+        <div class="foot">
+          Já tem conta? <a onclick="switchTab('login')">Entrar</a>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-top:22px;font-size:11.5px;color:var(--text-soft);text-align:center;max-width:380px">
+      Ao continuar você concorda com os termos de uso. Seus dados ficam isolados e criptografados.
+    </p>
+  </div>
+
+  <script>
+    function showAlert(msg) {
+      const a = document.getElementById('alert');
+      document.getElementById('alert-msg').textContent = msg;
+      a.classList.remove('hidden');
+      setTimeout(function() { a.classList.add('hidden'); }, 8000);
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(function(t) {
+        t.classList.toggle('active', t.dataset.tab === name);
+      });
+      document.querySelectorAll('.panel').forEach(function(p) {
+        p.classList.toggle('active', p.id === 'panel-' + name);
+      });
+      document.getElementById('alert').classList.add('hidden');
+    }
+    document.querySelectorAll('.tab').forEach(function(t) {
+      t.addEventListener('click', function() { switchTab(t.dataset.tab); });
+    });
+
+    // Se ja ta logado, vai direto pro dashboard
+    DMPAY.ready().then(async function() {
+      const s = await DMPAY.session();
+      if (s.user && s.profile) {
+        location.replace(s.company && s.company.cnpj ? 'dashboard.html' : 'wizard.html');
+      }
+    });
+
+    document.getElementById('form-login').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      try {
+        const fd = new FormData(e.target);
+        await DMPAY.signIn(fd.get('email'), fd.get('password'));
+        const s = await DMPAY.session(true);
+        location.replace(s.company && s.company.cnpj ? DMPAY.postLoginRedirect() : 'wizard.html');
+      } catch (err) {
+        showAlert(err.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : err.message);
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('form-signup').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      try {
+        const fd = new FormData(e.target);
+        await DMPAY.signUp(fd.get('email'), fd.get('password'), fd.get('name'), fd.get('company'));
+        // signUp dispara trigger handle_new_user que cria company + profile
+        // Faz signIn imediatamente (Supabase pode exigir confirm email — se exigir, mostra mensagem)
+        try {
+          await DMPAY.signIn(fd.get('email'), fd.get('password'));
+          location.replace('wizard.html');
+        } catch (loginErr) {
+          showAlert('Conta criada! Verifique o e-mail pra confirmar antes de entrar.');
+          btn.disabled = false;
+        }
+      } catch (err) {
+        showAlert(err.message);
+        btn.disabled = false;
+      }
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>
