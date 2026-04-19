@@ -56,46 +56,43 @@
     if (window.lucide) lucide.createIcons();
   }
 
-  async function novo() {
-    const bank_name = prompt('Nome do banco (ex: Santander, Banco do Brasil, Nubank):');
-    if (!bank_name) return;
-    const agency = prompt('Agência (opcional):') || null;
-    const account_number = prompt('Número da conta (opcional):') || null;
-    const balanceStr = prompt('Saldo atual (R$ 0,00):', '0,00');
-    if (balanceStr === null) return;
-    const balance = parseFloat(String(balanceStr).replace(/\./g,'').replace(',','.')) || 0;
-    const is_primary = ACCOUNTS.length === 0; // primeira vira principal
-    const { error } = await sb.from('bank_accounts').insert({
-      company_id: window.DMPAY_COMPANY.id,
-      bank_name: bank_name.trim(),
-      agency, account_number,
-      balance, is_primary,
-      account_type: 'corrente'
+  async function abrirForm(a) {
+    const editing = !!a;
+    const r = await window.DMPAY_UI.open({
+      title: editing ? 'Editar conta bancária' : 'Nova conta bancária',
+      fields: [
+        { key:'bank_name', label:'Banco', value:a?.bank_name||'', placeholder:'Santander, Banco do Brasil, Nubank…' },
+        { key:'agency', label:'Agência', value:a?.agency||'', placeholder:'0000' },
+        { key:'account_number', label:'Conta', value:a?.account_number||'', placeholder:'00000-0' },
+        { key:'balance', label:'Saldo atual (R$)', value:a?String(a.balance).replace('.',','):'0,00', placeholder:'0,00' }
+      ],
+      submitLabel: editing ? 'Salvar alterações' : 'Adicionar conta',
+      onSubmit: async (v) => {
+        if (!v.bank_name) throw new Error('Informe o nome do banco');
+        const balance = parseFloat(String(v.balance).replace(/\./g,'').replace(',','.')) || 0;
+        const payload = { bank_name: v.bank_name.trim(), agency: v.agency||null, account_number: v.account_number||null, balance };
+        let error;
+        if (editing) {
+          ({ error } = await sb.from('bank_accounts').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', a.id));
+        } else {
+          ({ error } = await sb.from('bank_accounts').insert({ ...payload, company_id: window.DMPAY_COMPANY.id, account_type:'corrente', is_primary: ACCOUNTS.length === 0 }));
+        }
+        if (error) throw new Error(error.message);
+      }
     });
-    if (error) { alert('Erro: ' + error.message); return; }
-    await load(); render();
+    if (r) { await load(); render(); }
   }
-
-  async function editar(id) {
-    const a = ACCOUNTS.find(x => x.id === id); if (!a) return;
-    const bank_name = prompt('Nome do banco:', a.bank_name);
-    if (bank_name === null) return;
-    const agency = prompt('Agência:', a.agency || '') || null;
-    const account_number = prompt('Número da conta:', a.account_number || '') || null;
-    const balanceStr = prompt('Saldo atual:', String(a.balance).replace('.',','));
-    if (balanceStr === null) return;
-    const balance = parseFloat(String(balanceStr).replace(/\./g,'').replace(',','.')) || 0;
-    const { error } = await sb.from('bank_accounts').update({
-      bank_name: bank_name.trim(), agency, account_number, balance,
-      updated_at: new Date().toISOString()
-    }).eq('id', id);
-    if (error) { alert(error.message); return; }
-    await load(); render();
-  }
+  async function novo() { return abrirForm(null); }
+  async function editar(id) { const a = ACCOUNTS.find(x => x.id === id); if (a) return abrirForm(a); }
 
   async function remover(id) {
     const a = ACCOUNTS.find(x => x.id === id); if (!a) return;
-    if (!confirm(`Remover a conta "${a.bank_name}"? Essa ação é irreversível.`)) return;
+    const ok = await window.DMPAY_UI.confirm({
+      title: 'Remover conta bancária',
+      desc: `Remover "${a.bank_name}"? A conta é desativada e some da lista — a ação é reversível no banco.`,
+      danger: true, okLabel: 'Remover'
+    });
+    if (!ok) return;
     const { error } = await sb.from('bank_accounts').update({ active: false }).eq('id', id);
     if (error) { alert(error.message); return; }
     await load(); render();

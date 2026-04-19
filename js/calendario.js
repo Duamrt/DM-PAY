@@ -219,22 +219,34 @@
 
   async function colarCodigo(id) {
     const p = PAYABLES.find(x => x.id === id); if (!p) return;
-    const v = prompt(`Código de barras do boleto (linha digitável ou 44 dígitos):\nFornecedor: ${p.suppliers?.legal_name || p.description || ''}\nValor: ${fmtBRLfull(p.amount)}`, p.boleto_line || '');
-    if (v === null) return;
-    const digits = String(v).replace(/\D/g, '');
-    if (digits.length !== 44 && digits.length !== 47) {
-      alert(`Código inválido: ${digits.length} dígitos encontrados.\nPrecisa ter 44 (barcode puro) ou 47 (linha digitável com DVs).`);
-      return;
-    }
-    const { error } = await sb.from('payables').update({
-      boleto_line: String(v).trim(),
-      payment_method: 'boleto'
-    }).eq('id', id);
-    if (error) { alert('Erro ao salvar: ' + error.message); return; }
+    if (!window.DMPAY_UI) { alert('UI não carregada'); return; }
+    const r = await window.DMPAY_UI.open({
+      title: 'Código de barras do boleto',
+      desc: `${p.suppliers?.legal_name || p.description || ''} · ${fmtBRLfull(p.amount)}`,
+      fields: [{
+        key: 'codigo',
+        label: 'Linha digitável ou código de barras',
+        value: p.boleto_line || '',
+        multiline: true,
+        placeholder: '23793.38128 00000.000000 00000.000000 1 99990000000000',
+        hint: 'Aceita linha digitável (47 dígitos com espaços/pontos) ou código de barras puro (44 dígitos).'
+      }],
+      submitLabel: 'Salvar código',
+      onSubmit: async (vals) => {
+        const v = vals.codigo || '';
+        const digits = v.replace(/\D/g, '');
+        if (digits.length !== 44 && digits.length !== 47) {
+          throw new Error(`Código inválido: ${digits.length} dígitos. Precisa ter 44 ou 47.`);
+        }
+        const { error } = await sb.from('payables').update({
+          boleto_line: v.trim(), payment_method: 'boleto'
+        }).eq('id', id);
+        if (error) throw new Error(error.message);
+      }
+    });
+    if (!r) return;
     const dia = new Date(p.due_date + 'T00:00:00').getDate();
-    await load();
-    render();
-    openDia(dia);
+    await load(); render(); openDia(dia);
   }
 
   async function copiarCodigo(id, btn) {
