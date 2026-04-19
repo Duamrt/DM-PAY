@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%232563EB%27/><text x=%2716%27 y=%2722%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2718%27>D</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contas a Receber · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="dmpay-version.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/contas-receber.js" defer></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{font-size:13px;color:var(--text-muted)}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+
+    main{padding:24px 28px 80px}
+
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+    .btn-danger{background:transparent;color:var(--danger);border-color:var(--danger-soft)}
+    .btn-danger:hover{background:var(--danger-soft)}
+
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+    .kpi-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .kpi-label svg{width:12px;height:12px}
+    .kpi-value{font-size:22px;font-weight:600;letter-spacing:-.02em;font-family:'Geist',sans-serif}
+    .kpi-sub{font-size:12px;color:var(--text-muted);margin-top:4px}
+    .kpi.success{background:linear-gradient(135deg,var(--success-soft) 0%,transparent 100%);border-color:var(--success)}
+    .kpi.success .kpi-label,.kpi.success .kpi-value{color:var(--success)}
+    .kpi.warn{background:linear-gradient(135deg,var(--warn-soft) 0%,transparent 100%);border-color:var(--warn)}
+    .kpi.warn .kpi-label,.kpi.warn .kpi-value{color:var(--warn)}
+    .kpi.danger{background:linear-gradient(135deg,var(--danger-soft) 0%,transparent 100%);border-color:var(--danger)}
+    .kpi.danger .kpi-label,.kpi.danger .kpi-value{color:var(--danger)}
+
+    .toolbar{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .search{position:relative;flex:1;min-width:240px}
+    .search input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:7px;background:var(--bg-soft);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+    .search input:focus{border-color:var(--accent)}
+    .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-soft)}
+    .status-chips{display:flex;gap:4px}
+    .status-chip{padding:6px 12px;background:var(--bg-soft);border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--text-muted);cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:5px}
+    .status-chip.active{background:var(--accent);color:white;border-color:var(--accent)}
+    .status-chip .cnt{font-weight:600;opacity:.85}
+
+    .table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{font-size:10.5px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:12px 16px;background:var(--bg-soft);border-bottom:1px solid var(--border);white-space:nowrap}
+    th.num{text-align:right}
+    td{padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+    td.num{text-align:right;font-family:'Geist Mono',monospace;font-weight:600}
+    tr:last-child td{border-bottom:none}
+    tbody tr{transition:background .12s}
+    tbody tr:hover{background:var(--bg-hover)}
+    .tiny{font-size:11px;margin-top:2px}
+
+    .cr-cell{display:flex;align-items:center;gap:10px}
+    .cr-avatar{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:white;font-weight:600;font-size:13px;flex-shrink:0;letter-spacing:-.01em}
+    .cr-name{font-weight:600;font-size:13.5px;letter-spacing:-.01em}
+    .cr-meta{font-size:11px;color:var(--text-soft);margin-top:2px}
+
+    .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.01em}
+    .badge-success{background:var(--success-soft);color:var(--success)}
+    .badge-warn{background:var(--warn-soft);color:var(--warn)}
+    .badge-danger{background:var(--danger-soft);color:var(--danger)}
+    .badge-muted{background:var(--bg-hover);color:var(--text-muted)}
+
+    .insight{background:linear-gradient(135deg,var(--accent-soft) 0%,transparent 100%);border:1px solid var(--accent);border-radius:12px;padding:16px 20px;margin-top:24px;display:flex;gap:14px}
+    .insight-icon{width:36px;height:36px;border-radius:8px;background:var(--accent);color:white;display:grid;place-items:center;flex-shrink:0}
+    .insight-icon svg{width:18px;height:18px}
+    .insight h3{margin:0 0 4px;font-size:13.5px;font-weight:600}
+    .insight p{margin:0;font-size:12.5px;color:var(--text-muted);line-height:1.55}
+    .insight p b{color:var(--text)}
+
+    @media (max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:840px){body{grid-template-columns:1fr}.sidebar{display:none}}
+
+    /* Modal helpers (também usados pelo contas-receber.js) */
+    .dmp-field-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .dmp-field-row:last-child{border-bottom:none}
+    .dmp-field-row span{color:var(--text-muted)}
+    .dmp-field-row b{color:var(--text);font-weight:600}
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">D</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item" href="alertas.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar</a>
+    <a class="nav-item active" href="contas-a-receber.html"><i data-lucide="hand-coins"></i> Contas a receber</a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">Financeiro / <b>Contas a receber</b></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()"><i data-lucide="moon"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>Contas a Receber</h1>
+          <p>Quem te deve, quanto e quando vai pagar. Fiado de cliente, cartão a liquidar, recebimento futuro — <b>tudo separado das vendas</b> pra você ver dinheiro real entrando.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" id="btn-novo"><i data-lucide="plus"></i> Nova conta a receber</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="hand-coins"></i> Total em aberto</div>
+          <div class="kpi-value">R$ 0,00</div>
+          <div class="kpi-sub">—</div>
+        </div>
+        <div class="kpi warn">
+          <div class="kpi-label"><i data-lucide="calendar-clock"></i> Vence em 7 dias</div>
+          <div class="kpi-value">R$ 0,00</div>
+          <div class="kpi-sub">—</div>
+        </div>
+        <div class="kpi danger">
+          <div class="kpi-label"><i data-lucide="alert-triangle"></i> Atrasados</div>
+          <div class="kpi-value">R$ 0,00</div>
+          <div class="kpi-sub">—</div>
+        </div>
+        <div class="kpi success">
+          <div class="kpi-label"><i data-lucide="check-circle-2"></i> Recebido no mês</div>
+          <div class="kpi-value">R$ 0,00</div>
+          <div class="kpi-sub">—</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <i data-lucide="search"></i>
+          <input placeholder="Buscar cliente ou descrição...">
+        </div>
+        <div class="status-chips">
+          <span class="status-chip active" data-filter="open">Em aberto <span class="cnt">0</span></span>
+          <span class="status-chip" data-filter="today">Hoje <span class="cnt">0</span></span>
+          <span class="status-chip" data-filter="overdue">Atrasados <span class="cnt">0</span></span>
+          <span class="status-chip" data-filter="received">Recebidos <span class="cnt">0</span></span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th class="num">Valor</th>
+              <th>Vencimento</th>
+              <th>Forma</th>
+              <th>Status</th>
+              <th>Recebido em</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cr-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="insight">
+        <div class="insight-icon"><i data-lucide="lightbulb"></i></div>
+        <div>
+          <h3>Por que separar Contas a Receber das Vendas?</h3>
+          <p><b>Vendeu não é o mesmo que recebeu.</b> Cliente comprou fiado, cartão de crédito vai cair em 30 dias, PIX entrou agora — eventos diferentes. O DM Pay separa isso pra você saber o que <b>já é caixa</b> e o que <b>vai virar caixa</b> nos próximos dias. Sem isso, você acha que tem dinheiro que ainda não tem.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const h = document.documentElement;
+      const next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      h.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+    }
+    const saved = localStorage.getItem('dmpay-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    lucide.createIcons();
+  </script>
+</body>
+</html>
