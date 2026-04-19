@@ -716,41 +716,13 @@
             <div class="panel-head">
               <div>
                 <h2><i data-lucide="credit-card"></i> Contas bancárias</h2>
-                <p>Bancos que o Mercadinho usa pra receber e pagar. Alimenta o Fluxo de Caixa e a reconciliação cruzada do DRE.</p>
+                <p>Bancos que o Mercadinho usa pra receber e pagar. Alimenta o Fluxo de Caixa e a reconciliação do DRE.</p>
               </div>
-              <span class="status ok">Completo</span>
+              <span class="status" id="bancos-status">—</span>
             </div>
             <div class="panel-body">
-
-              <div class="integracao">
-                <div class="integracao-logo" style="background:#EC0000;color:white">SC</div>
-                <div class="integracao-info">
-                  <div class="integracao-name">Santander — Ag 0234 / CC 19.876-5</div>
-                  <div class="integracao-desc">Conta principal · recebimento maquininhas e pagamentos</div>
-                </div>
-                <div style="text-align:right">
-                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Ativa</div>
-                  <div style="font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;margin-top:6px">R$ 18.340,00</div>
-                </div>
-              </div>
-
-              <div class="integracao">
-                <div class="integracao-logo" style="background:#CC092F;color:white">BB</div>
-                <div class="integracao-info">
-                  <div class="integracao-name">Banco do Brasil — Ag 1234-5 / CC 56.789-0</div>
-                  <div class="integracao-desc">Conta secundária · folha de pagamento</div>
-                </div>
-                <div style="text-align:right">
-                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Ativa</div>
-                  <div style="font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;margin-top:6px">R$ 6.890,00</div>
-                </div>
-              </div>
-
-              <button class="btn-add-socio"><i data-lucide="plus"></i> Adicionar conta bancária</button>
-            </div>
-            <div class="panel-foot">
-              <button class="btn btn-ghost">Cancelar</button>
-              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
+              <div id="bancos-list"></div>
+              <button class="btn-add-socio" onclick="DMPAY_BANCOS.novo()"><i data-lucide="plus"></i> Adicionar conta bancária</button>
             </div>
           </div>
 
@@ -759,9 +731,9 @@
             <div class="panel-head">
               <div>
                 <h2><i data-lucide="plug"></i> Integrações externas</h2>
-                <p>Conexões do DM Pay com outros sistemas. Reduz digitação manual e evita erro de digitação.</p>
+                <p>Conexões do DM Pay com outros sistemas.</p>
               </div>
-              <span class="status">1 pendente</span>
+              <span class="status">Em construção</span>
             </div>
             <div class="panel-body">
 
@@ -769,11 +741,11 @@
                 <div class="integracao-logo">iC</div>
                 <div class="integracao-info">
                   <div class="integracao-name">iCommerce (Ideia Sistema)</div>
-                  <div class="integracao-desc">ERP do Mercadinho. Puxa valor do estoque e consumo interno do Reginaldo automaticamente.</div>
+                  <div class="integracao-desc">Sincronização de clientes, vendas, sangrias e fiados do ERP. Rodando via agente Python local no servidor do cliente (daily 19:30).</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">
-                  <div class="integracao-status pending"><span class="integracao-status-dot"></span>Aguardando segunda</div>
-                  <button class="btn btn-ghost"><i data-lucide="settings-2"></i> Configurar</button>
+                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Ativa (agente local)</div>
+                  <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed" title="Configurada no servidor via AnyDesk">Gerenciada</button>
                 </div>
               </div>
 
@@ -781,23 +753,23 @@
                 <div class="integracao-logo" style="background:#25D366;color:white">W</div>
                 <div class="integracao-info">
                   <div class="integracao-name">WhatsApp Business API</div>
-                  <div class="integracao-desc">Envia o briefing matinal pro Reginaldo e Mikael. Modo sandbox até validar número oficial.</div>
+                  <div class="integracao-desc">Briefing matinal automático pro dono e aux administrativo. Exige número oficial Meta Business e Evolution API.</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">
-                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Sandbox</div>
-                  <button class="btn btn-ghost"><i data-lucide="settings-2"></i> Configurar</button>
+                  <div class="integracao-status off"><span class="integracao-status-dot"></span>Em construção</div>
+                  <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">Em breve</button>
                 </div>
               </div>
 
               <div class="integracao">
                 <div class="integracao-logo" style="background:#00A868;color:white">SE</div>
                 <div class="integracao-info">
-                  <div class="integracao-name">SEFAZ-PE (consulta NF-e)</div>
-                  <div class="integracao-desc">Valida chave da NF-e e baixa XML direto da SEFAZ quando fornecedor não mandar por e-mail.</div>
+                  <div class="integracao-name">SEFAZ (consulta NF-e)</div>
+                  <div class="integracao-desc">Consulta chave de NF-e e baixa XML direto da SEFAZ. Exige certificado digital A1 ou A3.</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">
-                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Ativa</div>
-                  <button class="btn btn-ghost"><i data-lucide="settings-2"></i> Configurar</button>
+                  <div class="integracao-status off"><span class="integracao-status-dot"></span>Em construção</div>
+                  <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">Em breve</button>
                 </div>
               </div>
 
@@ -805,10 +777,10 @@
                 <div class="integracao-logo" style="background:#0052CC;color:white">OB</div>
                 <div class="integracao-info">
                   <div class="integracao-name">Open Banking (saldo automático)</div>
-                  <div class="integracao-desc">Puxa saldo das contas bancárias em tempo real via Belvo/Pluggy. Elimina atualização manual.</div>
+                  <div class="integracao-desc">Puxa saldo das contas bancárias em tempo real via Belvo/Pluggy. Exige consentimento do correntista.</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">
-                  <div class="integracao-status off"><span class="integracao-status-dot"></span>Desativado · v2</div>
+                  <div class="integracao-status off"><span class="integracao-status-dot"></span>Em construção</div>
                   <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">Em breve</button>
                 </div>
               </div>
@@ -946,5 +918,6 @@
       setTimeout(() => bar.classList.remove('show'), 2000);
     }
   </script>
+  <script src="js/configuracoes-bancos.js" defer></script>
 </body>
 </html>
