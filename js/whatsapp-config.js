@@ -212,19 +212,22 @@
     };
   }
 
-  // Gera o texto do briefing (mesma lógica do whatsapp-preview.js mas standalone)
+  // Gera o texto do briefing (emojis universais pra WhatsApp não renderizar "?")
   async function gerarBriefing() {
     const COMPANY_ID = window.DMPAY_COMPANY.id;
     const hoje = new Date(); hoje.setHours(0,0,0,0);
     const dow = hoje.getDay();
     let inicio = new Date(hoje), fim = new Date(hoje);
-    if (dow === 1) inicio.setDate(inicio.getDate() - 2);
+    if (dow === 1) inicio.setDate(inicio.getDate() - 2); // segunda inclui sáb+dom
     if (dow === 6 || dow === 0) { while (fim.getDay() !== 1) fim.setDate(fim.getDate() + 1); inicio = new Date(fim); inicio.setDate(fim.getDate() - 2); }
     const iso = d => { const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${dd}`; };
     const fmt = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const brDate = d => d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    const brDow = d => ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d.getDay()];
+
     const [donoR, pagsR, bankR, salesR] = await Promise.all([
       sb.from('profiles').select('name').eq('company_id', COMPANY_ID).eq('role','dono').limit(1).maybeSingle(),
-      sb.from('payables').select('amount, description, suppliers(legal_name, trade_name)').eq('company_id', COMPANY_ID).eq('status','open').gte('due_date', iso(inicio)).lte('due_date', iso(fim)).order('amount',{ascending:false}).limit(100),
+      sb.from('payables').select('amount, due_date, description, suppliers(legal_name, trade_name)').eq('company_id', COMPANY_ID).eq('status','open').gte('due_date', iso(inicio)).lte('due_date', iso(fim)).order('amount',{ascending:false}).limit(200),
       sb.from('bank_accounts').select('balance').eq('company_id', COMPANY_ID).eq('active',true),
       sb.from('daily_sales').select('amount').eq('company_id', COMPANY_ID).gte('sale_date', iso(new Date(Date.now() - 3*86400000)))
     ]);
@@ -233,36 +236,66 @@
     const total = pags.reduce((s,p)=>s+Number(p.amount),0);
     const saldo = banks.reduce((s,b)=>s+Number(b.balance||0),0);
     const vendas3d = sales.reduce((s,v)=>s+Number(v.amount),0);
-    const dataStr = fim.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
-    const flags = SETTINGS.content_flags || {};
-    const linhas = [];
     const h = new Date().getHours();
     const saud = h<12?'Bom dia':(h<18?'Boa tarde':'Boa noite');
-    linhas.push(`🌅 ${saud}, ${nome}!`);
-    linhas.push(dataStr.charAt(0).toUpperCase() + dataStr.slice(1) + '.');
+    const flags = SETTINGS.content_flags || {};
+
+    // Agrupa boletos por dia (sáb/dom/seg quando for segunda)
+    const porDia = {};
+    pags.forEach(p => {
+      const d = iso(new Date(p.due_date + 'T00:00:00'));
+      if (!porDia[d]) porDia[d] = { total:0, count:0 };
+      porDia[d].total += Number(p.amount);
+      porDia[d].count += 1;
+    });
+    const diasOrdenados = Object.keys(porDia).sort();
+    const temMultiplosDias = diasOrdenados.length > 1;
+
+    const linhas = [];
+    linhas.push(`${saud}, ${nome}!`);
+    const dataPrincipal = fim.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+    linhas.push(dataPrincipal.charAt(0).toUpperCase() + dataPrincipal.slice(1) + '.');
     linhas.push('');
+
     if (flags.vencimentos !== false) {
       linhas.push('*Resumo do dia*');
-      if (pags.length === 0) linhas.push('✅ Nenhum boleto vencendo hoje.');
-      else {
-        linhas.push(`💰 A pagar: *${fmt(total)}* (${pags.length} boleto${pags.length>1?'s':''})`);
+      if (pags.length === 0) {
+        linhas.push('Nenhum boleto vencendo hoje.');
+      } else {
+        linhas.push(`*TOTAL A PAGAR: ${fmt(total)}* (${pags.length} boleto${pags.length>1?'s':''})`);
+        // Se fim de semana acumulou em segunda, mostra breakdown
+        if (temMultiplosDias) {
+          linhas.push('');
+          linhas.push('_Pagos hoje (compensação bancária):_');
+          diasOrdenados.forEach(dISO => {
+            const d = new Date(dISO + 'T00:00:00');
+            const agg = porDia[dISO];
+            linhas.push(`• ${brDow(d)} ${brDate(d)}: ${fmt(agg.total)} (${agg.count} boleto${agg.count>1?'s':''})`);
+          });
+        }
         linhas.push('');
-        linhas.push('Top ' + Math.min(5, pags.length) + ':');
-        pags.slice(0,5).forEach(p => {
+        const topN = Math.min(5, pags.length);
+        linhas.push(`*Top ${topN} por valor:*`);
+        pags.slice(0, topN).forEach(p => {
           const n = p.suppliers?.trade_name || p.suppliers?.legal_name || p.description || '—';
-          linhas.push(`• ${n} — ${fmt(p.amount)}`);
+          linhas.push(`• ${n} - ${fmt(p.amount)}`);
         });
-        if (pags.length > 5) linhas.push(`• +${pags.length-5} boleto${pags.length-5>1?'s':''} menores`);
+        if (pags.length > topN) linhas.push(`• +${pags.length-topN} boleto${pags.length-topN>1?'s':''} menores`);
       }
       linhas.push('');
     }
+
     if (flags.saldo !== false) {
-      linhas.push(`📊 Saldo: ${fmt(saldo)}`);
-      if (total > 0) linhas.push(`Após pagar tudo: ${fmt(saldo - total)}`);
+      linhas.push(`*Saldo nos bancos:* ${fmt(saldo)}`);
+      if (total > 0) {
+        const apos = saldo - total;
+        linhas.push(`Após pagar tudo: *${fmt(apos)}*${apos<0?' (caixa negativo)':''}`);
+      }
       if (flags.vendas_ontem) linhas.push(`Vendas últimos 3 dias: ${fmt(vendas3d)}`);
       linhas.push('');
     }
-    linhas.push('— DM Pay');
+
+    linhas.push('-- DM Pay');
     return linhas.join('\n');
   }
 
