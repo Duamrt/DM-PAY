@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>DM Pay — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* =========================================================================
+   TOKENS — DARK (default, inspirado DesignGrids)
+   ========================================================================= */
+:root[data-theme="dark"] {
+  --bg-base:      #0A0B0D;
+  --bg-surface:   #111316;
+  --bg-elevated:  #17191D;
+  --bg-hover:     #1C1E23;
+  --border:       #22252B;
+  --border-strong:#2E3138;
+  --text-primary: #F5F7FA;
+  --text-secondary:#B1B8C2;
+  --text-muted:   #6B7280;
+  --accent:       #3B82F6;
+  --accent-hover: #60A5FA;
+  --accent-soft:  rgba(59,130,246,.14);
+  --success:      #22C55E;
+  --success-soft: rgba(34,197,94,.14);
+  --warning:      #F59E0B;
+  --warning-soft: rgba(245,158,11,.14);
+  --danger:       #EF4444;
+  --danger-soft:  rgba(239,68,68,.14);
+  --shadow-sm:    0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:    0 2px 6px rgba(0,0,0,.5),0 1px 2px rgba(0,0,0,.3);
+  --ring:         0 0 0 3px rgba(59,130,246,.32);
+  --chart-grid:   rgba(177,184,194,.08);
+}
+
+/* =========================================================================
+   TOKENS — LIGHT
+   ========================================================================= */
+:root[data-theme="light"] {
+  --bg-base:      #F7F8FA;
+  --bg-surface:   #FFFFFF;
+  --bg-elevated:  #F1F3F6;
+  --bg-hover:     #F9FAFB;
+  --border:       #E4E7EB;
+  --border-strong:#D1D5DB;
+  --text-primary: #0B0D11;
+  --text-secondary:#4B5563;
+  --text-muted:   #9CA3AF;
+  --accent:       #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-soft:  #DBEAFE;
+  --success:      #10B981;
+  --success-soft: #D1FAE5;
+  --warning:      #D97706;
+  --warning-soft: #FEF3C7;
+  --danger:       #DC2626;
+  --danger-soft:  #FEE2E2;
+  --shadow-sm:    0 1px 2px rgba(11,13,17,.05);
+  --shadow-md:    0 1px 3px rgba(11,13,17,.08),0 1px 2px rgba(11,13,17,.05);
+  --ring:         0 0 0 3px rgba(37,99,235,.18);
+  --chart-grid:   rgba(75,85,99,.12);
+}
+
+/* =========================================================================
+   RESET + BASE
+   ========================================================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv11','ss01';
+  background: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 160ms ease, color 160ms ease;
+  min-height: 100vh;
+}
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+button { cursor: pointer; border: none; background: none; }
+a { color: var(--accent); text-decoration: none; }
+.num { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+.mono { font-family: 'Geist Mono', ui-monospace, 'SF Mono', monospace; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* =========================================================================
+   LAYOUT — App shell com sidebar fixa
+   ========================================================================= */
+.app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+@media (max-width: 900px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+/* SIDEBAR */
+.sidebar {
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 14px;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.brand-row { display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px; }
+.brand-mark {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), #60A5FA);
+  display: grid; place-items: center; color: #fff;
+  font-weight: 800; font-size: 13px; letter-spacing: -0.02em;
+}
+.brand-name { font-weight: 700; font-size: 16px; letter-spacing: -0.02em; }
+.brand-name .dot { color: var(--accent); }
+
+.nav-group { margin-top: 18px; }
+.nav-group-title {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--text-muted);
+  padding: 0 10px 6px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 8px;
+  font-size: 13.5px; color: var(--text-secondary);
+  cursor: pointer; transition: all 120ms ease;
+  margin-bottom: 1px;
+}
+.nav-item:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.nav-item .icon { width: 16px; height: 16px; flex-shrink: 0; }
+.nav-item .badge-count {
+  margin-left: auto; font-size: 10px; font-weight: 600;
+  background: var(--bg-elevated); padding: 2px 6px; border-radius: 999px;
+  color: var(--text-secondary);
+}
+.nav-item.active .badge-count { background: var(--accent); color: #fff; }
+
+.user-card {
+  margin-top: 24px; padding: 10px;
+  background: var(--bg-elevated); border-radius: 10px;
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 999px;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 12px;
+}
+.user-info { font-size: 13px; line-height: 1.3; flex: 1; min-width: 0; }
+.user-info .name { font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-info .email { color: var(--text-muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* TOPBAR */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 28px;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 20;
+}
+.breadcrumb { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+.breadcrumb strong { color: var(--text-primary); font-weight: 600; }
+.breadcrumb .sep { color: var(--text-muted); }
+
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.search-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  padding: 7px 12px; border-radius: 10px;
+  font-size: 13px; color: var(--text-muted);
+  min-width: 220px; transition: all 120ms ease;
+}
+.search-btn:hover { border-color: var(--border-strong); color: var(--text-secondary); }
+.search-btn .icon { width: 14px; height: 14px; }
+.search-btn .kbd { margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 11px; border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; background: var(--bg-elevated); color: var(--text-muted); }
+
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 8px;
+  display: grid; place-items: center;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  color: var(--text-secondary); transition: all 120ms ease;
+}
+.icon-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.icon-btn .icon { width: 15px; height: 15px; }
+
+/* MAIN */
+.main { padding: 24px 28px 72px; max-width: 1400px; }
+@media (max-width: 640px) { .main { padding: 16px; } .topbar { padding: 12px 16px; } .search-btn { min-width: 0; } }
+
+/* =========================================================================
+   HERO do dashboard
+   ========================================================================= */
+.hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.hero h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 4px; }
+.hero .sub { font-size: 13px; color: var(--text-muted); }
+.hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* =========================================================================
+   KPI ROW
+   ========================================================================= */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+@media (max-width: 1024px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .kpi-row { grid-template-columns: 1fr; } }
+
+.kpi-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 18px;
+  transition: all 160ms ease;
+}
+.kpi-card:hover { border-color: var(--border-strong); }
+.kpi-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.kpi-label .icon { width: 13px; height: 13px; }
+.kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; margin-top: 6px; line-height: 1.1; }
+.kpi-delta { margin-top: 6px; display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; }
+.kpi-delta.up { color: var(--success); }
+.kpi-delta.down { color: var(--danger); }
+.kpi-delta.warn { color: var(--warning); }
+.kpi-delta .icon { width: 13px; height: 13px; }
+.kpi-delta span.muted { color: var(--text-muted); font-weight: 400; }
+
+/* =========================================================================
+   CHARTS ROW
+   ========================================================================= */
+.chart-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 18px; }
+@media (max-width: 1024px) { .chart-row { grid-template-columns: 1fr; } }
+
+.panel {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 18px 16px;
+}
+.panel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.panel-title { font-size: 15px; font-weight: 600; letter-spacing: -0.015em; }
+.panel-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.tab-group { display: flex; background: var(--bg-elevated); border-radius: 8px; padding: 3px; gap: 2px; }
+.tab { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--text-muted); transition: all 120ms ease; }
+.tab.active { background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+.tab:hover:not(.active) { color: var(--text-secondary); }
+
+.bar-meta { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.bar-meta .total { font-size: 24px; font-weight: 700; letter-spacing: -0.025em; }
+.bar-legend { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+
+.chart-box { position: relative; height: 260px; width: 100%; }
+.chart-box-donut { height: 300px; }
+.chart-box canvas { max-width: 100%; max-height: 100%; }
+@media (max-width: 640px) {
+  .chart-box { height: 220px; }
+  .chart-box-donut { height: 280px; }
+}
+
+/* =========================================================================
+   TABELA de contas a pagar
+   ========================================================================= */
+.table-panel { padding: 0; overflow: hidden; }
+.table-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+}
+.filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 999px;
+  background: var(--bg-elevated); border: 1px solid transparent;
+  font-size: 12px; font-weight: 500; color: var(--text-secondary);
+  transition: all 120ms ease;
+}
+.chip:hover { border-color: var(--border); }
+.chip.active { background: var(--accent-soft); color: var(--accent); }
+.chip .icon { width: 12px; height: 12px; }
+
+table.dm { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.dm thead th {
+  text-align: left; padding: 11px 18px;
+  font-size: 11px; font-weight: 500; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+}
+table.dm tbody td { padding: 13px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+table.dm tbody tr:last-child td { border-bottom: none; }
+table.dm tbody tr { transition: background 100ms ease; }
+table.dm tbody tr:hover { background: var(--bg-hover); cursor: pointer; }
+table.dm td.money { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+table.dm td.date { font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+table.dm td.mono { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--text-muted); }
+table.dm .supplier { display: flex; align-items: center; gap: 10px; }
+.supplier-avatar {
+  width: 28px; height: 28px; border-radius: 6px;
+  background: var(--bg-elevated); display: grid; place-items: center;
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+}
+.check {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid var(--border-strong); background: var(--bg-surface);
+  cursor: pointer; transition: all 120ms ease;
+  display: inline-grid; place-items: center;
+}
+.check:hover { border-color: var(--accent); }
+.check.checked { background: var(--accent); border-color: var(--accent); }
+.check.checked::after { content: ''; width: 8px; height: 8px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>') center/contain no-repeat; }
+
+/* =========================================================================
+   BADGES
+   ========================================================================= */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: 11.5px; font-weight: 500;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.badge::before { content: ''; width: 6px; height: 6px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
+.badge-paid    { background: var(--success-soft); color: var(--success); }
+.badge-open    { background: var(--bg-elevated);  color: var(--text-secondary); border-color: var(--border); }
+.badge-overdue { background: var(--danger-soft);  color: var(--danger); }
+.badge-today   { background: var(--warning-soft); color: var(--warning); }
+.badge-new     { background: var(--accent-soft);  color: var(--accent); }
+
+/* =========================================================================
+   BOTÕES / INPUTS / COMPONENTES (showcase)
+   ========================================================================= */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 500;
+  transition: all 140ms cubic-bezier(.4,0,.2,1);
+  border: 1px solid transparent; white-space: nowrap;
+}
+.btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.btn-primary   { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary { background: var(--bg-surface); border-color: var(--border); color: var(--text-primary); }
+.btn-secondary:hover { background: var(--bg-elevated); border-color: var(--border-strong); }
+.btn-ghost     { background: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.btn-danger    { background: var(--danger); color: #fff; }
+.btn-danger:hover { filter: brightness(.92); }
+.btn-sm        { padding: 5px 10px; font-size: 12px; border-radius: 8px; }
+.btn .icon     { width: 14px; height: 14px; }
+.btn:disabled  { opacity: .5; cursor: not-allowed; }
+
+.input {
+  padding: 8px 12px; border-radius: 8px;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  color: var(--text-primary); font-size: 13.5px;
+  transition: all 120ms ease; width: 100%;
+}
+.input::placeholder { color: var(--text-muted); }
+.input:hover { border-color: var(--border-strong); }
+.input:focus { outline: none; border-color: var(--accent); box-shadow: var(--ring); }
+.input-with-icon { position: relative; }
+.input-with-icon .input { padding-left: 34px; }
+.input-with-icon .icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted); pointer-events: none; }
+
+/* =========================================================================
+   SHOWCASE (fim da página — referência visual)
+   ========================================================================= */
+.showcase { margin-top: 40px; padding-top: 32px; border-top: 1px dashed var(--border); }
+.showcase h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+.showcase .eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px; }
+.showcase p.sub { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; max-width: 520px; }
+.showcase-section { margin-bottom: 28px; }
+.showcase-section h3 { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.swatch {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px;
+}
+.swatch-color { height: 44px; border-radius: 6px; margin-bottom: 8px; border: 1px solid var(--border); }
+.swatch-label { font-size: 12px; font-weight: 500; }
+.swatch-hex { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+
+.type-sample { display: flex; align-items: baseline; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.type-sample:last-child { border-bottom: none; }
+.type-sample .label { font-size: 11px; color: var(--text-muted); font-family: 'Geist Mono', monospace; min-width: 88px; }
+
+.btn-grid { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+
+/* =========================================================================
+   COMMAND PALETTE
+   ========================================================================= */
+.cmdk-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: color-mix(in oklab, var(--bg-base) 60%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 12vh; opacity: 0; transition: opacity 180ms ease;
+}
+.cmdk-overlay.open { display: flex; opacity: 1; }
+.cmdk {
+  width: min(560px, 92vw);
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transform: translateY(-8px); transition: transform 180ms ease;
+}
+.cmdk-overlay.open .cmdk { transform: translateY(0); }
+.cmdk-input-wrap { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.cmdk-input-wrap .icon { width: 16px; height: 16px; color: var(--text-muted); flex-shrink: 0; }
+.cmdk-input { flex: 1; background: transparent; border: none; outline: none; font-size: 15px; color: var(--text-primary); }
+.cmdk-input::placeholder { color: var(--text-muted); }
+.cmdk-list { max-height: 320px; overflow-y: auto; padding: 6px; }
+.cmdk-group-title { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 10px 4px; }
+.cmdk-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; color: var(--text-primary); cursor: pointer; transition: background 100ms ease; }
+.cmdk-item:hover { background: var(--bg-elevated); }
+.cmdk-item .icon { width: 14px; height: 14px; color: var(--text-secondary); }
+.cmdk-item .kbd { margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--text-muted); padding: 1px 5px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-elevated); }
+.cmdk-footer { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; font-size: 10.5px; color: var(--text-muted); border-top: 1px solid var(--border); background: var(--bg-elevated); }
+.kbd-inline { font-family: 'Geist Mono', monospace; padding: 1px 5px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-surface); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============================== SIDEBAR ============================== -->
+  <aside class="sidebar">
+    <div class="brand-row">
+      <span class="brand-mark">DM</span>
+      <span class="brand-name">Pay<span class="dot">.</span></span>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Principal</div>
+      <div class="nav-item active"><i data-lucide="layout-dashboard" class="icon"></i>Dashboard</div>
+      <div class="nav-item"><i data-lucide="command" class="icon"></i>Copiloto <span class="badge-count" style="background:var(--accent-soft);color:var(--accent)">soon</span></div>
+      <div class="nav-item"><i data-lucide="bell" class="icon"></i>Alertas <span class="badge-count">3</span></div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Financeiro</div>
+      <div class="nav-item"><i data-lucide="receipt" class="icon"></i>Contas a pagar <span class="badge-count">34</span></div>
+      <div class="nav-item"><i data-lucide="calendar" class="icon"></i>Calendário</div>
+      <div class="nav-item"><i data-lucide="bar-chart-3" class="icon"></i>DRE mensal</div>
+      <div class="nav-item"><i data-lucide="trending-up" class="icon"></i>Fluxo de caixa</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Entradas</div>
+      <div class="nav-item"><i data-lucide="file-text" class="icon"></i>NF-e (XML)</div>
+      <div class="nav-item"><i data-lucide="upload" class="icon"></i>Vendas do dia</div>
+      <div class="nav-item"><i data-lucide="plus-square" class="icon"></i>Despesas</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Cadastros</div>
+      <div class="nav-item"><i data-lucide="building-2" class="icon"></i>Fornecedores</div>
+      <div class="nav-item"><i data-lucide="tag" class="icon"></i>Categorias</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-title">Config</div>
+      <div class="nav-item"><i data-lucide="users" class="icon"></i>Equipe</div>
+      <div class="nav-item"><i data-lucide="settings" class="icon"></i>Configurações</div>
+    </div>
+
+    <div class="user-card">
+      <div class="user-avatar">MK</div>
+      <div class="user-info">
+        <div class="name">Mikael</div>
+        <div class="email">Admin · Mercadinho Liberato</div>
+      </div>
+      <button class="icon-btn" style="width:26px;height:26px" aria-label="Conta"><i data-lucide="more-horizontal" class="icon" style="width:12px;height:12px"></i></button>
+    </div>
+  </aside>
+
+  <!-- ============================== MAIN ============================== -->
+  <div>
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="breadcrumb"><i data-lucide="layout-dashboard" style="width:14px;height:14px;color:var(--text-muted)"></i> <span>Principal</span> <span class="sep">/</span> <strong>Dashboard</strong></div>
+      <div class="topbar-actions">
+        <button class="search-btn" onclick="openCmdK()">
+          <i data-lucide="search" class="icon"></i>
+          <span>Buscar boleto, fornecedor...</span>
+          <span class="kbd">⌘K</span>
+        </button>
+        <button class="icon-btn" aria-label="Notificações"><i data-lucide="bell" class="icon"></i></button>
+        <button class="icon-btn" onclick="toggleTheme()" aria-label="Alternar tema">
+          <i data-lucide="sun" class="icon theme-icon-dark"></i>
+          <i data-lucide="moon" class="icon theme-icon-light" style="display:none"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div>
+          <h1>Dashboard executivo</h1>
+          <div class="sub">Visão geral das contas a pagar · Mercadinho Liberato · Abril 2026</div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-secondary"><i data-lucide="upload" class="icon"></i>Importar XML</button>
+          <button class="btn btn-secondary"><i data-lucide="download" class="icon"></i>Exportar CSV</button>
+          <button class="btn btn-primary"><i data-lucide="plus" class="icon"></i>Novo lançamento</button>
+        </div>
+      </section>
+
+      <!-- KPIs -->
+      <section class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label"><i data-lucide="dollar-sign" class="icon"></i>Receita do mês</div>
+          <div class="kpi-value num">R$ 986.778</div>
+          <div class="kpi-delta up"><i data-lucide="trending-up" class="icon"></i>+14,2% <span class="muted">vs abril/25</span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label"><i data-lucide="receipt" class="icon"></i>A pagar · 30 dias</div>
+          <div class="kpi-value num" style="color:var(--warning)">R$ 489.399</div>
+          <div class="kpi-delta warn"><i data-lucide="calendar-clock" class="icon"></i>34 boletos · <span class="muted">8 hoje</span></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label"><i data-lucide="bar-chart-3" class="icon"></i>Resultado bruto</div>
+          <div class="kpi-value num" style="color:var(--success)">R$ 186.220</div>
+          <div class="kpi-delta up"><i data-lucide="check-circle-2" class="icon"></i>Melhor mês do ano</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label"><i data-lucide="alert-triangle" class="icon"></i>Alertas ativos</div>
+          <div class="kpi-value num">3</div>
+          <div class="kpi-delta down"><i data-lucide="alert-circle" class="icon"></i>2 atrasados · <span class="muted">1 duplicata</span></div>
+        </div>
+      </section>
+
+      <!-- CHARTS -->
+      <section class="chart-row">
+        <!-- BAR chart (vendas × compras) -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Entradas × Saídas</div>
+              <div class="panel-subtitle">Últimos 30 dias · variação diária</div>
+            </div>
+            <div class="tab-group">
+              <div class="tab">7D</div>
+              <div class="tab active">30D</div>
+              <div class="tab">3M</div>
+              <div class="tab">Ano</div>
+            </div>
+          </div>
+          <div class="bar-meta">
+            <span class="total num">R$ 986.778,76</span>
+            <span class="bar-legend"><span class="legend-dot" style="background:var(--accent)"></span>Entradas</span>
+            <span class="bar-legend"><span class="legend-dot" style="background:var(--warning)"></span>Saídas</span>
+          </div>
+          <div class="chart-box"><canvas id="barChart"></canvas></div>
+        </div>
+
+        <!-- DONUT — mix forma de pagamento -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">Mix por forma de pagamento</div>
+              <div class="panel-subtitle">Vendas de abril/2026</div>
+            </div>
+          </div>
+          <div class="chart-box chart-box-donut"><canvas id="donutChart"></canvas></div>
+        </div>
+      </section>
+
+      <!-- TABELA de contas a pagar -->
+      <section class="panel table-panel">
+        <div class="table-toolbar">
+          <div class="filter-chips">
+            <button class="chip active"><i data-lucide="list" class="icon"></i>Todos <span style="opacity:.65">(34)</span></button>
+            <button class="chip"><i data-lucide="calendar-clock" class="icon"></i>Hoje <span style="opacity:.65">(8)</span></button>
+            <button class="chip"><i data-lucide="alert-circle" class="icon"></i>Atrasados <span style="opacity:.65">(2)</span></button>
+            <button class="chip"><i data-lucide="check-circle-2" class="icon"></i>Pagos <span style="opacity:.65">(147)</span></button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <div class="input-with-icon" style="max-width:240px">
+              <i data-lucide="search" class="icon"></i>
+              <input class="input" placeholder="Buscar fornecedor ou NF">
+            </div>
+            <button class="btn btn-secondary btn-sm"><i data-lucide="filter" class="icon"></i>Filtros</button>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto">
+        <table class="dm">
+          <thead>
+            <tr>
+              <th style="width:28px"><span class="check" aria-label="Selecionar todos"></span></th>
+              <th>Fornecedor</th>
+              <th>NF</th>
+              <th>Vencimento</th>
+              <th>Categoria</th>
+              <th style="text-align:right">Valor</th>
+              <th>Status</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="check"></span></td>
+              <td><div class="supplier"><span class="supplier-avatar">IM</span>IMPACTO DISTRIBUIDORA</div></td>
+              <td class="mono">435272</td>
+              <td class="date">18/04/2026</td>
+              <td>Mercadoria</td>
+              <td class="money">R$ 5.014,37</td>
+              <td><span class="badge badge-today">vence hoje</span></td>
+              <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
+            </tr>
+            <tr>
+              <td><span class="check checked"></span></td>
+              <td><div class="supplier"><span class="supplier-avatar">CT</span>CAFE TRES CORACOES</div></td>
+              <td class="mono">022183</td>
+              <td class="date">20/04/2026</td>
+              <td>Mercadoria</td>
+              <td class="money">R$ 2.752,34</td>
+              <td><span class="badge badge-open">em aberto</span></td>
+              <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
+            </tr>
+            <tr>
+              <td><span class="check"></span></td>
+              <td><div class="supplier"><span class="supplier-avatar">NE</span>NESTLE BRASIL</div></td>
+              <td class="mono">884120</td>
+              <td class="date">15/04/2026</td>
+              <td>Mercadoria</td>
+              <td class="money">R$ 3.132,86</td>
+              <td><span class="badge badge-overdue">atrasado 3d</span></td>
+              <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
+            </tr>
+            <tr>
+              <td><span class="check"></span></td>
+              <td><div class="supplier"><span class="supplier-avatar">DC</span>DCL CARDEAL</div></td>
+              <td class="mono">685066</td>
+              <td class="date">25/04/2026</td>
+              <td>Mercadoria</td>
+              <td class="money">R$ 870,74</td>
+              <td><span class="badge badge-open">em aberto</span></td>
+              <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
+            </tr>
+            <tr>
+              <td><span class="check"></span></td>
+              <td><div class="supplier"><span class="supplier-avatar">PA</span>PARATY ATACADO</div></td>
+              <td class="mono">4507959</td>
+              <td class="date">10/04/2026</td>
+              <td>Mercadoria</td>
+              <td class="money">R$ 1.102,81</td>
+              <td><span class="badge badge-paid">pago</span></td>
+              <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
+            </tr>
+            <tr>
+              <td><span class="check"></span></td>
+              <td><div class="supplier"><span class="supplier-avatar">JB</span>JBS S A</div></td>
+              <td class="mono">0593210</td>
+              <td class="date">23/04/2026</td>
+              <td>Mercadoria</td>
+              <td class="money">R$ 593,21</td>
+              <td><span class="badge badge-new">novo fornecedor</span></td>
+              <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+
+      <!-- ================== SHOWCASE (referência visual) ================== -->
+      <section class="showcase">
+        <p class="eyebrow">Design system · v0.2 · azul + verde + amarelo</p>
+        <h2>Referência visual</h2>
+        <p class="sub">Tokens, tipografia, componentes. Alterna claro/escuro no topo. Aperta ⌘K pra ver o Command Palette.</p>
+
+        <div class="showcase-section">
+          <h3>Paleta · fundo</h3>
+          <div class="swatch-grid">
+            <div class="swatch"><div class="swatch-color" style="background:var(--bg-base)"></div><div class="swatch-label">Base</div><div class="swatch-hex">--bg-base</div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--bg-surface)"></div><div class="swatch-label">Superfície</div><div class="swatch-hex">--bg-surface</div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--bg-elevated)"></div><div class="swatch-label">Elevado</div><div class="swatch-hex">--bg-elevated</div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--border)"></div><div class="swatch-label">Borda</div><div class="swatch-hex">--border</div></div>
+          </div>
+        </div>
+
+        <div class="showcase-section">
+          <h3>Paleta · semântica</h3>
+          <div class="swatch-grid">
+            <div class="swatch"><div class="swatch-color" style="background:var(--accent)"></div><div class="swatch-label">Acento</div><div class="swatch-hex">--accent</div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--success)"></div><div class="swatch-label">Sucesso</div><div class="swatch-hex">--success</div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--warning)"></div><div class="swatch-label">Alerta</div><div class="swatch-hex">--warning</div></div>
+            <div class="swatch"><div class="swatch-color" style="background:var(--danger)"></div><div class="swatch-label">Perigo</div><div class="swatch-hex">--danger</div></div>
+          </div>
+        </div>
+
+        <div class="showcase-section">
+          <h3>Tipografia · Geist</h3>
+          <div>
+            <div class="type-sample"><span class="label">Display · 48</span><span style="font-size:48px;font-weight:700;letter-spacing:-.03em">R$ 986.778,76</span></div>
+            <div class="type-sample"><span class="label">H1 · 28</span><span style="font-size:28px;font-weight:700;letter-spacing:-.02em">Dashboard executivo</span></div>
+            <div class="type-sample"><span class="label">H3 · 15</span><span style="font-size:15px;font-weight:600">Contas a pagar</span></div>
+            <div class="type-sample"><span class="label">Body · 13.5</span><span style="font-size:13.5px">Importar XML da nota fiscal e registrar o vencimento.</span></div>
+            <div class="type-sample"><span class="label">Mono · 12</span><span class="mono" style="font-size:12px;color:var(--text-secondary)">01.056.558/0001-51 · 23793.38128 60000.458901 10032.810009</span></div>
+          </div>
+        </div>
+
+        <div class="showcase-section">
+          <h3>Botões</h3>
+          <div class="btn-grid">
+            <button class="btn btn-primary"><i data-lucide="plus" class="icon"></i>Novo boleto</button>
+            <button class="btn btn-secondary"><i data-lucide="upload" class="icon"></i>Importar XML</button>
+            <button class="btn btn-ghost"><i data-lucide="filter" class="icon"></i>Filtros</button>
+            <button class="btn btn-danger"><i data-lucide="trash-2" class="icon"></i>Excluir</button>
+            <button class="btn btn-primary" disabled>Processando…</button>
+            <button class="btn btn-primary btn-sm">Confirmar</button>
+            <button class="btn btn-secondary btn-sm">Cancelar</button>
+          </div>
+        </div>
+
+        <div class="showcase-section">
+          <h3>Inputs</h3>
+          <div class="input-grid">
+            <div class="input-with-icon"><i data-lucide="search" class="icon"></i><input class="input" placeholder="Buscar fornecedor"></div>
+            <input class="input" placeholder="CNPJ 00.000.000/0000-00">
+            <select class="input"><option>Mercadoria</option><option>Folha</option><option>Energia</option></select>
+            <input class="input num" value="R$ 5.014,37">
+          </div>
+        </div>
+
+        <div class="showcase-section">
+          <h3>Badges</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="badge badge-paid">pago</span>
+            <span class="badge badge-open">em aberto</span>
+            <span class="badge badge-today">vence hoje</span>
+            <span class="badge badge-overdue">atrasado 3d</span>
+            <span class="badge badge-new">novo fornecedor</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- COMMAND PALETTE -->
+<div class="cmdk-overlay" id="cmdkOverlay" onclick="if(event.target===this) closeCmdK()">
+  <div class="cmdk" role="dialog" aria-modal="true">
+    <div class="cmdk-input-wrap">
+      <i data-lucide="search" class="icon"></i>
+      <input class="cmdk-input" id="cmdkInput" placeholder="Buscar ação, fornecedor, boleto…" autocomplete="off">
+      <span class="kbd-inline">esc</span>
+    </div>
+    <div class="cmdk-list" id="cmdkList"></div>
+    <div class="cmdk-footer">
+      <span><span class="kbd-inline">↑↓</span> navegar</span>
+      <span><span class="kbd-inline">enter</span> abrir</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============== TEMA ===============
+const THEME_KEY = 'dmpay-theme';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const isDark = theme === 'dark';
+  const sun = document.querySelector('.theme-icon-dark');
+  const moon = document.querySelector('.theme-icon-light');
+  if (sun) sun.style.display = isDark ? '' : 'none';
+  if (moon) moon.style.display = isDark ? 'none' : '';
+  if (window.__charts) updateChartsTheme();
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
+(function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) { applyTheme(saved); return; }
+  const prefers = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  applyTheme(prefers);
+})();
+
+// =============== LUCIDE ICONS ===============
+function refreshIcons() { if (window.lucide) lucide.createIcons(); }
+refreshIcons();
+
+// =============== CHECKBOX TOGGLE ===============
+document.addEventListener('click', e => {
+  const chk = e.target.closest('.check');
+  if (chk) chk.classList.toggle('checked');
+  const chip = e.target.closest('.chip');
+  if (chip) {
+    chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  }
+  const tab = e.target.closest('.tab');
+  if (tab) {
+    tab.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  }
+});
+
+// =============== CHARTS ===============
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function makeBarChart() {
+  const ctx = document.getElementById('barChart');
+  if (!ctx) return null;
+  const labels = Array.from({length:30}, (_,i) => String(i+1).padStart(2,'0'));
+  const rev = [28,32,29,36,42,38,35,41,45,48,44,51,55,49,53,58,61,56,59,63,58,65,69,62,67,71,75,70,73,78];
+  const exp = [18,20,17,22,25,23,21,24,27,28,26,30,32,29,31,34,36,33,35,37,34,38,41,36,39,42,44,41,43,46];
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'Entradas', data: rev, backgroundColor: css('--accent'), borderRadius: 4, borderSkipped:false, barPercentage:.72, categoryPercentage:.85 },
+        { label:'Saídas',   data: exp, backgroundColor: css('--warning'), borderRadius: 4, borderSkipped:false, barPercentage:.72, categoryPercentage:.85 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:css('--bg-surface'),titleColor:css('--text-primary'),
+          bodyColor:css('--text-secondary'),borderColor:css('--border'),borderWidth:1,
+          padding:10,cornerRadius:8,displayColors:true,boxPadding:4,
+          titleFont:{family:'Geist',weight:'600'},bodyFont:{family:'Geist Mono',size:11},
+          callbacks:{label:(c)=>c.dataset.label+': R$ '+(c.parsed.y*1000).toLocaleString('pt-BR')}
+        }
+      },
+      scales:{
+        x:{grid:{display:false},border:{display:false},ticks:{color:css('--text-muted'),font:{family:'Geist',size:10},autoSkip:true,maxTicksLimit:10}},
+        y:{grid:{color:css('--chart-grid'),drawBorder:false},border:{display:false},ticks:{color:css('--text-muted'),font:{family:'Geist Mono',size:10},callback:v=>v+'k'}}
+      }
+    }
+  });
+}
+
+function makeDonut() {
+  const ctx = document.getElementById('donutChart');
+  if (!ctx) return null;
+  return new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['Dinheiro','PIX','Crédito','Débito','A prazo'],
+      datasets:[{
+        data:[341375,99650,91211,71055,41855],
+        backgroundColor:[css('--accent'),css('--success'),css('--warning'),'#60A5FA',css('--text-muted')],
+        borderColor:css('--bg-surface'),borderWidth:3,hoverOffset:6
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{
+        legend:{position:'bottom',labels:{color:css('--text-secondary'),font:{family:'Geist',size:11},padding:10,usePointStyle:true,pointStyle:'circle',boxWidth:7}},
+        tooltip:{
+          backgroundColor:css('--bg-surface'),titleColor:css('--text-primary'),
+          bodyColor:css('--text-secondary'),borderColor:css('--border'),borderWidth:1,
+          padding:10,cornerRadius:8,
+          callbacks:{label:(c)=>c.label+': R$ '+c.parsed.toLocaleString('pt-BR')}
+        }
+      }
+    }
+  });
+}
+
+function initCharts() {
+  window.__charts = { bar: makeBarChart(), donut: makeDonut() };
+}
+function updateChartsTheme() {
+  Object.values(window.__charts || {}).forEach(c => c && c.destroy());
+  setTimeout(initCharts, 20);
+}
+initCharts();
+
+// =============== COMMAND PALETTE ===============
+const CMDK = [
+  { group:'Ações', items:[
+    { icon:'upload',       label:'Lançar NF-e',                      kbd:'⌘I' },
+    { icon:'file-text',    label:'Importar PDF de fluxo de caixa'             },
+    { icon:'plus-circle',  label:'Novo boleto manual',               kbd:'⌘N' },
+    { icon:'credit-card',  label:'Registrar pagamento'                        },
+  ]},
+  { group:'Ir para', items:[
+    { icon:'layout-dashboard', label:'Dashboard',                kbd:'G D' },
+    { icon:'calendar',         label:'Calendário de pagamentos', kbd:'G C' },
+    { icon:'receipt',          label:'Contas a pagar',           kbd:'G P' },
+    { icon:'bar-chart-3',      label:'DRE mensal',               kbd:'G R' },
+    { icon:'building-2',       label:'Fornecedores'                        },
+  ]},
+  { group:'Busca', items:[
+    { icon:'search', label:'Buscar "IMPACTO DISTRIBUIDORA"' },
+    { icon:'search', label:'Boletos vencendo esta semana'    },
+  ]}
+];
+function renderCmdK(filter='') {
+  const el = document.getElementById('cmdkList'); el.innerHTML = '';
+  const q = filter.toLowerCase();
+  CMDK.forEach(g => {
+    const f = g.items.filter(it => it.label.toLowerCase().includes(q));
+    if (!f.length) return;
+    const t = document.createElement('div'); t.className='cmdk-group-title'; t.textContent = g.group;
+    el.appendChild(t);
+    f.forEach(it => {
+      const row = document.createElement('div'); row.className='cmdk-item';
+      row.innerHTML = `<i data-lucide="${it.icon}" class="icon"></i><span>${it.label}</span>${it.kbd?'<span class="kbd">'+it.kbd+'</span>':''}`;
+      el.appendChild(row);
+    });
+  });
+  refreshIcons();
+}
+function openCmdK() { renderCmdK(''); document.getElementById('cmdkOverlay').classList.add('open'); setTimeout(()=>document.getElementById('cmdkInput').focus(),40); }
+function closeCmdK() { document.getElementById('cmdkOverlay').classList.remove('open'); document.getElementById('cmdkInput').value=''; }
+document.getElementById('cmdkInput').addEventListener('input', e => renderCmdK(e.target.value));
+document.addEventListener('keydown', e => {
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && e.key.toLowerCase()==='k') { e.preventDefault(); openCmdK(); }
+  if (e.key==='Escape') closeCmdK();
+});
+renderCmdK('');
+</script>
+</body>
+</html>

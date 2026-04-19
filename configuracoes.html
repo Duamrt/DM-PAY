@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configurações · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    /* Sidebar padrão DM Pay */
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    /* Topbar */
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:.15s}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+    .btn-danger{background:transparent;color:var(--danger);border-color:var(--border)}
+    .btn-danger:hover{background:var(--danger-soft);border-color:var(--danger)}
+
+    main{padding:24px 28px 80px;max-width:1240px}
+
+    /* Hero */
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+
+    /* Pendências banner */
+    .pendencias{background:var(--warn-soft);border:1px solid var(--warn);border-radius:12px;padding:14px 18px;margin-bottom:22px;display:flex;align-items:center;gap:14px}
+    .pendencias-ico{width:36px;height:36px;border-radius:9px;background:var(--warn);color:white;display:grid;place-items:center;flex-shrink:0}
+    .pendencias-ico svg{width:17px;height:17px}
+    .pendencias-content{flex:1}
+    .pendencias h3{margin:0 0 2px;font-size:13px;font-weight:600;color:var(--warn);letter-spacing:-.01em}
+    .pendencias p{margin:0;font-size:12.5px;color:var(--text);line-height:1.45}
+    .pendencias p b{font-weight:600}
+    .pendencias-count{background:var(--warn);color:white;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;font-family:'Geist Mono',monospace}
+
+    /* Layout tabs verticais + content */
+    .settings-layout{display:grid;grid-template-columns:240px 1fr;gap:22px;align-items:start}
+    @media (max-width:1100px){.settings-layout{grid-template-columns:1fr}}
+
+    /* Tabs verticais */
+    .tabs{position:sticky;top:80px;display:flex;flex-direction:column;gap:2px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:10px 8px}
+    .tab{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-muted);transition:.15s;position:relative}
+    .tab:hover{background:var(--bg-hover);color:var(--text)}
+    .tab.active{background:var(--accent-soft);color:var(--accent)}
+    .tab svg{width:15px;height:15px;flex-shrink:0}
+    .tab-badge{margin-left:auto;font-size:9px;font-weight:700;background:var(--warn);color:white;padding:2px 6px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase}
+    .tab-badge.ok{background:var(--success)}
+    .tab-check{margin-left:auto;color:var(--success);width:14px;height:14px}
+
+    /* Conteúdo */
+    .content{min-height:500px}
+    .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:0;overflow:hidden;display:none}
+    .panel.active{display:block}
+    .panel-head{padding:20px 24px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+    .panel-head h2{margin:0 0 4px;font-size:17px;font-weight:600;letter-spacing:-.015em;display:flex;align-items:center;gap:8px}
+    .panel-head h2 svg{width:17px;height:17px;color:var(--accent)}
+    .panel-head p{margin:0;font-size:12.5px;color:var(--text-muted);max-width:520px;line-height:1.5}
+    .panel-head .status{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--warn-soft);color:var(--warn);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+    .panel-head .status.ok{background:var(--success-soft);color:var(--success)}
+    .panel-body{padding:22px 24px}
+    .panel-foot{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--bg-soft)}
+
+    /* Form */
+    .form-row{display:grid;gap:14px;margin-bottom:16px}
+    .form-row-2{grid-template-columns:1fr 1fr}
+    .form-row-3{grid-template-columns:1fr 1fr 1fr}
+    .field label{display:block;font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:5px;letter-spacing:-.01em}
+    .field label b{color:var(--text);font-weight:500}
+    .field label .badge-pend{font-size:9px;font-weight:700;background:var(--warn);color:white;padding:2px 6px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;margin-left:6px}
+    .field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:.15s}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+    .field input:read-only,.field input[readonly]{background:var(--bg-soft);color:var(--text-muted)}
+    .field-hint{font-size:11px;color:var(--text-soft);margin-top:5px;line-height:1.4}
+    .field-hint b{color:var(--text-muted);font-weight:500}
+    .field.pending input{border-color:var(--warn);background:var(--warn-soft)}
+    [data-theme="dark"] .field.pending input{background:rgba(251,191,36,.05)}
+    .field.mono input{font-family:'Geist Mono',monospace}
+    .input-suffix{position:relative}
+    .input-suffix .suffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-soft);font-family:'Geist Mono',monospace;pointer-events:none}
+    .input-suffix input{padding-right:40px}
+    .input-prefix{position:relative}
+    .input-prefix .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-soft);font-family:'Geist Mono',monospace}
+    .input-prefix input{padding-left:38px;font-family:'Geist Mono',monospace}
+
+    .section-title{font-size:12px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px;padding-top:18px;border-top:1px solid var(--border)}
+    .section-title:first-child{border-top:none;padding-top:0;margin-top:0}
+
+    /* Option cards (radio visual) */
+    .opt-grid{display:grid;gap:10px}
+    .opt-grid.cols-2{grid-template-columns:1fr 1fr}
+    .opt-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
+    .opt{border:1px solid var(--border);border-radius:9px;padding:14px 16px;cursor:pointer;transition:.15s;background:var(--bg);display:flex;gap:12px;align-items:flex-start}
+    .opt:hover{border-color:var(--border-strong)}
+    .opt.selected{border-color:var(--accent);background:var(--accent-soft)}
+    .opt.disabled{opacity:.55;cursor:not-allowed}
+    .opt-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border-strong);flex-shrink:0;margin-top:1px;position:relative;transition:.15s}
+    .opt.selected .opt-radio{border-color:var(--accent)}
+    .opt.selected .opt-radio::after{content:"";position:absolute;inset:2px;border-radius:50%;background:var(--accent)}
+    .opt-content{flex:1}
+    .opt-name{font-size:13px;font-weight:600;letter-spacing:-.01em;margin-bottom:2px}
+    .opt-name .opt-tag{font-size:9px;font-weight:700;background:var(--success);color:white;padding:1px 5px;border-radius:3px;letter-spacing:.04em;text-transform:uppercase;margin-left:6px;vertical-align:middle}
+    .opt-name .opt-tag.warn{background:var(--warn)}
+    .opt-name .opt-tag.soon{background:var(--text-soft)}
+    .opt-desc{font-size:12px;color:var(--text-muted);line-height:1.5}
+
+    /* Socio card */
+    .socio-card{background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}
+    .socio-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .socio-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:14px}
+    .socio-info{flex:1}
+    .socio-name{font-size:14px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+    .socio-role{font-size:12px;color:var(--text-muted);margin-top:1px}
+    .socio-actions{display:flex;gap:4px}
+    .socio-actions .icon-btn{width:30px;height:30px}
+    .socio-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+    @media (max-width:760px){.socio-body{grid-template-columns:1fr}}
+
+    .btn-add-socio{width:100%;padding:12px;border:1px dashed var(--border-strong);border-radius:10px;background:transparent;color:var(--text-muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit}
+    .btn-add-socio:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+    .btn-add-socio svg{width:14px;height:14px}
+
+    /* Toggle */
+    .toggle{display:inline-block;position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0}
+    .toggle input{display:none}
+    .toggle-track{position:absolute;inset:0;background:var(--border-strong);border-radius:20px;transition:.2s}
+    .toggle-dot{position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .toggle input:checked + .toggle-track{background:var(--accent)}
+    .toggle input:checked + .toggle-track .toggle-dot{left:18px}
+
+    /* Key-value list */
+    .kv-list{background:var(--bg-soft);border:1px solid var(--border);border-radius:9px;overflow:hidden}
+    .kv{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center}
+    .kv:last-child{border-bottom:none}
+    .kv-key{font-size:12.5px;color:var(--text);font-weight:500}
+    .kv-key-hint{font-size:11px;color:var(--text-soft);margin-top:1px}
+    .kv-val{font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;color:var(--text);letter-spacing:-.01em}
+
+    /* Integração card */
+    .integracao{border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:10px}
+    .integracao-logo{width:44px;height:44px;border-radius:9px;background:var(--bg-soft);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0;font-weight:700;font-size:14px;color:var(--text)}
+    .integracao-info{flex:1;min-width:0}
+    .integracao-name{font-size:14px;font-weight:600;letter-spacing:-.01em}
+    .integracao-desc{font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.45}
+    .integracao-status{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em}
+    .integracao-status.off{background:var(--bg-hover);color:var(--text-soft)}
+    .integracao-status.pending{background:var(--warn-soft);color:var(--warn)}
+    .integracao-status.on{background:var(--success-soft);color:var(--success)}
+    .integracao-status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+    /* Saved toast */
+    .save-bar{position:fixed;bottom:20px;right:24px;background:var(--text);color:var(--bg);padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transition:.25s;box-shadow:var(--shadow-lg);z-index:50}
+    .save-bar.show{opacity:1;transform:translateY(-4px)}
+    .save-bar svg{width:15px;height:15px;color:var(--success)}
+
+    @media (max-width:860px){
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .form-row-2,.form-row-3{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item" href="whatsapp-preview.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item active"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Config</a>
+        <span class="sep">/</span>
+        <b>Configurações</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn"><i data-lucide="help-circle"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>Configurações</h1>
+          <p>Central de parâmetros da empresa. Tudo cadastrado aqui alimenta automaticamente o <b>DRE</b>, <b>Fluxo de Caixa</b>, <b>Briefing WhatsApp</b> e os <b>Alertas</b>. Um valor errado aqui distorce o sistema inteiro — preenche com calma.</p>
+        </div>
+      </div>
+
+      <div class="pendencias">
+        <div class="pendencias-ico"><i data-lucide="calendar-clock"></i></div>
+        <div class="pendencias-content">
+          <h3>7 campos aguardando validação na segunda (20/04)</h3>
+          <p>Dados que dependem de conversa com <b>Mikael, Reginaldo e contador</b> no Mercadinho: alíquotas reais, retiradas do sócio, valor do estoque inicial, export iCommerce. Enquanto isso, o esqueleto tá pronto com valores padrão do Lucro Real.</p>
+        </div>
+        <div class="pendencias-count">7 pendentes</div>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Tabs verticais -->
+        <nav class="tabs">
+          <div class="tab active" onclick="selTab('empresa', this)">
+            <i data-lucide="building-2"></i> Empresa
+            <i class="tab-check" data-lucide="check-circle"></i>
+          </div>
+          <div class="tab" onclick="selTab('tributario', this)">
+            <i data-lucide="landmark"></i> Tributário
+            <span class="tab-badge">3</span>
+          </div>
+          <div class="tab" onclick="selTab('socios', this)">
+            <i data-lucide="user-circle"></i> Sócios
+            <span class="tab-badge">2</span>
+          </div>
+          <div class="tab" onclick="selTab('estoque', this)">
+            <i data-lucide="package"></i> Estoque & CMV
+            <span class="tab-badge">2</span>
+          </div>
+          <div class="tab" onclick="selTab('dre', this)">
+            <i data-lucide="bar-chart-3"></i> DRE
+            <i class="tab-check" data-lucide="check-circle"></i>
+          </div>
+          <div class="tab" onclick="selTab('bancos', this)">
+            <i data-lucide="credit-card"></i> Contas bancárias
+            <i class="tab-check" data-lucide="check-circle"></i>
+          </div>
+          <div class="tab" onclick="selTab('integracoes', this)">
+            <i data-lucide="plug"></i> Integrações
+            <span class="tab-badge">1</span>
+          </div>
+          <div class="tab" onclick="selTab('preferencias', this)">
+            <i data-lucide="sliders"></i> Preferências
+            <i class="tab-check" data-lucide="check-circle"></i>
+          </div>
+        </nav>
+
+        <!-- Conteúdo -->
+        <div class="content">
+
+          <!-- EMPRESA -->
+          <div class="panel active" id="panel-empresa">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="building-2"></i> Dados da empresa</h2>
+                <p>Informações do Mercadinho Liberato que aparecem em recibos, relatórios e exportações.</p>
+              </div>
+              <span class="status ok">Completo</span>
+            </div>
+            <div class="panel-body">
+              <div class="section-title">Identificação</div>
+              <div class="form-row form-row-2">
+                <div class="field">
+                  <label>Razão social</label>
+                  <input type="text" value="MERCADINHO LIBERATO LTDA">
+                </div>
+                <div class="field">
+                  <label>Nome fantasia</label>
+                  <input type="text" value="Mercadinho Liberato">
+                </div>
+              </div>
+              <div class="form-row form-row-3">
+                <div class="field mono">
+                  <label>CNPJ</label>
+                  <input type="text" value="01.056.558/0001-51">
+                </div>
+                <div class="field">
+                  <label>Inscrição estadual (PE)</label>
+                  <input type="text" value="0234567-89">
+                </div>
+                <div class="field">
+                  <label>Inscrição municipal</label>
+                  <input type="text" placeholder="(se aplicável)">
+                </div>
+              </div>
+
+              <div class="section-title">Endereço</div>
+              <div class="form-row">
+                <div class="field">
+                  <label>Logradouro</label>
+                  <input type="text" value="Rua Principal, 123 — Centro">
+                </div>
+              </div>
+              <div class="form-row form-row-3">
+                <div class="field">
+                  <label>Cidade</label>
+                  <input type="text" value="Jupi">
+                </div>
+                <div class="field">
+                  <label>UF</label>
+                  <input type="text" value="PE" maxlength="2">
+                </div>
+                <div class="field">
+                  <label>CEP</label>
+                  <input type="text" value="55345-000">
+                </div>
+              </div>
+
+              <div class="section-title">Contato</div>
+              <div class="form-row form-row-2">
+                <div class="field">
+                  <label>Telefone / WhatsApp</label>
+                  <input type="text" value="+55 87 98888-1234">
+                </div>
+                <div class="field">
+                  <label>E-mail</label>
+                  <input type="email" value="contato@mercadinholiberato.com.br">
+                </div>
+              </div>
+            </div>
+            <div class="panel-foot">
+              <button class="btn btn-ghost">Cancelar</button>
+              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
+            </div>
+          </div>
+
+          <!-- TRIBUTÁRIO -->
+          <div class="panel" id="panel-tributario">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="landmark"></i> Regime tributário e alíquotas</h2>
+                <p>Define como os impostos entram no DRE. <b>Valores precisam ser confirmados com o contador na segunda</b> — estes são os padrões do Lucro Real.</p>
+              </div>
+              <span class="status">3 pendentes</span>
+            </div>
+            <div class="panel-body">
+              <div class="section-title">Regime tributário</div>
+              <div class="opt-grid cols-3">
+                <div class="opt disabled" onclick="selOpt(this)">
+                  <span class="opt-radio"></span>
+                  <div class="opt-content">
+                    <div class="opt-name">Simples Nacional</div>
+                    <div class="opt-desc">Faturamento acima de R$ 4,8M/ano. <b>Não se aplica.</b></div>
+                  </div>
+                </div>
+                <div class="opt disabled" onclick="selOpt(this)">
+                  <span class="opt-radio"></span>
+                  <div class="opt-content">
+                    <div class="opt-name">Lucro Presumido</div>
+                    <div class="opt-desc">Faturamento anual até R$ 78M. Confirmado pelo contador: não é o caso.</div>
+                  </div>
+                </div>
+                <div class="opt selected" onclick="selOpt(this)">
+                  <span class="opt-radio"></span>
+                  <div class="opt-content">
+                    <div class="opt-name">Lucro Real <span class="opt-tag">Ativo</span></div>
+                    <div class="opt-desc">Informado pelo Reginaldo. PIS/COFINS não-cumulativos, IRPJ e CSLL apurados sobre lucro real.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-title">Alíquotas federais</div>
+              <div class="form-row form-row-3">
+                <div class="field pending">
+                  <label>PIS (não-cumulativo) <span class="badge-pend">Validar</span></label>
+                  <div class="input-suffix"><input type="text" class="mono" value="1,65"><span class="suffix">%</span></div>
+                  <div class="field-hint">Padrão Lucro Real</div>
+                </div>
+                <div class="field pending">
+                  <label>COFINS (não-cumulativo) <span class="badge-pend">Validar</span></label>
+                  <div class="input-suffix"><input type="text" class="mono" value="7,60"><span class="suffix">%</span></div>
+                  <div class="field-hint">Padrão Lucro Real</div>
+                </div>
+                <div class="field">
+                  <label>CSLL</label>
+                  <div class="input-suffix"><input type="text" class="mono" value="9,00"><span class="suffix">%</span></div>
+                  <div class="field-hint">Sobre lucro antes do IR</div>
+                </div>
+              </div>
+              <div class="form-row form-row-2">
+                <div class="field">
+                  <label>IRPJ base</label>
+                  <div class="input-suffix"><input type="text" class="mono" value="15,00"><span class="suffix">%</span></div>
+                  <div class="field-hint">Sobre lucro real</div>
+                </div>
+                <div class="field">
+                  <label>IRPJ adicional</label>
+                  <div class="input-suffix"><input type="text" class="mono" value="10,00"><span class="suffix">%</span></div>
+                  <div class="field-hint">Sobre lucro excedente a R$ 20k/mês</div>
+                </div>
+              </div>
+
+              <div class="section-title">Alíquotas estaduais (PE)</div>
+              <div class="form-row form-row-2">
+                <div class="field pending">
+                  <label>ICMS predominante <span class="badge-pend">Validar</span></label>
+                  <div class="input-suffix"><input type="text" class="mono" value="17,00"><span class="suffix">%</span></div>
+                  <div class="field-hint">Confirmar se há diferimento ou benefício</div>
+                </div>
+                <div class="field">
+                  <label>Substituição tributária</label>
+                  <select>
+                    <option>Sim — alguns itens (laticínios, carnes)</option>
+                    <option>Não</option>
+                    <option>A verificar com contador</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="kv-list" style="margin-top:18px">
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Carga tributária estimada</div>
+                    <div class="kv-key-hint">Simulada com alíquotas atuais sobre faturamento médio R$ 960k</div>
+                  </div>
+                  <div class="kv-val">~R$ 89.280,00/mês</div>
+                </div>
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">% sobre faturamento bruto</div>
+                    <div class="kv-key-hint">Soma de PIS + COFINS + ICMS + IRPJ/CSLL</div>
+                  </div>
+                  <div class="kv-val">~9,3%</div>
+                </div>
+              </div>
+            </div>
+            <div class="panel-foot">
+              <button class="btn btn-ghost">Cancelar</button>
+              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
+            </div>
+          </div>
+
+          <!-- SÓCIOS -->
+          <div class="panel" id="panel-socios">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="user-circle"></i> Sócios e retiradas</h2>
+                <p>Cadastro de sócios para o DRE separar <b>pró-labore</b> (despesa administrativa) de <b>distribuição de lucros</b> (não é despesa) e <b>consumo próprio</b> (saída de estoque sem receita).</p>
+              </div>
+              <span class="status">2 pendentes</span>
+            </div>
+            <div class="panel-body">
+
+              <div class="socio-card">
+                <div class="socio-head">
+                  <div class="socio-avatar" style="background:#8b5cf6">R</div>
+                  <div class="socio-info">
+                    <div class="socio-name">Reginaldo Silva</div>
+                    <div class="socio-role">Sócio-administrador · 100% de participação</div>
+                  </div>
+                  <div class="socio-actions">
+                    <button class="icon-btn"><i data-lucide="pencil"></i></button>
+                    <button class="icon-btn"><i data-lucide="trash-2"></i></button>
+                  </div>
+                </div>
+                <div class="socio-body">
+                  <div class="field pending">
+                    <label>Pró-labore mensal <span class="badge-pend">Validar</span></label>
+                    <div class="input-prefix"><span class="prefix">R$</span><input type="text" value="5.000,00"></div>
+                    <div class="field-hint">Entra no DRE como <b>Despesa Administrativa</b></div>
+                  </div>
+                  <div class="field pending">
+                    <label>Distribuição de lucros <span class="badge-pend">Validar</span></label>
+                    <div class="input-prefix"><span class="prefix">R$</span><input type="text" value="variável"></div>
+                    <div class="field-hint"><b>Não entra no DRE</b> · sai do patrimônio líquido</div>
+                  </div>
+                  <div class="field">
+                    <label>Consumo próprio estimado</label>
+                    <div class="input-prefix"><span class="prefix">R$</span><input type="text" value="800,00"></div>
+                    <div class="field-hint">Mercadoria retirada pra uso doméstico · categoria separada no DRE</div>
+                  </div>
+                </div>
+
+                <div style="margin-top:14px;padding:10px 12px;background:var(--accent-soft);border-radius:7px;display:flex;gap:8px;align-items:center;font-size:12px">
+                  <i data-lucide="link" style="width:14px;height:14px;color:var(--accent)"></i>
+                  <span>Conta vinculada no iCommerce: <b style="font-family:'Geist Mono',monospace">cliente#042 — REGINALDO (uso interno)</b></span>
+                </div>
+              </div>
+
+              <button class="btn-add-socio"><i data-lucide="plus"></i> Adicionar sócio</button>
+            </div>
+            <div class="panel-foot">
+              <button class="btn btn-ghost">Cancelar</button>
+              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
+            </div>
+          </div>
+
+          <!-- ESTOQUE -->
+          <div class="panel" id="panel-estoque">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="package"></i> Estoque e cálculo de CMV</h2>
+                <p>O DM Pay <b>não controla estoque detalhado</b> (isso é papel do ERP iCommerce). Mas o DRE precisa do valor total do estoque pra calcular o Custo da Mercadoria Vendida (CMV).</p>
+              </div>
+              <span class="status">2 pendentes</span>
+            </div>
+            <div class="panel-body">
+
+              <div class="section-title">Método de cálculo do CMV</div>
+              <div class="opt-grid">
+                <div class="opt selected" onclick="selOpt(this)">
+                  <span class="opt-radio"></span>
+                  <div class="opt-content">
+                    <div class="opt-name">Compras = CMV <span class="opt-tag">Padrão</span></div>
+                    <div class="opt-desc">Aproximação simples. Assume que o estoque é estável (vendeu = comprou). Bom pra giro alto como mercadinho. <b>Pode distorcer o DRE em meses de reposição pesada.</b></div>
+                  </div>
+                </div>
+                <div class="opt" onclick="selOpt(this)">
+                  <span class="opt-radio"></span>
+                  <div class="opt-content">
+                    <div class="opt-name">Inventário manual mensal <span class="opt-tag warn">Trabalhoso</span></div>
+                    <div class="opt-desc">Mikael informa o valor do estoque no 1º e último dia do mês. <b>Mais preciso</b>, mas exige contagem física ou export do iCommerce.</div>
+                  </div>
+                </div>
+                <div class="opt" onclick="selOpt(this)">
+                  <span class="opt-radio"></span>
+                  <div class="opt-content">
+                    <div class="opt-name">Integração iCommerce automática <span class="opt-tag soon">Aguardando segunda</span></div>
+                    <div class="opt-desc">Se o servidor do iCommerce for local e a TI autorizar, o DM Pay lê o valor do estoque direto do banco do ERP. <b>Precisão máxima, zero trabalho.</b></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-title">Estoque inicial</div>
+              <div class="form-row form-row-2">
+                <div class="field pending">
+                  <label>Valor do estoque em 30/04/2026 <span class="badge-pend">Pendente</span></label>
+                  <div class="input-prefix"><span class="prefix">R$</span><input type="text" placeholder="A preencher segunda"></div>
+                  <div class="field-hint">Mikael exporta esse valor no último dia de abril pra iniciar a operação em maio</div>
+                </div>
+                <div class="field">
+                  <label>Data de início da operação</label>
+                  <input type="date" value="2026-05-01">
+                  <div class="field-hint">A partir dessa data o DRE começa a ser calculado</div>
+                </div>
+              </div>
+
+              <div class="section-title">Margem bruta esperada</div>
+              <div class="form-row form-row-2">
+                <div class="field pending">
+                  <label>Margem bruta média esperada <span class="badge-pend">Validar</span></label>
+                  <div class="input-suffix"><input type="text" class="mono" value="28,00"><span class="suffix">%</span></div>
+                  <div class="field-hint">Usado pra alertar quando o resultado real foge muito do esperado (benchmark mercadinho: 25-35%)</div>
+                </div>
+                <div class="field">
+                  <label>Tolerância de alerta</label>
+                  <div class="input-suffix"><input type="text" class="mono" value="5,00"><span class="suffix">± %</span></div>
+                  <div class="field-hint">Se margem cair/subir além disso, sistema avisa</div>
+                </div>
+              </div>
+            </div>
+            <div class="panel-foot">
+              <button class="btn btn-ghost">Cancelar</button>
+              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
+            </div>
+          </div>
+
+          <!-- DRE -->
+          <div class="panel" id="panel-dre">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="bar-chart-3"></i> DRE gerencial</h2>
+                <p>Define como o Demonstrativo do Resultado é apresentado. <b>Não substitui</b> o DRE contábil oficial do contador — é uma visão de gestão pro Reginaldo enxergar o negócio.</p>
+              </div>
+              <span class="status ok">Completo</span>
+            </div>
+            <div class="panel-body">
+
+              <div class="section-title">Regime contábil padrão</div>
+              <div class="opt-grid cols-2">
+                <div class="opt selected" onclick="selOpt(this)">
+                  <span class="opt-radio"></span>
+                  <div class="opt-content">
+                    <div class="opt-name">Competência <span class="opt-tag">Padrão</span></div>
+                    <div class="opt-desc">Receita pela data de emissão da NF de venda. Despesa pela data de emissão da NF do fornecedor (não do pagamento). <b>Correto contabilmente.</b></div>
+                  </div>
+                </div>
+                <div class="opt" onclick="selOpt(this)">
+                  <span class="opt-radio"></span>
+                  <div class="opt-content">
+                    <div class="opt-name">Caixa</div>
+                    <div class="opt-desc">Receita quando o dinheiro entra. Despesa quando o boleto é pago. Mostra quanto <b>sobrou</b> no mês — intuitivo pro Reginaldo.</div>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:10px;padding:10px 12px;background:var(--accent-soft);border-radius:7px;display:flex;gap:8px;align-items:center;font-size:12.5px">
+                <i data-lucide="info" style="width:14px;height:14px;color:var(--accent);flex-shrink:0"></i>
+                <span>Ambos os valores são calculados. O toggle no topo do DRE permite alternar a visualização sem recalcular.</span>
+              </div>
+
+              <div class="section-title">Comparativos</div>
+              <div class="kv-list">
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Mês atual × mês anterior</div>
+                    <div class="kv-key-hint">Variação R$ + %</div>
+                  </div>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Mês atual × mesmo mês ano passado</div>
+                    <div class="kv-key-hint">Sazonalidade</div>
+                  </div>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Alerta de margem fora do benchmark</div>
+                    <div class="kv-key-hint">Avisa se margem bruta sair da faixa 25-35%</div>
+                  </div>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Reconciliação cruzada</div>
+                    <div class="kv-key-hint">Lucro × Saldo × Caixa devem bater (tolerância R$ 10)</div>
+                  </div>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+              </div>
+
+              <div class="section-title">Disclaimer exibido no cabeçalho do DRE</div>
+              <div class="form-row">
+                <div class="field">
+                  <textarea rows="2" style="font-family:inherit;resize:vertical">DRE gerencial. Não substitui o demonstrativo contábil oficial do contador.</textarea>
+                </div>
+              </div>
+            </div>
+            <div class="panel-foot">
+              <button class="btn btn-ghost">Cancelar</button>
+              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
+            </div>
+          </div>
+
+          <!-- BANCOS -->
+          <div class="panel" id="panel-bancos">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="credit-card"></i> Contas bancárias</h2>
+                <p>Bancos que o Mercadinho usa pra receber e pagar. Alimenta o Fluxo de Caixa e a reconciliação cruzada do DRE.</p>
+              </div>
+              <span class="status ok">Completo</span>
+            </div>
+            <div class="panel-body">
+
+              <div class="integracao">
+                <div class="integracao-logo" style="background:#EC0000;color:white">SC</div>
+                <div class="integracao-info">
+                  <div class="integracao-name">Santander — Ag 0234 / CC 19.876-5</div>
+                  <div class="integracao-desc">Conta principal · recebimento maquininhas e pagamentos</div>
+                </div>
+                <div style="text-align:right">
+                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Ativa</div>
+                  <div style="font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;margin-top:6px">R$ 18.340,00</div>
+                </div>
+              </div>
+
+              <div class="integracao">
+                <div class="integracao-logo" style="background:#CC092F;color:white">BB</div>
+                <div class="integracao-info">
+                  <div class="integracao-name">Banco do Brasil — Ag 1234-5 / CC 56.789-0</div>
+                  <div class="integracao-desc">Conta secundária · folha de pagamento</div>
+                </div>
+                <div style="text-align:right">
+                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Ativa</div>
+                  <div style="font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;margin-top:6px">R$ 6.890,00</div>
+                </div>
+              </div>
+
+              <button class="btn-add-socio"><i data-lucide="plus"></i> Adicionar conta bancária</button>
+            </div>
+            <div class="panel-foot">
+              <button class="btn btn-ghost">Cancelar</button>
+              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
+            </div>
+          </div>
+
+          <!-- INTEGRAÇÕES -->
+          <div class="panel" id="panel-integracoes">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="plug"></i> Integrações externas</h2>
+                <p>Conexões do DM Pay com outros sistemas. Reduz digitação manual e evita erro de digitação.</p>
+              </div>
+              <span class="status">1 pendente</span>
+            </div>
+            <div class="panel-body">
+
+              <div class="integracao">
+                <div class="integracao-logo">iC</div>
+                <div class="integracao-info">
+                  <div class="integracao-name">iCommerce (Ideia Sistema)</div>
+                  <div class="integracao-desc">ERP do Mercadinho. Puxa valor do estoque e consumo interno do Reginaldo automaticamente.</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="integracao-status pending"><span class="integracao-status-dot"></span>Aguardando segunda</div>
+                  <button class="btn btn-ghost"><i data-lucide="settings-2"></i> Configurar</button>
+                </div>
+              </div>
+
+              <div class="integracao">
+                <div class="integracao-logo" style="background:#25D366;color:white">W</div>
+                <div class="integracao-info">
+                  <div class="integracao-name">WhatsApp Business API</div>
+                  <div class="integracao-desc">Envia o briefing matinal pro Reginaldo e Mikael. Modo sandbox até validar número oficial.</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Sandbox</div>
+                  <button class="btn btn-ghost"><i data-lucide="settings-2"></i> Configurar</button>
+                </div>
+              </div>
+
+              <div class="integracao">
+                <div class="integracao-logo" style="background:#00A868;color:white">SE</div>
+                <div class="integracao-info">
+                  <div class="integracao-name">SEFAZ-PE (consulta NF-e)</div>
+                  <div class="integracao-desc">Valida chave da NF-e e baixa XML direto da SEFAZ quando fornecedor não mandar por e-mail.</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="integracao-status on"><span class="integracao-status-dot"></span>Ativa</div>
+                  <button class="btn btn-ghost"><i data-lucide="settings-2"></i> Configurar</button>
+                </div>
+              </div>
+
+              <div class="integracao">
+                <div class="integracao-logo" style="background:#0052CC;color:white">OB</div>
+                <div class="integracao-info">
+                  <div class="integracao-name">Open Banking (saldo automático)</div>
+                  <div class="integracao-desc">Puxa saldo das contas bancárias em tempo real via Belvo/Pluggy. Elimina atualização manual.</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="integracao-status off"><span class="integracao-status-dot"></span>Desativado · v2</div>
+                  <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">Em breve</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- PREFERÊNCIAS -->
+          <div class="panel" id="panel-preferencias">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="sliders"></i> Preferências gerais</h2>
+                <p>Ajustes de aparência, notificações e comportamento do sistema.</p>
+              </div>
+              <span class="status ok">Completo</span>
+            </div>
+            <div class="panel-body">
+
+              <div class="section-title">Região e formato</div>
+              <div class="form-row form-row-3">
+                <div class="field">
+                  <label>Moeda</label>
+                  <select><option>BRL — Real brasileiro</option></select>
+                </div>
+                <div class="field">
+                  <label>Fuso horário</label>
+                  <select><option>America/Recife (UTC-3)</option></select>
+                </div>
+                <div class="field">
+                  <label>Formato de data</label>
+                  <select><option>DD/MM/AAAA</option><option>AAAA-MM-DD</option></select>
+                </div>
+              </div>
+
+              <div class="section-title">Notificações</div>
+              <div class="kv-list">
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Briefing WhatsApp matinal</div>
+                    <div class="kv-key-hint">Todo dia útil às 6h15</div>
+                  </div>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Alerta de boleto vencendo (2 dias antes)</div>
+                    <div class="kv-key-hint">Notificação in-app + WhatsApp</div>
+                  </div>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Margem bruta fora do benchmark</div>
+                    <div class="kv-key-hint">Aviso no fechamento do mês</div>
+                  </div>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Dia com concentração alta de pagamentos</div>
+                    <div class="kv-key-hint">Alerta quando dia excede 20% do total do mês</div>
+                  </div>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+              </div>
+
+              <div class="section-title">Aparência</div>
+              <div class="kv-list">
+                <div class="kv">
+                  <div>
+                    <div class="kv-key">Tema</div>
+                    <div class="kv-key-hint">Alternar entre claro e escuro</div>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost" onclick="document.documentElement.setAttribute('data-theme','light');localStorage.setItem('dmpay-theme','light')">Claro</button>
+                    <button class="btn btn-ghost" onclick="document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('dmpay-theme','dark')">Escuro</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-title">Zona perigosa</div>
+              <div style="border:1px solid var(--danger);border-radius:10px;padding:16px;background:var(--danger-soft)">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--danger);letter-spacing:-.01em">Excluir empresa do DM Pay</div>
+                    <div style="font-size:12px;color:var(--text);margin-top:3px">Remove todos os dados. Ação irreversível.</div>
+                  </div>
+                  <button class="btn btn-danger"><i data-lucide="trash-2"></i> Excluir empresa</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="save-bar" id="savebar">
+    <i data-lucide="check-circle"></i> Configurações salvas
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    function toggleTheme(){
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+    }
+
+    function selTab(id, el){
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('panel-'+id).classList.add('active');
+      document.querySelector('main').scrollTo({top:0,behavior:'smooth'});
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function selOpt(el){
+      if (el.classList.contains('disabled')) return;
+      const parent = el.parentElement;
+      parent.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function showSaved(){
+      const bar = document.getElementById('savebar');
+      bar.classList.add('show');
+      setTimeout(() => bar.classList.remove('show'), 2000);
+    }
+  </script>
+</body>
+</html>

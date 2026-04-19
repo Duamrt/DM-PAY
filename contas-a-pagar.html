@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>DM Pay — Contas a pagar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11/dist/JsBarcode.all.min.js"></script>
+<script src="dmpay-data.js"></script>
+<style>
+/* ========================= TOKENS ========================= */
+:root[data-theme="dark"] {
+  --bg-base:#0A0B0D; --bg-surface:#111316; --bg-elevated:#17191D; --bg-hover:#1C1E23;
+  --border:#22252B; --border-strong:#2E3138;
+  --text-primary:#F5F7FA; --text-secondary:#B1B8C2; --text-muted:#6B7280;
+  --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.14);
+  --success:#22C55E; --success-soft:rgba(34,197,94,.14);
+  --warning:#F59E0B; --warning-soft:rgba(245,158,11,.14);
+  --danger:#EF4444;  --danger-soft:rgba(239,68,68,.14);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 2px 6px rgba(0,0,0,.5),0 1px 2px rgba(0,0,0,.3);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.55),0 4px 10px rgba(0,0,0,.35);
+  --ring:0 0 0 3px rgba(59,130,246,.32);
+}
+:root[data-theme="light"] {
+  --bg-base:#F7F8FA; --bg-surface:#FFFFFF; --bg-elevated:#F1F3F6; --bg-hover:#F9FAFB;
+  --border:#E4E7EB; --border-strong:#D1D5DB;
+  --text-primary:#0B0D11; --text-secondary:#4B5563; --text-muted:#9CA3AF;
+  --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+  --success:#10B981; --success-soft:#D1FAE5;
+  --warning:#D97706; --warning-soft:#FEF3C7;
+  --danger:#DC2626;  --danger-soft:#FEE2E2;
+  --shadow-sm:0 1px 2px rgba(11,13,17,.05);
+  --shadow-md:0 1px 3px rgba(11,13,17,.08),0 1px 2px rgba(11,13,17,.05);
+  --shadow-lg:0 20px 50px rgba(11,13,17,.18),0 6px 12px rgba(11,13,17,.08);
+  --ring:0 0 0 3px rgba(37,99,235,.18);
+}
+
+/* ========================= BASE ========================= */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-feature-settings:'cv11','ss01';background:var(--bg-base);color:var(--text-primary);line-height:1.5;letter-spacing:-0.005em;-webkit-font-smoothing:antialiased;transition:background-color 160ms ease,color 160ms ease;min-height:100vh}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--accent);text-decoration:none}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:'tnum'}
+.mono{font-family:'Geist Mono',ui-monospace,'SF Mono',monospace}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ========================= APP SHELL ========================= */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+@media (max-width:900px){.app{grid-template-columns:1fr}.sidebar{display:none}}
+
+/* ========================= SIDEBAR ========================= */
+.sidebar{background:var(--bg-surface);border-right:1px solid var(--border);padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand-row{display:flex;align-items:center;gap:10px;padding:4px 8px 20px}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#60A5FA);display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;letter-spacing:-.02em}
+.brand-name{font-weight:700;font-size:16px;letter-spacing:-.02em}
+.brand-name .dot{color:var(--accent)}
+.nav-group{margin-top:18px}
+.nav-group-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);padding:0 10px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;font-size:13.5px;color:var(--text-secondary);cursor:pointer;transition:all 120ms ease;margin-bottom:1px}
+.nav-item:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:500}
+.nav-item .icon{width:16px;height:16px;flex-shrink:0}
+.nav-item .badge-count{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-elevated);padding:2px 6px;border-radius:999px;color:var(--text-secondary)}
+.nav-item.active .badge-count{background:var(--accent);color:#fff}
+.nav-item.soon{opacity:0.55;cursor:default}
+.nav-item.soon:hover{background:transparent;color:var(--text-secondary)}
+.badge-count.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px}
+.user-card{margin-top:24px;padding:10px;background:var(--bg-elevated);border-radius:10px;display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;border-radius:999px;background:linear-gradient(135deg,#3B82F6,#8B5CF6);display:grid;place-items:center;color:#fff;font-weight:600;font-size:12px}
+.user-info{font-size:13px;line-height:1.3;flex:1;min-width:0}
+.user-info .name{font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-info .email{color:var(--text-muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ========================= TOPBAR ========================= */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 28px;background:var(--bg-base);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+.breadcrumb{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:8px}
+.breadcrumb strong{color:var(--text-primary);font-weight:600}
+.breadcrumb .sep{color:var(--text-muted)}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.search-btn{display:inline-flex;align-items:center;gap:10px;background:var(--bg-surface);border:1px solid var(--border);padding:7px 12px;border-radius:10px;font-size:13px;color:var(--text-muted);min-width:220px;transition:all 120ms ease}
+.search-btn:hover{border-color:var(--border-strong);color:var(--text-secondary)}
+.search-btn .icon{width:14px;height:14px}
+.search-btn .kbd{margin-left:auto;font-family:'Geist Mono',monospace;font-size:11px;border:1px solid var(--border);padding:1px 6px;border-radius:4px;background:var(--bg-elevated);color:var(--text-muted)}
+.icon-btn{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);transition:all 120ms ease}
+.icon-btn:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.icon-btn .icon{width:15px;height:15px}
+
+/* ========================= MAIN ========================= */
+.main{padding:24px 28px 100px;max-width:1600px}
+@media (max-width:640px){.main{padding:16px 16px 120px}.topbar{padding:12px 16px}.search-btn{min-width:0}}
+
+/* HERO */
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.hero h1{font-size:26px;font-weight:700;letter-spacing:-.025em;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.hero .count-chip{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 10px;border-radius:999px;letter-spacing:.02em}
+.hero .sub{font-size:13px;color:var(--text-muted)}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* KPI ROW (compacta pra essa tela) */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+@media (max-width:1024px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.kpi-row{grid-template-columns:1fr}}
+.kpi-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;transition:all 160ms ease;position:relative;overflow:hidden}
+.kpi-card:hover{border-color:var(--border-strong)}
+.kpi-card.tone-warn{border-color:var(--warning-soft)}
+.kpi-card.tone-danger{border-color:var(--danger-soft)}
+.kpi-card.tone-success{border-color:var(--success-soft)}
+.kpi-label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
+.kpi-label .icon{width:13px;height:13px}
+.kpi-value{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:4px;line-height:1.1}
+.kpi-meta{margin-top:4px;font-size:11.5px;color:var(--text-muted)}
+.kpi-meta strong{font-weight:600;color:var(--text-secondary)}
+
+/* ========================= PANEL (tabela) ========================= */
+.panel{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;background:var(--bg-elevated);border:1px solid transparent;font-size:12px;font-weight:500;color:var(--text-secondary);transition:all 120ms ease}
+.chip:hover{border-color:var(--border)}
+.chip.active{background:var(--accent-soft);color:var(--accent)}
+.chip .icon{width:12px;height:12px}
+.toolbar-right{display:flex;gap:8px;align-items:center}
+.input{padding:7px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary);font-size:13px;transition:all 120ms ease;width:100%}
+.input::placeholder{color:var(--text-muted)}
+.input:hover{border-color:var(--border-strong)}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:var(--ring)}
+.input-with-icon{position:relative}
+.input-with-icon .input{padding-left:32px}
+.input-with-icon .icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-muted);pointer-events:none}
+
+/* TABELA */
+.table-wrap{overflow-x:auto}
+table.dm{width:100%;border-collapse:collapse;font-size:13.5px;min-width:960px}
+table.dm thead th{text-align:left;padding:11px 16px;font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;background:var(--bg-elevated);border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
+table.dm thead th.sortable{cursor:pointer;transition:color 120ms ease}
+table.dm thead th.sortable:hover{color:var(--text-secondary)}
+table.dm thead th.sortable .sort-icon{width:11px;height:11px;margin-left:4px;vertical-align:-1px;opacity:.5}
+table.dm thead th.sortable.active{color:var(--text-primary)}
+table.dm thead th.sortable.active .sort-icon{opacity:1;color:var(--accent)}
+table.dm tbody td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.dm tbody tr:last-child td{border-bottom:none}
+table.dm tbody tr{transition:background 100ms ease}
+table.dm tbody tr:hover{background:var(--bg-hover);cursor:pointer}
+table.dm tbody tr.selected{background:var(--accent-soft)}
+table.dm td.money{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+table.dm td.date{font-variant-numeric:tabular-nums;color:var(--text-secondary);white-space:nowrap}
+table.dm td.mono{font-family:'Geist Mono',monospace;font-size:12px;color:var(--text-muted)}
+table.dm .supplier{display:flex;align-items:center;gap:10px;min-width:0}
+table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.supplier-avatar{width:28px;height:28px;border-radius:6px;background:var(--bg-elevated);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--text-secondary);flex-shrink:0}
+.supplier-avatar.tone-1{background:rgba(59,130,246,.15);color:#60A5FA}
+.supplier-avatar.tone-2{background:rgba(34,197,94,.15);color:var(--success)}
+.supplier-avatar.tone-3{background:rgba(245,158,11,.15);color:var(--warning)}
+.supplier-avatar.tone-4{background:rgba(168,85,247,.15);color:#C084FC}
+.supplier-avatar.tone-5{background:rgba(239,68,68,.15);color:#F87171}
+.check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border-strong);background:var(--bg-surface);cursor:pointer;transition:all 120ms ease;display:inline-grid;place-items:center}
+.check:hover{border-color:var(--accent)}
+.check.checked{background:var(--accent);border-color:var(--accent)}
+.check.checked::after{content:'';width:8px;height:8px;background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>') center/contain no-repeat}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:500;border:1px solid transparent;white-space:nowrap}
+.badge::before{content:'';width:6px;height:6px;border-radius:999px;background:currentColor;flex-shrink:0}
+.badge-paid{background:var(--success-soft);color:var(--success)}
+.badge-open{background:var(--bg-elevated);color:var(--text-secondary);border-color:var(--border)}
+.badge-overdue{background:var(--danger-soft);color:var(--danger)}
+.badge-today{background:var(--warning-soft);color:var(--warning)}
+.badge-new{background:var(--accent-soft);color:var(--accent)}
+
+/* BOTÕES */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:10px;font-size:13.5px;font-weight:500;transition:all 140ms cubic-bezier(.4,0,.2,1);border:1px solid transparent;white-space:nowrap}
+.btn:focus-visible{outline:none;box-shadow:var(--ring)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--bg-surface);border-color:var(--border);color:var(--text-primary)}
+.btn-secondary:hover{background:var(--bg-elevated);border-color:var(--border-strong)}
+.btn-ghost{background:transparent;color:var(--text-secondary)}
+.btn-ghost:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{filter:brightness(.92)}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn .icon{width:14px;height:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* PAGINATION */
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid var(--border);gap:12px;flex-wrap:wrap}
+.pag-info{font-size:12px;color:var(--text-muted)}
+.pag-info strong{color:var(--text-secondary);font-weight:600}
+.pag-controls{display:flex;gap:4px;align-items:center}
+.pag-btn{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-secondary);font-size:12px;font-weight:500;transition:all 120ms ease}
+.pag-btn:hover{background:var(--bg-elevated);color:var(--text-primary)}
+.pag-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pag-btn:disabled{opacity:.4;cursor:not-allowed}
+.pag-btn .icon{width:13px;height:13px}
+
+/* ========================= SELECTION BAR (flutuante) ========================= */
+.sel-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120%);background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-lg);z-index:50;transition:transform 240ms cubic-bezier(.4,0,.2,1);min-width:420px}
+.sel-bar.open{transform:translateX(-50%) translateY(0)}
+.sel-bar .count{font-size:13px;font-weight:600;padding-right:14px;border-right:1px solid var(--border)}
+.sel-bar .count strong{color:var(--accent)}
+.sel-bar .actions{display:flex;gap:6px}
+.sel-bar .close-x{margin-left:4px;color:var(--text-muted);padding:4px;border-radius:6px}
+.sel-bar .close-x:hover{background:var(--bg-elevated);color:var(--text-primary)}
+
+/* ========================= DRAWER LATERAL ========================= */
+.drawer-overlay{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity 220ms ease}
+.drawer-overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(520px,92vw);background:var(--bg-surface);border-left:1px solid var(--border);z-index:81;box-shadow:var(--shadow-lg);transform:translateX(100%);transition:transform 260ms cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow:hidden}
+.drawer.open{transform:translateX(0)}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.drawer-title{font-size:15px;font-weight:600}
+.drawer-title .muted{font-family:'Geist Mono',monospace;font-weight:400;color:var(--text-muted);font-size:13px;margin-left:8px}
+.drawer-body{padding:20px;overflow-y:auto;flex:1}
+.drawer-footer{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);background:var(--bg-elevated);flex-shrink:0}
+
+.drawer-section{margin-bottom:22px}
+.drawer-section h4{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.field-row{display:flex;justify-content:space-between;gap:16px;padding:7px 0;font-size:13px}
+.field-row .k{color:var(--text-muted)}
+.field-row .v{color:var(--text-primary);font-weight:500;text-align:right}
+.field-row .v.mono{font-family:'Geist Mono',monospace;font-size:12px;word-break:break-all;max-width:60%}
+.due-progress{margin-top:12px}
+.due-bar{height:6px;background:var(--bg-elevated);border-radius:999px;overflow:hidden;margin-top:6px}
+.due-fill{height:100%;background:linear-gradient(90deg,var(--success),var(--warning) 70%,var(--danger));border-radius:999px}
+.due-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-top:6px}
+
+.timeline{position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:var(--border)}
+.timeline-item{position:relative;padding-bottom:14px;font-size:12.5px}
+.timeline-item::before{content:'';position:absolute;left:-17px;top:4px;width:10px;height:10px;border-radius:999px;background:var(--accent);border:2px solid var(--bg-surface)}
+.timeline-item .ts{color:var(--text-muted);font-size:11px;margin-bottom:2px}
+.timeline-item .msg{color:var(--text-primary)}
+
+/* ========================= EMPTY STATE ========================= */
+.empty{padding:60px 20px;text-align:center;color:var(--text-muted)}
+.empty .icon{width:40px;height:40px;margin-bottom:12px;color:var(--text-muted);opacity:.5}
+.empty h3{font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:6px}
+.empty p{font-size:13px;max-width:320px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand-row">
+      <span class="brand-mark">DM</span>
+      <span class="brand-name">Pay<span class="dot">.</span></span>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Principal</div>
+      <div class="nav-item"><i data-lucide="layout-dashboard" class="icon"></i>Dashboard</div>
+      <div class="nav-item"><i data-lucide="bell" class="icon"></i>Alertas <span class="badge-count">3</span></div>
+      <div class="nav-item soon"><i data-lucide="sparkles" class="icon"></i>Copiloto <span class="badge-count soon-badge">Soon</span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Financeiro</div>
+      <div class="nav-item active"><i data-lucide="receipt" class="icon"></i>Contas a pagar <span class="badge-count">34</span></div>
+      <div class="nav-item"><i data-lucide="calendar" class="icon"></i>Calendário</div>
+      <div class="nav-item"><i data-lucide="trending-up" class="icon"></i>Fluxo de caixa</div>
+      <div class="nav-item"><i data-lucide="bar-chart-3" class="icon"></i>DRE</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Entradas</div>
+      <div class="nav-item"><i data-lucide="upload" class="icon"></i>NF-e</div>
+      <div class="nav-item"><i data-lucide="file-text" class="icon"></i>Histórico NF-e</div>
+      <div class="nav-item"><i data-lucide="shopping-cart" class="icon"></i>Vendas diárias</div>
+      <div class="nav-item"><i data-lucide="plus-square" class="icon"></i>Despesas</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Cadastros</div>
+      <div class="nav-item"><i data-lucide="building-2" class="icon"></i>Fornecedores</div>
+      <div class="nav-item"><i data-lucide="tag" class="icon"></i>Categorias</div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Config</div>
+      <div class="nav-item"><i data-lucide="users" class="icon"></i>Equipe</div>
+      <div class="nav-item"><i data-lucide="settings" class="icon"></i>Configurações</div>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">MK</div>
+      <div class="user-info">
+        <div class="name">Mikael</div>
+        <div class="email">Admin · Mercadinho Liberato</div>
+      </div>
+      <button class="icon-btn" style="width:26px;height:26px" aria-label="Conta"><i data-lucide="more-horizontal" class="icon" style="width:12px;height:12px"></i></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <i data-lucide="receipt" style="width:14px;height:14px;color:var(--text-muted)"></i>
+        <span>Financeiro</span> <span class="sep">/</span>
+        <strong>Contas a pagar</strong>
+      </div>
+      <div class="topbar-actions">
+        <button class="search-btn">
+          <i data-lucide="search" class="icon"></i>
+          <span>Buscar boleto, fornecedor...</span>
+          <span class="kbd">⌘K</span>
+        </button>
+        <button class="icon-btn" aria-label="Notificações"><i data-lucide="bell" class="icon"></i></button>
+        <button class="icon-btn" onclick="toggleTheme()" aria-label="Alternar tema">
+          <i data-lucide="sun" class="icon theme-icon-dark"></i>
+          <i data-lucide="moon" class="icon theme-icon-light" style="display:none"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- HERO -->
+      <section class="hero">
+        <div>
+          <h1>Contas a pagar <span class="count-chip">34 em aberto</span></h1>
+          <div class="sub">Mercadinho Liberato · abril/2026 · próximo vencimento hoje</div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-ghost"><i data-lucide="sliders-horizontal" class="icon"></i>Filtros avançados</button>
+          <button class="btn btn-secondary"><i data-lucide="download" class="icon"></i>Exportar</button>
+          <button class="btn btn-secondary"><i data-lucide="upload" class="icon"></i>Importar XML</button>
+          <button class="btn btn-primary"><i data-lucide="plus" class="icon"></i>Novo boleto</button>
+        </div>
+      </section>
+
+      <!-- KPIs compactos -->
+      <section class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label"><i data-lucide="clock" class="icon"></i>Total em aberto</div>
+          <div class="kpi-value num">R$ 489.399</div>
+          <div class="kpi-meta"><strong>34</strong> boletos · próximos 30 dias</div>
+        </div>
+        <div class="kpi-card tone-warn">
+          <div class="kpi-label"><i data-lucide="calendar-clock" class="icon"></i>Vencem esta semana</div>
+          <div class="kpi-value num" style="color:var(--warning)">R$ 127.490</div>
+          <div class="kpi-meta"><strong>8</strong> hoje · <strong>5</strong> até sábado</div>
+        </div>
+        <div class="kpi-card tone-danger">
+          <div class="kpi-label"><i data-lucide="alert-circle" class="icon"></i>Atrasados</div>
+          <div class="kpi-value num" style="color:var(--danger)">R$ 6.247</div>
+          <div class="kpi-meta"><strong>2</strong> boletos · média 3 dias</div>
+        </div>
+        <div class="kpi-card tone-success">
+          <div class="kpi-label"><i data-lucide="check-circle-2" class="icon"></i>Pagos no mês</div>
+          <div class="kpi-value num" style="color:var(--success)">R$ 489.399</div>
+          <div class="kpi-meta"><strong>147</strong> boletos · 96% no prazo</div>
+        </div>
+      </section>
+
+      <!-- TABELA + TOOLBAR -->
+      <section class="panel">
+        <div class="table-toolbar">
+          <div class="filter-chips">
+            <button class="chip active"><i data-lucide="list" class="icon"></i>Todos <span style="opacity:.65">(34)</span></button>
+            <button class="chip"><i data-lucide="calendar-clock" class="icon"></i>Hoje <span style="opacity:.65">(8)</span></button>
+            <button class="chip"><i data-lucide="alert-circle" class="icon"></i>Atrasados <span style="opacity:.65">(2)</span></button>
+            <button class="chip"><i data-lucide="clock" class="icon"></i>Semana <span style="opacity:.65">(13)</span></button>
+            <button class="chip"><i data-lucide="check-circle-2" class="icon"></i>Pagos <span style="opacity:.65">(147)</span></button>
+          </div>
+          <div class="toolbar-right">
+            <div class="input-with-icon" style="width:240px">
+              <i data-lucide="search" class="icon"></i>
+              <input class="input" placeholder="Buscar fornecedor ou NF">
+            </div>
+            <button class="btn btn-secondary btn-sm"><i data-lucide="filter" class="icon"></i>Filtros</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="dm">
+            <thead>
+              <tr>
+                <th style="width:28px"><span class="check" id="selAll" aria-label="Selecionar todos"></span></th>
+                <th class="sortable">Fornecedor <i data-lucide="chevrons-up-down" class="sort-icon"></i></th>
+                <th class="sortable">NF <i data-lucide="chevrons-up-down" class="sort-icon"></i></th>
+                <th class="sortable">Emissão <i data-lucide="chevrons-up-down" class="sort-icon"></i></th>
+                <th class="sortable active">Vencimento <i data-lucide="arrow-up" class="sort-icon"></i></th>
+                <th>Categoria</th>
+                <th class="sortable" style="text-align:right">Valor <i data-lucide="chevrons-up-down" class="sort-icon"></i></th>
+                <th>Status</th>
+                <th style="width:30px"></th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <!-- Linhas geradas por JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="pagination">
+          <div class="pag-info">Mostrando <strong>1–10</strong> de <strong>34</strong> boletos</div>
+          <div class="pag-controls">
+            <button class="pag-btn" disabled><i data-lucide="chevron-left" class="icon"></i></button>
+            <button class="pag-btn active">1</button>
+            <button class="pag-btn">2</button>
+            <button class="pag-btn">3</button>
+            <button class="pag-btn">4</button>
+            <button class="pag-btn"><i data-lucide="chevron-right" class="icon"></i></button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- SELECTION BAR FLUTUANTE -->
+<div class="sel-bar" id="selBar">
+  <span class="count"><strong id="selCount">0</strong> selecionados</span>
+  <div class="actions">
+    <button class="btn btn-primary btn-sm"><i data-lucide="check-circle-2" class="icon"></i>Marcar como pago</button>
+    <button class="btn btn-secondary btn-sm"><i data-lucide="download" class="icon"></i>Exportar</button>
+    <button class="btn btn-secondary btn-sm"><i data-lucide="tag" class="icon"></i>Mudar categoria</button>
+    <button class="btn btn-ghost btn-sm"><i data-lucide="trash-2" class="icon"></i>Excluir</button>
+  </div>
+  <button class="close-x" onclick="clearSel()" aria-label="Fechar"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true">
+  <div class="drawer-header">
+    <div class="drawer-title">Detalhes do boleto <span class="muted" id="drawerNF">NF —</span></div>
+    <button class="icon-btn" onclick="closeDrawer()" aria-label="Fechar"><i data-lucide="x" class="icon"></i></button>
+  </div>
+  <div class="drawer-body" id="drawerBody">
+    <!-- conteúdo dinâmico -->
+  </div>
+  <div class="drawer-footer">
+    <button class="btn btn-ghost btn-sm">Marcar como pago</button>
+    <button class="btn btn-secondary btn-sm">Editar</button>
+    <button class="btn btn-primary btn-sm"><i data-lucide="copy" class="icon"></i>Copiar linha digitável</button>
+  </div>
+</aside>
+
+<script>
+// ========================= DADOS REAIS — Mercadinho Liberato =========================
+// Fonte: CONTROLE DE PAGAMENTO - BOLETOS.xlsx (2026) via dmpay-data.js
+const HOJE = new Date('2026-04-19T00:00:00');
+
+function _iniciais(nome) {
+  const w = nome.replace(/[^\wÀ-ÿ ]/g,'').trim().split(/\s+/);
+  return ((w[0]||'')[0] + (w[1]||'')[0] || (w[0]||'??').slice(0,2)).toUpperCase();
+}
+function _toneOf(nome) {
+  let h = 0; for (let i = 0; i < nome.length; i++) h = (h*31 + nome.charCodeAt(i)) | 0;
+  return (Math.abs(h) % 5) + 1;
+}
+function _brDate(iso) {
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function _diffDays(d1iso, d2) {
+  const d1 = new Date(d1iso + 'T00:00:00');
+  return Math.round((d1 - d2) / 86400000);
+}
+// Linha digitável gerada a partir do valor (mock FEBRABAN — só pra renderizar o barcode)
+function _genLinha(valor) {
+  const cents = Math.round(valor * 100).toString().padStart(10, '0');
+  return `23793.38128 00000.000000 00000.000000 1 9990${cents}`;
+}
+
+function _statusFrom(item) {
+  if (item.status === 'PAGO') return { s: 'paid', overdue: 0 };
+  if (!item.vencimento) return { s: 'open', overdue: 0 };
+  const diff = _diffDays(item.vencimento, HOJE);
+  if (diff < 0) return { s: 'overdue', overdue: -diff };
+  if (diff === 0) return { s: 'today', overdue: 0 };
+  return { s: 'open', overdue: 0 };
+}
+
+// Monta PAYABLES a partir dos dados reais — pega 80 próximos pendentes por vencimento + 20 pagos recentes
+const _src = (window.DMPAY_DATA?.PENDENTES || []).slice(0, 80)
+  .concat((window.DMPAY_DATA?.PAGOS_2026 || []).slice(-20));
+
+const PAYABLES = _src.map((item, i) => {
+  const sup = item.fornecedor;
+  const st = _statusFrom(item);
+  return {
+    id: 'p' + (i + 1),
+    sup: sup.length > 38 ? sup.slice(0, 35) + '…' : sup,
+    ini: _iniciais(sup),
+    tone: _toneOf(sup),
+    nf: item.nf || '—',
+    emi: _brDate(item.emissao),
+    due: _brDate(item.vencimento),
+    cat: 'Mercadoria',
+    amt: item.valor,
+    status: st.s,
+    line: _genLinha(item.valor),
+    overdue: st.overdue
+  };
+});
+
+// Atualiza KPIs com números reais
+(function atualizaKPIs() {
+  const s = window.DMPAY_DATA?.SUMMARY; if (!s) return;
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const ks = document.querySelectorAll('.kpi-value.num');
+  if (ks[0]) ks[0].textContent = fmt(s.pendentes_total);
+  if (ks[1]) ks[1].textContent = fmt(s.pendentes_7d);
+  if (ks[2]) ks[2].textContent = fmt(s.pendentes_atrasado);
+  if (ks[3]) ks[3].textContent = fmt(s.compras_abril);
+  const metas = document.querySelectorAll('.kpi-card .kpi-meta');
+  if (metas[0]) metas[0].innerHTML = `<strong>${s.pendentes_count}</strong> boletos em aberto · 2026`;
+  if (metas[1]) metas[1].innerHTML = `próximos <strong>7</strong> dias · NORSA, OI, NESTLÉ, JBS...`;
+  if (metas[2]) metas[2].innerHTML = `<strong>planilha desatualizada</strong> · revisar`;
+  if (metas[3]) metas[3].innerHTML = `compras · abril/2026`;
+  // Count chip + pag info
+  const chip = document.querySelector('.count-chip');
+  if (chip) chip.textContent = s.pendentes_count + ' em aberto';
+  const chipTodos = document.querySelector('.chip.active');
+  if (chipTodos) chipTodos.innerHTML = `<i data-lucide="list" class="icon"></i>Todos <span style="opacity:.65">(${s.pendentes_count})</span>`;
+  const pagInfo = document.querySelector('.pag-info');
+  if (pagInfo) pagInfo.innerHTML = `Mostrando <strong>1–${Math.min(PAYABLES.length, 80)}</strong> de <strong>${s.pendentes_count}</strong> boletos`;
+  // Subtítulo hero
+  const sub = document.querySelector('.hero .sub');
+  if (sub) sub.textContent = `Mercadinho Liberato · 2026 · dados reais · hoje 19/04/2026`;
+})();
+
+const BADGE_MAP = {
+  paid:    { cls:'badge-paid',    label:'pago' },
+  open:    { cls:'badge-open',    label:'em aberto' },
+  overdue: { cls:'badge-overdue', label: d => 'atrasado ' + d + 'd' },
+  today:   { cls:'badge-today',   label:'vence hoje' },
+  new:     { cls:'badge-new',     label:'novo fornecedor' }
+};
+
+function fmtBRL(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ========================= RENDER TABELA =========================
+const tbody = document.getElementById('tbody');
+PAYABLES.forEach(p => {
+  const b = BADGE_MAP[p.status];
+  const label = typeof b.label === 'function' ? b.label(p.overdue) : b.label;
+  const tr = document.createElement('tr');
+  tr.dataset.id = p.id;
+  tr.innerHTML = `
+    <td><span class="check" data-row="${p.id}" onclick="event.stopPropagation(); toggleRow('${p.id}', this)"></span></td>
+    <td><div class="supplier"><span class="supplier-avatar tone-${p.tone}">${p.ini}</span><span class="supplier-name">${p.sup}</span></div></td>
+    <td class="mono">${p.nf}</td>
+    <td class="date">${p.emi}</td>
+    <td class="date">${p.due}</td>
+    <td>${p.cat}</td>
+    <td class="money">${fmtBRL(p.amt)}</td>
+    <td><span class="badge ${b.cls}">${label}</span></td>
+    <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none" onclick="event.stopPropagation()"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
+  `;
+  tr.addEventListener('click', () => openDrawer(p));
+  tbody.appendChild(tr);
+});
+
+// ========================= SELECTION =========================
+const selected = new Set();
+function toggleRow(id, el) {
+  if (selected.has(id)) { selected.delete(id); el.classList.remove('checked'); }
+  else                  { selected.add(id); el.classList.add('checked'); }
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) tr.classList.toggle('selected', selected.has(id));
+  updateSelBar();
+}
+function clearSel() {
+  selected.clear();
+  document.querySelectorAll('.check[data-row]').forEach(c => c.classList.remove('checked'));
+  document.querySelectorAll('tr[data-id]').forEach(t => t.classList.remove('selected'));
+  document.getElementById('selAll').classList.remove('checked');
+  updateSelBar();
+}
+function updateSelBar() {
+  const bar = document.getElementById('selBar');
+  document.getElementById('selCount').textContent = selected.size;
+  bar.classList.toggle('open', selected.size > 0);
+}
+document.getElementById('selAll').addEventListener('click', function() {
+  const shouldCheck = !this.classList.contains('checked');
+  this.classList.toggle('checked', shouldCheck);
+  document.querySelectorAll('.check[data-row]').forEach(c => {
+    const id = c.dataset.row;
+    c.classList.toggle('checked', shouldCheck);
+    if (shouldCheck) selected.add(id); else selected.delete(id);
+    const tr = document.querySelector(`tr[data-id="${id}"]`);
+    if (tr) tr.classList.toggle('selected', shouldCheck);
+  });
+  updateSelBar();
+});
+
+// ========================= FILTRO CHIPS / TABS =========================
+document.addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (chip) {
+    chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+  }
+});
+
+// ========================= DRAWER =========================
+function daysBetween(d1, d2) {
+  const [a,b,c] = d1.split('/').map(Number);
+  const [d,e,f] = d2.split('/').map(Number);
+  const t1 = new Date(c, b-1, a), t2 = new Date(f, e-1, d);
+  return Math.round((t2-t1) / (1000*60*60*24));
+}
+
+function openDrawer(p) {
+  document.getElementById('drawerNF').textContent = 'NF ' + p.nf;
+  const elapsed = daysBetween(p.emi, '18/04/2026');
+  const total = daysBetween(p.emi, p.due);
+  const pct = Math.min(100, Math.max(0, Math.round(elapsed/Math.max(total,1)*100)));
+  const body = document.getElementById('drawerBody');
+  body.innerHTML = `
+    <div class="drawer-section">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div class="supplier-avatar tone-${p.tone}" style="width:44px;height:44px;font-size:15px;border-radius:10px">${p.ini}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:600">${p.sup}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${p.cat} · NF <span class="mono">${p.nf}</span></div>
+        </div>
+        <span class="badge ${BADGE_MAP[p.status].cls}">${typeof BADGE_MAP[p.status].label === 'function' ? BADGE_MAP[p.status].label(p.overdue) : BADGE_MAP[p.status].label}</span>
+      </div>
+      <div style="font-size:36px;font-weight:700;letter-spacing:-.025em" class="num">${fmtBRL(p.amt)}</div>
+    </div>
+
+    <div class="drawer-section">
+      <h4>Vencimento</h4>
+      <div class="field-row"><span class="k">Emitido em</span><span class="v">${p.emi}</span></div>
+      <div class="field-row"><span class="k">Vence em</span><span class="v">${p.due}</span></div>
+      <div class="due-progress">
+        <div class="due-bar"><div class="due-fill" style="width:${pct}%"></div></div>
+        <div class="due-meta"><span>emissão</span><span>${pct}%</span><span>vencimento</span></div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <h4>Detalhes</h4>
+      <div class="field-row"><span class="k">Forma</span><span class="v">Boleto bancário</span></div>
+      <div class="field-row"><span class="k">Categoria</span><span class="v">${p.cat}</span></div>
+      <div class="field-row"><span class="k">Status</span><span class="v">${typeof BADGE_MAP[p.status].label === 'function' ? BADGE_MAP[p.status].label(p.overdue) : BADGE_MAP[p.status].label}</span></div>
+    </div>
+
+    <div class="drawer-section">
+      <div style="background:var(--bg-elevated);border:1px dashed var(--border);border-radius:10px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start">
+        <i data-lucide="scan-line" style="width:18px;height:18px;color:var(--accent);flex-shrink:0;margin-top:2px"></i>
+        <div style="font-size:12.5px;line-height:1.55;color:var(--text-secondary)">
+          <b style="color:var(--text-primary)">Código de barras não capturado.</b><br>
+          Quando o DM Pay estiver ligado ao e-mail do Mercadinho, o XML da NF-e + o boleto anexo são lidos automaticamente — com código de barras pronto pra pagar no app do banco.
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <h4>Origem</h4>
+      <div class="field-row"><span class="k">Fonte</span><span class="v">Planilha de controle · importado</span></div>
+      <div class="field-row"><span class="k">NF importada em</span><span class="v">${p.emi}</span></div>
+      <div class="field-row"><span class="k">Vencimento</span><span class="v">${p.due}</span></div>
+    </div>
+  `;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  if (window.lucide) lucide.createIcons();
+}
+
+/**
+ * Converte linha digitável FEBRABAN (47 chars) em código de barras (44 chars).
+ * Padrão: boleto bancário — tipo 1 (banco+moeda começa com 1-8).
+ * Para arrecadação (energia, água — começa com 8) a regra é diferente.
+ */
+function lineToBarcode44(linha) {
+  const d = String(linha).replace(/\D/g, '');
+  if (d.length === 44) return d; // já é barcode
+  if (d.length !== 47) throw new Error('Linha digitável inválida: ' + d.length + ' dígitos');
+  // Posições da linha digitável boleto bancário:
+  // 0..3   = banco(3) + moeda(1)
+  // 4..8   = campo 1 — 5 dígitos (sem DV na pos 9)
+  // 10..19 = campo 2 — 10 dígitos (sem DV na pos 20)
+  // 21..30 = campo 3 — 10 dígitos (sem DV na pos 31)
+  // 32     = DV geral
+  // 33..46 = fator vencimento (4) + valor (10)
+  return d.substr(0,4) + d.substr(32,1) + d.substr(33,14) + d.substr(4,5) + d.substr(10,10) + d.substr(21,10);
+}
+function closeDrawer() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+// ========================= TEMA =========================
+const THEME_KEY = 'dmpay-theme';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const isDark = theme === 'dark';
+  const sun = document.querySelector('.theme-icon-dark');
+  const moon = document.querySelector('.theme-icon-light');
+  if (sun) sun.style.display = isDark ? '' : 'none';
+  if (moon) moon.style.display = isDark ? 'none' : '';
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
+(function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) { applyTheme(saved); return; }
+  const prefers = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  applyTheme(prefers);
+})();
+
+// ========================= ICONES =========================
+if (window.lucide) lucide.createIcons();
+</script>
+</body>
+</html>

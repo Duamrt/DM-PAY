@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calendário de Pagamentos · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <script src="dmpay-data.js"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    /* Sidebar — padronizado DM Pay */
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    /* Topbar */
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .search{position:relative;width:240px}
+    .search input{width:100%;padding:7px 12px 7px 32px;border:1px solid var(--border);border-radius:6px;background:var(--bg-soft);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+    .search input:focus{border-color:var(--accent)}
+    .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-soft)}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+
+    /* Main */
+    main{padding:24px 28px 80px}
+
+    /* Hero */
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:540px}
+
+    /* Month nav */
+    .month-nav{display:flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:4px}
+    .month-nav button{width:32px;height:32px;border:none;background:transparent;color:var(--text-muted);border-radius:6px;cursor:pointer;display:grid;place-items:center}
+    .month-nav button:hover{background:var(--bg-hover);color:var(--text)}
+    .month-nav button svg{width:14px;height:14px}
+    .month-nav .current{font-weight:600;font-size:13px;padding:0 12px;color:var(--text);letter-spacing:-.01em}
+    .month-nav .today-btn{padding:6px 12px;font-size:12px;width:auto;color:var(--accent);font-weight:500}
+
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+    .kpi-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .kpi-label svg{width:12px;height:12px}
+    .kpi-value{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:2px}
+    .kpi-sub{font-size:12px;color:var(--text-muted)}
+    .kpi.highlight{background:linear-gradient(135deg,var(--warn-soft) 0%,transparent 100%);border-color:var(--warn)}
+    .kpi.highlight .kpi-label{color:var(--warn)}
+
+    /* Alert banner */
+    .alert{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;background:var(--warn-soft);border:1px solid var(--warn);border-radius:10px;margin-bottom:18px}
+    .alert svg{width:18px;height:18px;color:var(--warn);flex-shrink:0;margin-top:1px}
+    .alert-text{font-size:13px;color:var(--text);line-height:1.5}
+    .alert-text b{color:var(--warn);font-weight:600}
+    .alert-close{margin-left:auto;background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:4px}
+
+    /* Calendar */
+    .calendar{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg-soft);border-bottom:1px solid var(--border)}
+    .cal-weekdays div{padding:10px 12px;font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;text-align:left}
+    .cal-weekdays div.weekend{color:var(--text-soft);opacity:0.6}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:120px}
+    .cal-day{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:background .15s;position:relative}
+    .cal-day:nth-child(7n){border-right:none}
+    .cal-day:hover{background:var(--bg-hover)}
+    .cal-day.empty{background:var(--bg-soft);color:var(--text-soft);opacity:0.55;cursor:default}
+    .cal-day.empty:hover{background:var(--bg-soft)}
+    .cal-day.weekend{background:var(--bg-soft)}
+    .cal-day.today{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+    .cal-day.selected{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+    .cal-day.heavy{background:linear-gradient(180deg,var(--warn-soft) 0%,transparent 60%)}
+    .cal-day.critical{background:linear-gradient(180deg,var(--danger-soft) 0%,transparent 60%)}
+    .cal-day-num{font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;color:var(--text);letter-spacing:-.02em}
+    .cal-day.empty .cal-day-num{color:var(--text-soft);font-weight:500}
+    .cal-day.weekend .cal-day-num{color:var(--text-muted)}
+    .cal-day.today .cal-day-num{color:var(--accent)}
+    .cal-day-total{font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;color:var(--text);letter-spacing:-.02em}
+    .cal-day.heavy .cal-day-total{color:var(--warn)}
+    .cal-day.critical .cal-day-total{color:var(--danger)}
+    .cal-day-chips{display:flex;gap:3px;flex-wrap:wrap;margin-top:auto}
+    .cal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+    .cal-dot.paid{background:var(--success)}
+    .cal-dot.open{background:var(--warn)}
+    .cal-dot.late{background:var(--danger)}
+    .cal-day-count{font-size:10px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.04em}
+
+    /* Legenda */
+    .legend{display:flex;gap:18px;margin-top:16px;padding:0 4px;font-size:12px;color:var(--text-muted)}
+    .legend-item{display:flex;align-items:center;gap:6px}
+    .legend-dot{width:8px;height:8px;border-radius:50%}
+    .legend-dot.paid{background:var(--success)}
+    .legend-dot.open{background:var(--warn)}
+    .legend-dot.late{background:var(--danger)}
+    .legend-swatch{width:14px;height:14px;border-radius:3px;border:1px solid var(--border)}
+    .legend-swatch.weekend{background:var(--bg-soft)}
+    .legend-swatch.heavy{background:linear-gradient(180deg,var(--warn-soft) 0%,transparent 60%)}
+    .legend-swatch.critical{background:linear-gradient(180deg,var(--danger-soft) 0%,transparent 60%)}
+
+    /* Drawer */
+    .drawer{position:fixed;top:0;right:0;width:460px;height:100vh;background:var(--bg);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:50;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease-out}
+    .drawer.open{transform:translateX(0)}
+    .drawer-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .drawer-head h2{margin:0 0 4px;font-size:18px;font-weight:600;letter-spacing:-.02em}
+    .drawer-head p{margin:0;font-size:13px;color:var(--text-muted)}
+    .drawer-close{background:transparent;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:var(--text-muted)}
+    .drawer-close:hover{background:var(--bg-hover);color:var(--text)}
+    .drawer-close svg{width:14px;height:14px}
+    .drawer-body{flex:1;overflow-y:auto;padding:16px 24px}
+    .drawer-total{background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+    .drawer-total-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+    .drawer-total-value{font-size:22px;font-weight:600;letter-spacing:-.02em;font-family:'Geist Mono',monospace}
+
+    /* Boleto items */
+    .boleto-item{border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;transition:border-color .15s}
+    .boleto-item:hover{border-color:var(--accent)}
+    .boleto-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+    .boleto-supplier{font-weight:600;font-size:14px;letter-spacing:-.01em}
+    .boleto-nf{font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-soft)}
+    .boleto-amount{font-family:'Geist Mono',monospace;font-weight:600;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+    .boleto-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+    .boleto-line{font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+    .boleto-actions{display:flex;gap:6px;flex-shrink:0}
+    .btn-mini{padding:5px 10px;border:1px solid var(--border);border-radius:5px;background:var(--bg-card);color:var(--text-muted);font-family:inherit;font-weight:500;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+    .btn-mini:hover{background:var(--bg-hover);color:var(--text)}
+    .btn-mini svg{width:11px;height:11px}
+    .btn-mini.primary{background:var(--accent);color:white;border-color:var(--accent)}
+    .btn-mini.primary:hover{background:var(--accent-hover)}
+
+    .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:500;border:1px solid transparent}
+    .chip svg{width:11px;height:11px}
+    .chip.success{background:var(--success-soft);color:var(--success);border-color:var(--success)}
+    .chip.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+    .chip.danger{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}
+    .chip.info{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+
+    /* Modal de pagamento */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--bg);border:1px solid var(--border);border-radius:14px;max-width:560px;width:100%;box-shadow:var(--shadow-lg);overflow:hidden;animation:modal-in .22s ease-out}
+    @keyframes modal-in{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+    .modal-head h2{margin:0 0 4px;font-size:18px;font-weight:600;letter-spacing:-.02em}
+    .modal-head p{margin:0;font-size:13px;color:var(--text-muted)}
+    .modal-head .price-label{font-size:10px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;text-align:right}
+    .modal-head .price{font-size:22px;font-weight:600;letter-spacing:-.02em;font-family:'Geist Mono',monospace;color:var(--danger);text-align:right}
+    .modal-body{padding:24px}
+    .barcode-box{background:white;padding:20px;border-radius:10px;border:1px solid #E5E7EB;margin-bottom:16px;display:flex;justify-content:center;align-items:center}
+    .barcode-box svg{width:100%;max-width:460px;height:90px}
+    .barcode-hint{text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:18px;display:flex;align-items:center;justify-content:center;gap:8px;line-height:1.5}
+    .barcode-hint svg{width:14px;height:14px;color:var(--accent);flex-shrink:0}
+    .barcode-hint b{color:var(--text);font-weight:600}
+    .line-wrap{background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:11px 14px;display:flex;align-items:center;gap:10px}
+    .line-text{flex:1;font-family:'Geist Mono',monospace;font-size:12.5px;color:var(--text);font-weight:500;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--bg-soft)}
+    .btn{padding:9px 14px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-weight:500;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .btn:hover{background:var(--bg-hover)}
+    .btn svg{width:14px;height:14px}
+    .btn.primary{background:var(--success);color:white;border-color:var(--success)}
+    .btn.primary:hover{filter:brightness(1.1)}
+    .btn.ghost{border-color:transparent;color:var(--text-muted)}
+    .btn.ghost:hover{background:var(--bg-hover);color:var(--text)}
+
+    @media (max-width: 1200px) {
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width: 960px) {
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .cal-grid{grid-auto-rows:80px}
+      .cal-day{padding:6px 8px}
+      .drawer{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar padronizado -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">DM</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item" href="alertas.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item active"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <!-- Content -->
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span>Financeiro</span>
+        <span class="sep">/</span>
+        <b>Calendário</b>
+      </div>
+      <div class="topbar-actions">
+        <div class="search">
+          <i data-lucide="search"></i>
+          <input placeholder="Buscar boleto, fornecedor...">
+        </div>
+        <button class="icon-btn" id="theme-toggle" title="Alternar tema">
+          <i data-lucide="moon"></i>
+        </button>
+        <button class="icon-btn"><i data-lucide="bell"></i></button>
+        <div class="avatar">DR</div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <div class="hero">
+        <div>
+          <h1>Calendário de Pagamentos</h1>
+          <p>Visualize saídas por dia. Segunda é sempre o dia mais pesado — o sistema agrupa sáb/dom/seg automaticamente pra você não ser surpreendido.</p>
+        </div>
+        <div class="month-nav">
+          <button title="Mês anterior"><i data-lucide="chevron-left"></i></button>
+          <span class="current">Abril 2026</span>
+          <button title="Próximo mês"><i data-lucide="chevron-right"></i></button>
+          <button class="today-btn">Hoje</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="wallet"></i> Total a pagar</div>
+          <div class="kpi-value">R$ 47.850</div>
+          <div class="kpi-sub">12 boletos · 8 dias do mês</div>
+        </div>
+        <div class="kpi highlight">
+          <div class="kpi-label"><i data-lucide="alert-triangle"></i> Maior dia do mês</div>
+          <div class="kpi-value">R$ 10.202</div>
+          <div class="kpi-sub">Seg 20/04 · 3 boletos acumulados do fim de semana</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="check-circle-2"></i> Já pago este mês</div>
+          <div class="kpi-value" style="color:var(--success)">R$ 31.200</div>
+          <div class="kpi-sub">8 boletos pagos · R$ 3.900 / dia em média</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="trending-down"></i> Saldo projetado</div>
+          <div class="kpi-value">R$ 18.340</div>
+          <div class="kpi-sub">Saldo ao final do mês (entradas − saídas)</div>
+        </div>
+      </div>
+
+      <!-- Alert banner — dor principal do Mercadinho -->
+      <div class="alert">
+        <i data-lucide="alert-triangle"></i>
+        <div class="alert-text">
+          <b>Semana que vem tem acúmulo.</b> 3 boletos com vencimento entre sábado 18 e domingo 19 serão cobrados na <b>segunda-feira 20/04</b> — totalizando <b>R$ 10.202,00</b>. Prepare caixa: IMPACTO (R$ 4.282), CAFÉ TRÊS CORAÇÕES (R$ 2.400), NESTLÉ (R$ 3.520).
+        </div>
+        <button class="alert-close" title="Dispensar"><i data-lucide="x" style="width:14px;height:14px"></i></button>
+      </div>
+
+      <!-- Calendar -->
+      <div class="calendar">
+        <div class="cal-weekdays">
+          <div class="weekend">Dom</div>
+          <div>Seg</div>
+          <div>Ter</div>
+          <div>Qua</div>
+          <div>Qui</div>
+          <div>Sex</div>
+          <div class="weekend">Sáb</div>
+        </div>
+        <div class="cal-grid">
+          <!-- Semana 1 (mar 29 - abr 4) -->
+          <div class="cal-day empty weekend"><span class="cal-day-num">29</span></div>
+          <div class="cal-day empty"><span class="cal-day-num">30</span></div>
+          <div class="cal-day empty"><span class="cal-day-num">31</span></div>
+          <div class="cal-day"><span class="cal-day-num">1</span></div>
+          <div class="cal-day"><span class="cal-day-num">2</span></div>
+          <div class="cal-day">
+            <span class="cal-day-num">3</span>
+            <span class="cal-day-total">R$ 4.500</span>
+            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">1 pago</span></div>
+          </div>
+          <div class="cal-day weekend"><span class="cal-day-num">4</span></div>
+
+          <!-- Semana 2 (abr 5-11) -->
+          <div class="cal-day weekend"><span class="cal-day-num">5</span></div>
+          <div class="cal-day">
+            <span class="cal-day-num">6</span>
+            <span class="cal-day-total">R$ 380</span>
+            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">1 pago</span></div>
+          </div>
+          <div class="cal-day">
+            <span class="cal-day-num">7</span>
+            <span class="cal-day-total">R$ 1.890</span>
+            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">1 pago</span></div>
+          </div>
+          <div class="cal-day"><span class="cal-day-num">8</span></div>
+          <div class="cal-day"><span class="cal-day-num">9</span></div>
+          <div class="cal-day">
+            <span class="cal-day-num">10</span>
+            <span class="cal-day-total">R$ 12.800</span>
+            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">Folha</span></div>
+          </div>
+          <div class="cal-day weekend"><span class="cal-day-num">11</span></div>
+
+          <!-- Semana 3 (abr 12-18) -->
+          <div class="cal-day weekend"><span class="cal-day-num">12</span></div>
+          <div class="cal-day"><span class="cal-day-num">13</span></div>
+          <div class="cal-day">
+            <span class="cal-day-num">14</span>
+            <span class="cal-day-total">R$ 420</span>
+            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">1 pago</span></div>
+          </div>
+          <div class="cal-day"><span class="cal-day-num">15</span></div>
+          <div class="cal-day"><span class="cal-day-num">16</span></div>
+          <div class="cal-day">
+            <span class="cal-day-num">17</span>
+            <span class="cal-day-total">R$ 2.929</span>
+            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">2 pagos</span></div>
+          </div>
+          <div class="cal-day today weekend">
+            <span class="cal-day-num">18</span>
+            <span class="cal-day-total" style="font-size:11px;color:var(--accent);font-weight:500">Hoje</span>
+          </div>
+
+          <!-- Semana 4 (abr 19-25) — a dor do mês -->
+          <div class="cal-day weekend"><span class="cal-day-num">19</span></div>
+          <div class="cal-day critical selected" onclick="this.classList.toggle('selected')">
+            <span class="cal-day-num">20</span>
+            <span class="cal-day-total">R$ 10.202</span>
+            <div class="cal-day-chips">
+              <span class="cal-dot open"></span><span class="cal-dot open"></span><span class="cal-dot open"></span>
+              <span class="cal-day-count">3 abertos</span>
+            </div>
+          </div>
+          <div class="cal-day"><span class="cal-day-num">21</span></div>
+          <div class="cal-day heavy">
+            <span class="cal-day-num">22</span>
+            <span class="cal-day-total">R$ 5.890</span>
+            <div class="cal-day-chips"><span class="cal-dot open"></span><span class="cal-day-count">1 aberto</span></div>
+          </div>
+          <div class="cal-day"><span class="cal-day-num">23</span></div>
+          <div class="cal-day">
+            <span class="cal-day-num">24</span>
+            <span class="cal-day-total">R$ 1.980</span>
+            <div class="cal-day-chips"><span class="cal-dot open"></span><span class="cal-day-count">1 aberto</span></div>
+          </div>
+          <div class="cal-day weekend"><span class="cal-day-num">25</span></div>
+
+          <!-- Semana 5 (abr 26-30) -->
+          <div class="cal-day weekend"><span class="cal-day-num">26</span></div>
+          <div class="cal-day heavy">
+            <span class="cal-day-num">27</span>
+            <span class="cal-day-total">R$ 5.390</span>
+            <div class="cal-day-chips">
+              <span class="cal-dot open"></span><span class="cal-dot open"></span>
+              <span class="cal-day-count">2 abertos</span>
+            </div>
+          </div>
+          <div class="cal-day"><span class="cal-day-num">28</span></div>
+          <div class="cal-day"><span class="cal-day-num">29</span></div>
+          <div class="cal-day">
+            <span class="cal-day-num">30</span>
+            <span class="cal-day-total">R$ 4.283</span>
+            <div class="cal-day-chips"><span class="cal-dot open"></span><span class="cal-day-count">1 aberto</span></div>
+          </div>
+          <div class="cal-day empty"><span class="cal-day-num">1</span></div>
+          <div class="cal-day empty weekend"><span class="cal-day-num">2</span></div>
+        </div>
+      </div>
+
+      <!-- Legenda -->
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot paid"></span> Pago</div>
+        <div class="legend-item"><span class="legend-dot open"></span> A pagar</div>
+        <div class="legend-item"><span class="legend-dot late"></span> Atrasado</div>
+        <div class="legend-item"><span class="legend-swatch weekend"></span> Fim de semana</div>
+        <div class="legend-item"><span class="legend-swatch heavy"></span> Dia pesado</div>
+        <div class="legend-item"><span class="legend-swatch critical"></span> Crítico (fim de semana acumulado)</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer -->
+  <aside class="drawer open" id="drawer">
+    <div class="drawer-head">
+      <div>
+        <h2>Segunda, 20 de abril</h2>
+        <p>Fim de semana acumulado · 3 boletos · <b style="color:var(--danger)">R$ 10.202,00</b></p>
+      </div>
+      <button class="drawer-close" onclick="document.getElementById('drawer').classList.remove('open')" title="Fechar"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="drawer-total">
+        <div>
+          <div class="drawer-total-label">Total do dia</div>
+          <div class="drawer-total-value" style="color:var(--danger)">R$ 10.202,00</div>
+        </div>
+        <span class="chip danger"><i data-lucide="alert-triangle"></i> Dia crítico</span>
+      </div>
+
+      <!-- Boleto 1 -->
+      <div class="boleto-item">
+        <div class="boleto-head">
+          <div>
+            <div class="boleto-supplier">IMPACTO DISTRIBUIDORA</div>
+            <div class="boleto-nf">NF 042317 · Parcela 1/3 · Laticínios</div>
+          </div>
+          <div class="boleto-amount">R$ 4.282,50</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="chip warn"><i data-lucide="clock"></i> Venceu sábado 18/04</span>
+          <span class="chip info"><i data-lucide="calendar"></i> Cobrado hoje 20/04</span>
+        </div>
+        <div class="boleto-footer">
+          <div class="boleto-line">34191.79001 01043.510047 91020.150008 6 89860000428250</div>
+          <div class="boleto-actions">
+            <button class="btn-mini" title="Copiar linha"><i data-lucide="copy"></i></button>
+            <button class="btn-mini primary"><i data-lucide="check"></i> Pagar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boleto 2 -->
+      <div class="boleto-item">
+        <div class="boleto-head">
+          <div>
+            <div class="boleto-supplier">CAFÉ TRÊS CORAÇÕES S/A</div>
+            <div class="boleto-nf">NF 038211 · Parcela 1/2 · Bebidas</div>
+          </div>
+          <div class="boleto-amount">R$ 2.400,00</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="chip warn"><i data-lucide="clock"></i> Venceu domingo 19/04</span>
+          <span class="chip info"><i data-lucide="calendar"></i> Cobrado hoje 20/04</span>
+        </div>
+        <div class="boleto-footer">
+          <div class="boleto-line">23792.48001 09812.450011 48310.210017 7 89730000240000</div>
+          <div class="boleto-actions">
+            <button class="btn-mini" title="Copiar linha"><i data-lucide="copy"></i></button>
+            <button class="btn-mini primary"><i data-lucide="check"></i> Pagar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boleto 3 -->
+      <div class="boleto-item">
+        <div class="boleto-head">
+          <div>
+            <div class="boleto-supplier">NESTLÉ BRASIL LTDA</div>
+            <div class="boleto-nf">NF 512033 · Parcela 1/1 · Laticínios</div>
+          </div>
+          <div class="boleto-amount">R$ 3.520,00</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="chip info"><i data-lucide="calendar"></i> Vence hoje 20/04</span>
+          <span class="chip success"><i data-lucide="shield-check"></i> No prazo</span>
+        </div>
+        <div class="boleto-footer">
+          <div class="boleto-line">00190.00009 03123.810014 51112.330018 3 89840000352000</div>
+          <div class="boleto-actions">
+            <button class="btn-mini" title="Copiar linha"><i data-lucide="copy"></i></button>
+            <button class="btn-mini primary"><i data-lucide="check"></i> Pagar</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding:14px 16px;background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+        <i data-lucide="info" style="width:16px;height:16px;color:var(--accent);flex-shrink:0;margin-top:2px"></i>
+        <div style="font-size:12.5px;color:var(--text-muted);line-height:1.5">
+          <b style="color:var(--text);font-weight:600">Dica:</b> você pode <b>antecipar</b> os boletos do fim de semana para sexta-feira se tiver caixa. Isso distribui melhor o fluxo e reduz o impacto da segunda.
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Modal de pagamento -->
+  <div class="modal-overlay" id="payModal">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <h2 id="paySupplier">IMPACTO DISTRIBUIDORA</h2>
+          <p id="payNfInfo">NF 042317 · Parcela 1/3</p>
+        </div>
+        <div>
+          <div class="price-label">Valor</div>
+          <div class="price" id="payAmount">R$ 4.282,50</div>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="barcode-box">
+          <svg id="barcodeSvg"></svg>
+        </div>
+        <div class="barcode-hint">
+          <i data-lucide="smartphone"></i>
+          <span><b>Aponte o celular</b> pro código acima ou copie a linha digitável abaixo.</span>
+        </div>
+        <div class="line-wrap">
+          <span class="line-text" id="payLineText">34191.79001 01043.510047 91020.150008 6 89860000428250</span>
+          <button class="btn" id="btnCopyLine" title="Copiar linha digitável"><i data-lucide="copy"></i> Copiar</button>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="document.getElementById('payModal').classList.remove('open')">Fechar</button>
+        <button class="btn primary" id="btnMarkPaid"><i data-lucide="check-circle-2"></i> Marcar como pago</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tema dual-mode
+    const root = document.documentElement;
+    const saved = localStorage.getItem('dmp-theme');
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    root.setAttribute('data-theme', saved || (systemDark ? 'dark' : 'light'));
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('dmp-theme', next);
+      lucide.createIcons();
+    });
+
+    // Click no dia abre drawer (mock — sempre mostra o dia 20)
+    document.querySelectorAll('.cal-day').forEach(day => {
+      if (day.classList.contains('empty')) return;
+      day.addEventListener('click', () => {
+        document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+        day.classList.add('selected');
+        document.getElementById('drawer').classList.add('open');
+      });
+    });
+
+    // Dispensar alerta
+    document.querySelector('.alert-close').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelector('.alert').style.display = 'none';
+    });
+
+    // ========================================
+    // Algoritmo FEBRABAN — gera boletos válidos (DVs corretos)
+    // ========================================
+    function mod10(num) {
+      let soma = 0, peso = 2;
+      for (let i = num.length - 1; i >= 0; i--) {
+        let prod = parseInt(num[i]) * peso;
+        if (prod >= 10) prod = Math.floor(prod / 10) + (prod % 10);
+        soma += prod;
+        peso = peso === 2 ? 1 : 2;
+      }
+      const resto = soma % 10;
+      return resto === 0 ? 0 : 10 - resto;
+    }
+    function mod11Boleto(num) {
+      let soma = 0, peso = 2;
+      for (let i = num.length - 1; i >= 0; i--) {
+        soma += parseInt(num[i]) * peso;
+        peso = peso === 9 ? 2 : peso + 1;
+      }
+      const resto = soma % 11;
+      let dv = 11 - resto;
+      if (dv === 0 || dv === 10 || dv === 11) dv = 1;
+      return dv;
+    }
+    // Fator vencimento: base 22/02/2025 = 1000 (nova regra FEBRABAN 2025+)
+    function fatorVencimento(dataVcto) {
+      const base = new Date(2025, 1, 22); // 22/02/2025
+      const vcto = new Date(dataVcto);
+      const dias = Math.floor((vcto - base) / 86400000);
+      return (1000 + dias).toString().padStart(4, '0');
+    }
+    function gerarBoletoValido({banco='341', moeda='9', dataVcto, valorCentavos, campoLivre}) {
+      banco = banco.padStart(3, '0');
+      const fator = fatorVencimento(dataVcto);
+      const valor = valorCentavos.toString().padStart(10, '0');
+      campoLivre = campoLivre.padStart(25, '0');
+      // DV geral (módulo 11 de 43 dígitos)
+      const semDV = banco + moeda + fator + valor + campoLivre;
+      const dvGeral = mod11Boleto(semDV);
+      const barcode44 = banco + moeda + dvGeral + fator + valor + campoLivre;
+      // Linha digitável 47 dígitos: c1(10) + c2(11) + c3(11) + c4(1) + c5(14)
+      const base1 = banco + moeda + campoLivre.substr(0, 5);
+      const c1 = base1 + mod10(base1);
+      const base2 = campoLivre.substr(5, 10);
+      const c2 = base2 + mod10(base2);
+      const base3 = campoLivre.substr(15, 10);
+      const c3 = base3 + mod10(base3);
+      const c4 = dvGeral.toString();
+      const c5 = fator + valor;
+      const linhaFmt = `${c1.substr(0,5)}.${c1.substr(5,5)} ${c2.substr(0,5)}.${c2.substr(5,6)} ${c3.substr(0,5)}.${c3.substr(5,6)} ${c4} ${c5}`;
+      return { barcode44, linhaFmt };
+    }
+
+    // Substitui linhas mock por linhas FEBRABAN válidas ao carregar
+    (function aplicarLinhasValidas() {
+      const boletosMock = [
+        { banco: '341', dataVcto: '2026-04-20', valorCentavos: 428250, campoLivre: '7900101043510047910201500' },
+        { banco: '237', dataVcto: '2026-04-20', valorCentavos: 240000, campoLivre: '4801298124500483102100177' },
+        { banco: '033', dataVcto: '2026-04-20', valorCentavos: 352000, campoLivre: '0000903123810014511123318' }
+      ];
+      const items = document.querySelectorAll('.boleto-item');
+      items.forEach((item, i) => {
+        if (!boletosMock[i]) return;
+        const b = gerarBoletoValido(boletosMock[i]);
+        item.querySelector('.boleto-line').textContent = b.linhaFmt;
+        item.dataset.barcode = b.barcode44;
+      });
+    })();
+
+    // ========================================
+    // Modal de pagamento + barcode renderer
+    // ========================================
+    function lineToBarcode44(linha) {
+      const d = String(linha).replace(/\D/g, '');
+      if (d.length === 44) return d;
+      if (d.length !== 47) throw new Error('Linha invalida: ' + d.length + ' digitos');
+      // Boleto bancario 47 -> 44 (posicoes FEBRABAN)
+      return d.substr(0,4) + d.substr(32,1) + d.substr(33,14) + d.substr(4,5) + d.substr(10,10) + d.substr(21,10);
+    }
+
+    function abrirPagamento(btn) {
+      const item = btn.closest('.boleto-item');
+      const supplier = item.querySelector('.boleto-supplier').textContent.trim();
+      const nfInfo = item.querySelector('.boleto-nf').textContent.trim();
+      const amount = item.querySelector('.boleto-amount').textContent.trim();
+      const line = item.querySelector('.boleto-line').textContent.trim();
+
+      document.getElementById('paySupplier').textContent = supplier;
+      document.getElementById('payNfInfo').textContent = nfInfo;
+      document.getElementById('payAmount').textContent = amount;
+      document.getElementById('payLineText').textContent = line;
+
+      try {
+        const barcode = lineToBarcode44(line);
+        JsBarcode('#barcodeSvg', barcode, {
+          format: 'ITF',
+          displayValue: false,
+          height: 95,
+          margin: 10,
+          width: 2.4,
+          background: '#ffffff',
+          lineColor: '#000000'
+        });
+      } catch (e) {
+        console.error('Erro ao gerar barcode:', e);
+      }
+
+      document.getElementById('payModal').classList.add('open');
+      lucide.createIcons();
+    }
+
+    // Bind botoes Pagar no drawer
+    document.querySelectorAll('.boleto-item .btn-mini.primary').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        abrirPagamento(btn);
+      });
+    });
+
+    // Copiar linha digitavel
+    document.getElementById('btnCopyLine').addEventListener('click', () => {
+      const text = document.getElementById('payLineText').textContent.replace(/\s/g, '');
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('btnCopyLine');
+        btn.innerHTML = '<i data-lucide="check"></i> Copiado!';
+        lucide.createIcons();
+        setTimeout(() => {
+          btn.innerHTML = '<i data-lucide="copy"></i> Copiar';
+          lucide.createIcons();
+        }, 1500);
+      }).catch(() => {
+        // Fallback pra navegadores sem clipboard API
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Linha copiada: ' + text);
+      });
+    });
+
+    // Marcar como pago
+    document.getElementById('btnMarkPaid').addEventListener('click', () => {
+      const supplier = document.getElementById('paySupplier').textContent;
+      const amount = document.getElementById('payAmount').textContent;
+      alert('Boleto de ' + supplier + ' (' + amount + ') marcado como pago.\nCalendário será atualizado.');
+      document.getElementById('payModal').classList.remove('open');
+    });
+
+    // Fechar modal clicando no overlay
+    document.getElementById('payModal').addEventListener('click', (e) => {
+      if (e.target.id === 'payModal') {
+        document.getElementById('payModal').classList.remove('open');
+      }
+    });
+
+    // ESC fecha modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('payModal').classList.remove('open');
+      }
+    });
+
+    lucide.createIcons();
+
+    // ============== DADOS REAIS (override) ==============
+    (function popularCalendarioReal(){
+      const D = window.DMPAY_DATA; if (!D) return;
+      const HOJE = new Date('2026-04-19T00:00:00');
+
+      // Agrupa pendentes por dia do mês de abril 2026
+      const porDiaAbr = {};  // { 22: { total: X, count: Y } }
+      const porDiaMai = {};
+      let totalMesAbr = 0, totalMesMai = 0;
+      (D.PENDENTES || []).forEach(p => {
+        if (!p.vencimento) return;
+        const [y, m, d] = p.vencimento.split('-').map(Number);
+        if (y === 2026 && m === 4) {
+          if (!porDiaAbr[d]) porDiaAbr[d] = { total:0, count:0 };
+          porDiaAbr[d].total += p.valor;
+          porDiaAbr[d].count += 1;
+          totalMesAbr += p.valor;
+        } else if (y === 2026 && m === 5) {
+          if (!porDiaMai[d]) porDiaMai[d] = { total:0, count:0 };
+          porDiaMai[d].total += p.valor;
+          porDiaMai[d].count += 1;
+          totalMesMai += p.valor;
+        }
+      });
+
+      // Total pagos em abril
+      let pagosAbr = 0, pagosCount = 0;
+      (D.PAGOS_2026 || []).forEach(p => {
+        if (p.pagamento && p.pagamento.startsWith('2026-04')) {
+          pagosAbr += p.valor;
+          pagosCount += 1;
+        }
+      });
+
+      function fmt(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+
+      // Itera em cada célula do calendário abril (não empty, não weekend-vazio)
+      const dias = document.querySelectorAll('.cal-grid .cal-day');
+      dias.forEach(cell => {
+        if (cell.classList.contains('empty')) return;
+        const numEl = cell.querySelector('.cal-day-num');
+        if (!numEl) return;
+        const diaNum = parseInt(numEl.textContent);
+        if (!diaNum) return;
+
+        // Limpa chips/total existentes, mantendo só o número
+        cell.querySelectorAll('.cal-day-total, .cal-day-chips').forEach(e => e.remove());
+        cell.classList.remove('critical', 'heavy', 'today', 'selected');
+
+        // Marca HOJE (dia 19)
+        if (diaNum === 19 && !cell.classList.contains('empty')) {
+          cell.classList.add('today');
+          const tot = document.createElement('span');
+          tot.className = 'cal-day-total';
+          tot.style.cssText = 'font-size:11px;color:var(--accent);font-weight:500';
+          tot.textContent = 'Hoje';
+          cell.appendChild(tot);
+          return;
+        }
+
+        // Dia com pendências
+        const agg = porDiaAbr[diaNum];
+        if (agg && agg.total > 0) {
+          const tot = document.createElement('span');
+          tot.className = 'cal-day-total';
+          tot.textContent = fmt(agg.total);
+          cell.appendChild(tot);
+
+          const chips = document.createElement('div');
+          chips.className = 'cal-day-chips';
+          const dots = Math.min(agg.count, 3);
+          for (let i = 0; i < dots; i++) {
+            const d = document.createElement('span');
+            d.className = 'cal-dot open';
+            chips.appendChild(d);
+          }
+          const cnt = document.createElement('span');
+          cnt.className = 'cal-day-count';
+          cnt.textContent = agg.count + (agg.count > 1 ? ' aberto' : ' aberto');
+          if (agg.count > 1) cnt.textContent = agg.count + ' abertos';
+          chips.appendChild(cnt);
+          cell.appendChild(chips);
+
+          // Classes visuais: >R$ 50k = critical, >R$ 20k = heavy
+          if (agg.total > 50000) cell.classList.add('critical');
+          else if (agg.total > 20000) cell.classList.add('heavy');
+        }
+      });
+
+      // Atualiza KPIs
+      const ks = document.querySelectorAll('.kpi-value');
+      if (ks[0]) ks[0].textContent = fmt(totalMesAbr);  // Total abril
+      // próximos 7 dias (19-26)
+      let prox7 = 0;
+      for (let d = 20; d <= 26; d++) if (porDiaAbr[d]) prox7 += porDiaAbr[d].total;
+      if (ks[1]) {
+        ks[1].textContent = fmt(prox7);
+        ks[1].style.color = '';
+      }
+      if (ks[2]) ks[2].textContent = fmt(pagosAbr);  // Já pagos abril
+      if (ks[3]) ks[3].textContent = fmt(totalMesMai);  // Vence maio
+
+      const kpiMetas = document.querySelectorAll('.kpi-sub');
+      // Legendas já estão OK, só atualizar subtítulo
+
+      // Subtítulo do hero
+      const heroSub = document.querySelector('.hero-sub');
+      if (heroSub) heroSub.innerHTML = `Abril/2026 · <b>dados reais</b> do Mercadinho · ${Object.keys(porDiaAbr).length} dias com vencimento`;
+
+      // Alerta do topo: pior dia do mês
+      let piorDia = null, piorValor = 0;
+      Object.entries(porDiaAbr).forEach(([d, agg]) => {
+        if (agg.total > piorValor) { piorValor = agg.total; piorDia = parseInt(d); }
+      });
+      if (piorDia) {
+        const alertText = document.querySelector('.alert-text');
+        if (alertText) alertText.innerHTML = `Dia <b>${piorDia}/04</b> concentra <b style="color:var(--danger)">${fmt(piorValor)}</b> em vencimentos — pior dia do mês. Vale antecipar compras com prazo maior pra suavizar.`;
+      }
+
+      // Atualiza o drawer com os boletos reais do dia 20 (próximo com pendências)
+      const proxDiaPend = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].find(d => porDiaAbr[d]);
+      if (proxDiaPend) {
+        const drawerHead = document.querySelector('.drawer-head h2');
+        const drawerP = document.querySelector('.drawer-head p');
+        if (drawerHead) drawerHead.textContent = `Dia ${proxDiaPend} de abril`;
+        if (drawerP) {
+          const agg = porDiaAbr[proxDiaPend];
+          drawerP.innerHTML = `${agg.count} boleto${agg.count>1?'s':''} · <b style="color:var(--danger)">${fmt(agg.total)}</b>`;
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

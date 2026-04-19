@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vendas diárias · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+      --pay-dinheiro:#10B981; --pay-credito:#8B5CF6; --pay-debito:#3B82F6;
+      --pay-pix:#EC4899; --pay-fiado:#F97316;
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+      --pay-dinheiro:#34D399; --pay-credito:#A78BFA; --pay-debito:#60A5FA;
+      --pay-pix:#F472B6; --pay-fiado:#FB923C;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    /* Sidebar padrão */
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    /* Topbar */
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:.15s}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+
+    main{padding:24px 28px 80px}
+
+    /* Hero */
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:18px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:12px}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+
+    /* Sync banner iCommerce */
+    .sync-banner{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border-left:3px solid var(--success)}
+    .sync-left{display:flex;gap:12px;align-items:center;flex:1;min-width:260px}
+    .sync-ico{width:34px;height:34px;border-radius:8px;background:var(--success-soft);color:var(--success);display:grid;place-items:center;flex-shrink:0}
+    .sync-ico svg{width:15px;height:15px;animation:sync-spin 8s linear infinite}
+    @keyframes sync-spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .sync-title{font-size:13px;letter-spacing:-.01em}
+    .sync-title b{font-weight:600;color:var(--success)}
+    .sync-meta{font-size:11.5px;color:var(--text-soft);margin-top:4px;display:flex;gap:14px;flex-wrap:wrap;font-family:'Geist Mono',monospace}
+    .sync-meta span{display:inline-flex;align-items:center;gap:5px}
+    .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 0 0 rgba(16,185,129,0.6);animation:pulse-dot 2s infinite}
+    @keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(16,185,129,0.6)}70%{box-shadow:0 0 0 7px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+    .sync-right{display:flex;gap:6px;flex-wrap:wrap}
+    .sync-btn{padding:7px 12px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;display:inline-flex;align-items:center;gap:5px;transition:.15s}
+    .sync-btn:hover{background:var(--bg-hover);border-color:var(--border-strong)}
+    .sync-btn svg{width:12px;height:12px}
+    .sync-btn.ghost{background:transparent;color:var(--text-muted)}
+
+    /* Auto tag nos KPIs e cards */
+    .auto-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--success-soft);color:var(--success);padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
+    .auto-tag svg{width:9px;height:9px}
+
+    /* Dia em curso destacado */
+    .today-card{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-hover) 100%);color:white;border-radius:14px;padding:20px 24px;margin-bottom:18px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;box-shadow:var(--shadow-lg)}
+    .today-info{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+    .today-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+    .today-date{font-size:14px;font-weight:600;margin-top:4px;opacity:.95;display:flex;align-items:center;gap:8px}
+    .today-date-dot{width:7px;height:7px;background:#10F981;border-radius:50%;box-shadow:0 0 0 0 rgba(16,249,129,0.6);animation:pulse 2s infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,249,129,0.6)}70%{box-shadow:0 0 0 8px rgba(16,249,129,0)}100%{box-shadow:0 0 0 0 rgba(16,249,129,0)}}
+    .today-value{font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1;font-family:'Geist',sans-serif;margin-top:4px}
+    .today-sub{font-size:12px;opacity:.85;margin-top:6px;display:flex;align-items:center;gap:6px}
+    .today-sub svg{width:12px;height:12px}
+    .today-actions{display:flex;gap:8px}
+    .btn-today{padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:.15s}
+    .btn-today svg{width:14px;height:14px}
+    .btn-today.primary{background:white;color:var(--accent)}
+    .btn-today.primary:hover{background:#f1f5ff}
+    .btn-today.ghost{background:rgba(255,255,255,.15);color:white;backdrop-filter:blur(6px)}
+    .btn-today.ghost:hover{background:rgba(255,255,255,.25)}
+
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+    .kpi-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .kpi-label svg{width:12px;height:12px}
+    .kpi-value{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:2px;font-family:'Geist',sans-serif}
+    .kpi-sub{font-size:12px;color:var(--text-muted)}
+    .kpi-sub .up{color:var(--success);font-weight:600}
+    .kpi-sub .down{color:var(--danger);font-weight:600}
+    .kpi.success{background:linear-gradient(135deg,var(--success-soft) 0%,transparent 100%);border-color:var(--success)}
+    .kpi.success .kpi-label,.kpi.success .kpi-value{color:var(--success)}
+
+    /* 2-col grid */
+    .sales-grid{display:grid;grid-template-columns:1fr 380px;gap:18px;margin-bottom:18px}
+    @media (max-width:1100px){.sales-grid{grid-template-columns:1fr}}
+
+    /* Chart card */
+    .chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+    .chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:14px;flex-wrap:wrap}
+    .chart-title{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+    .chart-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .chart-box{height:260px;position:relative}
+    .chart-legend{display:flex;gap:16px;font-size:12px;color:var(--text-muted);margin-top:10px;flex-wrap:wrap}
+    .chart-legend span{display:inline-flex;align-items:center;gap:6px}
+    .legend-dot{width:10px;height:10px;border-radius:3px}
+
+    /* Breakdown por forma pagamento */
+    .pay-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+    .pay-card h3{margin:0 0 14px;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .pay-card h3 svg{width:14px;height:14px;color:var(--accent)}
+    .pay-row{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border)}
+    .pay-row:last-child{border-bottom:none}
+    .pay-ico{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;flex-shrink:0}
+    .pay-ico svg{width:12px;height:12px;color:white}
+    .pay-ico.dinheiro{background:var(--pay-dinheiro)}
+    .pay-ico.credito{background:var(--pay-credito)}
+    .pay-ico.debito{background:var(--pay-debito)}
+    .pay-ico.pix{background:var(--pay-pix)}
+    .pay-ico.fiado{background:var(--pay-fiado)}
+    .pay-info{min-width:0}
+    .pay-name{font-size:13px;font-weight:500;letter-spacing:-.01em;line-height:1.1}
+    .pay-bar{height:4px;background:var(--bg-soft);border-radius:2px;margin-top:5px;overflow:hidden}
+    .pay-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+    .pay-bar-fill.dinheiro{background:var(--pay-dinheiro)}
+    .pay-bar-fill.credito{background:var(--pay-credito)}
+    .pay-bar-fill.debito{background:var(--pay-debito)}
+    .pay-bar-fill.pix{background:var(--pay-pix)}
+    .pay-bar-fill.fiado{background:var(--pay-fiado)}
+    .pay-value{text-align:right}
+    .pay-val-main{font-size:13px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.01em}
+    .pay-val-pct{font-size:10.5px;color:var(--text-soft);margin-top:1px;font-family:'Geist Mono',monospace}
+    .pay-total{margin-top:12px;padding-top:14px;border-top:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700}
+    .pay-total-val{font-family:'Geist Mono',monospace;letter-spacing:-.02em;font-size:18px}
+
+    /* Heatmap */
+    .heatmap-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:18px}
+    .heatmap-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:14px;flex-wrap:wrap}
+    .heatmap-head h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+    .heatmap-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .hm-legend{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)}
+    .hm-legend-scale{display:flex;gap:2px}
+    .hm-legend-box{width:12px;height:12px;border-radius:3px}
+    .hm-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+    .hm-dow{font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;text-align:center;padding:4px 0}
+    .hm-cell{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;padding:6px 7px;cursor:pointer;transition:.15s;border:1px solid transparent;position:relative;min-height:64px}
+    .hm-cell:hover{transform:scale(1.06);border-color:var(--text);z-index:5}
+    .hm-cell.empty{background:transparent;cursor:default}
+    .hm-cell.empty:hover{transform:none;border-color:transparent}
+    .hm-cell.today{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+    .hm-cell.future{background:var(--bg-soft);color:var(--text-soft);cursor:default;opacity:0.5}
+    .hm-cell.future:hover{transform:none;border-color:transparent}
+    .hm-num{font-family:'Geist Mono',monospace;font-weight:700;font-size:12px;letter-spacing:-.01em}
+    .hm-val{font-size:9.5px;font-family:'Geist Mono',monospace;font-weight:600;margin-top:auto;line-height:1.1}
+
+    /* Tabela lançamentos */
+    .records-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .records-head{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .records-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em}
+    .records-table{width:100%;border-collapse:collapse;font-size:13px}
+    .records-table th{font-size:10.5px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:10px 16px;background:var(--bg-soft);border-bottom:1px solid var(--border);white-space:nowrap}
+    .records-table th.num{text-align:right}
+    .records-table th.ctr{text-align:center}
+    .records-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+    .records-table td.num{text-align:right;font-family:'Geist Mono',monospace;font-weight:600;letter-spacing:-.01em}
+    .records-table td.ctr{text-align:center}
+    .records-table tr:last-child td{border-bottom:none}
+    .records-table tbody tr:hover{background:var(--bg-hover)}
+    .date-cell{font-family:'Geist Mono',monospace;font-weight:600;font-size:13px;letter-spacing:-.01em}
+    .date-day{font-size:10.5px;color:var(--text-soft);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+    .status-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em}
+    .status-pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .status-pill.fechado{background:var(--success-soft);color:var(--success)}
+    .status-pill.aberto{background:var(--accent-soft);color:var(--accent)}
+    .status-pill.parcial{background:var(--warn-soft);color:var(--warn)}
+
+    .pay-mix{display:inline-flex;gap:2px;height:10px;border-radius:2px;overflow:hidden;min-width:120px}
+    .pay-mix-seg{height:100%}
+    .pay-mix-seg.dinheiro{background:var(--pay-dinheiro)}
+    .pay-mix-seg.credito{background:var(--pay-credito)}
+    .pay-mix-seg.debito{background:var(--pay-debito)}
+    .pay-mix-seg.pix{background:var(--pay-pix)}
+    .pay-mix-seg.fiado{background:var(--pay-fiado)}
+
+    /* Modal fechamento */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+    .modal-bg.open{display:flex}
+    .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;max-width:520px;width:100%;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+    .modal-head h2{margin:0 0 2px;font-size:16px;font-weight:600;letter-spacing:-.01em}
+    .modal-head-sub{font-size:12px;color:var(--text-muted)}
+    .modal-body{padding:20px 22px}
+    .modal-foot{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-top:1px solid var(--border);background:var(--bg-soft)}
+    .close-btn{width:30px;height:30px;display:grid;place-items:center;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer}
+    .close-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .close-btn svg{width:16px;height:16px}
+
+    /* Form conciliação */
+    .recon-head{display:grid;grid-template-columns:28px 1fr 120px 140px 40px;gap:10px;align-items:center;padding:10px 0 8px;border-bottom:1px solid var(--border);font-size:10.5px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em}
+    .recon-head .col-icom{text-align:right;display:inline-flex;align-items:center;gap:4px;justify-content:flex-end}
+    .recon-head .col-icom svg{width:11px;height:11px;color:var(--success)}
+    .recon-head .col-real{text-align:right}
+    .pay-input-row{display:grid;grid-template-columns:28px 1fr 120px 140px 40px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
+    .pay-input-row:last-child{border-bottom:none}
+    .pay-input-row .pay-ico{width:28px;height:28px;border-radius:7px}
+    .pay-input-row .pay-ico svg{width:14px;height:14px}
+    .pay-input-label{font-size:13px;font-weight:500}
+    .pay-input-hint{font-size:11px;color:var(--text-soft);margin-top:2px}
+    .icom-val{font-size:13px;font-weight:600;font-family:'Geist Mono',monospace;text-align:right;color:var(--text-muted);letter-spacing:-.01em}
+    .pay-input{width:140px;padding:8px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;font-size:13px;text-align:right;font-weight:600;outline:none;transition:.15s}
+    .pay-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+    .diff-ind{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;font-size:10px;font-weight:700;font-family:'Geist Mono',monospace}
+    .diff-ind.ok{background:var(--success-soft);color:var(--success)}
+    .diff-ind.warn{background:var(--warn-soft);color:var(--warn)}
+    .diff-ind svg{width:13px;height:13px}
+
+    .pay-input-total{margin-top:14px;padding:12px 14px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+    .pay-input-total-label{font-size:12px;font-weight:500;color:var(--accent)}
+    .pay-input-total-val{font-size:18px;font-weight:700;font-family:'Geist Mono',monospace;color:var(--accent);letter-spacing:-.01em}
+
+    @media (max-width:860px){
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+      .today-card{grid-template-columns:1fr}
+      .today-actions{flex-wrap:wrap}
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item" href="alertas.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item active"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Entradas</a>
+        <span class="sep">/</span>
+        <b>Vendas diárias</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn"><i data-lucide="help-circle"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>Vendas diárias</h1>
+          <p>Fechamento do dia por forma de pagamento. O sistema soma dinheiro do caixa, Z das maquininhas, PIX recebidos e fiado — e mostra <b>se o dia veio forte ou fraco em tempo real</b>, comparado com o mesmo dia da semana anterior.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost"><i data-lucide="calendar"></i> Abril / 2026</button>
+          <button class="btn btn-ghost" onclick="openImport()"><i data-lucide="upload"></i> Importar manual</button>
+          <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar</button>
+        </div>
+      </div>
+
+      <!-- Banner de sincronização iCommerce -->
+      <div class="sync-banner">
+        <div class="sync-left">
+          <div class="sync-ico"><i data-lucide="refresh-cw"></i></div>
+          <div>
+            <div class="sync-title"><b>Integração iCommerce ativa.</b> <span style="color:var(--text-muted);font-weight:400">Vendas são importadas automaticamente do PDV a cada 15 minutos.</span></div>
+            <div class="sync-meta">
+              <span><span class="sync-dot"></span>Conectado</span>
+              <span><i data-lucide="clock" style="width:11px;height:11px;display:inline"></i> Última sincronização: hoje 14:28 (há 4 min)</span>
+              <span><i data-lucide="database" style="width:11px;height:11px;display:inline"></i> Servidor: Mercadinho Liberato (local)</span>
+            </div>
+          </div>
+        </div>
+        <div class="sync-right">
+          <button class="sync-btn"><i data-lucide="refresh-cw"></i>Sincronizar agora</button>
+          <button class="sync-btn ghost" onclick="window.location.href='configuracoes.html'"><i data-lucide="settings-2"></i>Configurar</button>
+        </div>
+      </div>
+
+      <!-- Hoje em destaque -->
+      <div class="today-card">
+        <div class="today-info">
+          <div>
+            <div class="today-label"><i data-lucide="clock" style="width:11px;height:11px;display:inline"></i> Dia em curso</div>
+            <div class="today-date"><span class="today-date-dot"></span>Sábado · 19/04/2026 · 14:32</div>
+          </div>
+          <div style="height:40px;width:1px;background:rgba(255,255,255,.25)"></div>
+          <div>
+            <div class="today-label">Parcial</div>
+            <div class="today-value">R$ 22.667</div>
+            <div class="today-sub"><i data-lucide="trending-up"></i> Estimativa final: R$ 26.667 · +R$ 3.280 vs sáb passado</div>
+          </div>
+        </div>
+        <div class="today-actions">
+          <button class="btn-today ghost"><i data-lucide="refresh-cw"></i> Atualizar</button>
+          <button class="btn-today primary" onclick="openModal()"><i data-lucide="check"></i> Fechar dia</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="calendar-check"></i> Mês até hoje</div>
+          <div class="kpi-value">R$ 480.320</div>
+          <div class="kpi-sub">18 dias · <span class="up">+5,2% vs abril/25</span></div>
+        </div>
+        <div class="kpi success">
+          <div class="kpi-label"><i data-lucide="target"></i> Projeção do mês</div>
+          <div class="kpi-value">R$ 800.017</div>
+          <div class="kpi-sub">+R$ 18.500 vs média 6m</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="shopping-bag"></i> Ticket médio</div>
+          <div class="kpi-value">R$ 52,40</div>
+          <div class="kpi-sub">~12.700 vendas no mês</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="flame"></i> Melhor dia até agora</div>
+          <div class="kpi-value">R$ 28.450</div>
+          <div class="kpi-sub">Sábado 12/04 · fim de mês</div>
+        </div>
+      </div>
+
+      <!-- Gráfico + breakdown forma pagamento -->
+      <div class="sales-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <h3 class="chart-title">Vendas do mês — dia a dia <span class="auto-tag"><i data-lucide="zap"></i>Auto · iCommerce</span></h3>
+              <div class="chart-sub">Abril/26 (azul) × Abril/25 mesmos dias (cinza) · dados importados do PDV</div>
+            </div>
+          </div>
+          <div class="chart-box"><canvas id="salesChart"></canvas></div>
+          <div class="chart-legend">
+            <span><span class="legend-dot" style="background:var(--accent)"></span>Abril/26</span>
+            <span><span class="legend-dot" style="background:var(--text-soft);opacity:.5"></span>Abril/25</span>
+            <span><span class="legend-dot" style="background:var(--success)"></span>Média dia útil R$ 33,8k</span>
+          </div>
+        </div>
+
+        <div class="pay-card">
+          <h3><i data-lucide="wallet"></i> Formas de pagamento — hoje <span class="auto-tag"><i data-lucide="zap"></i>Auto · iCommerce</span></h3>
+
+          <div class="pay-row">
+            <div class="pay-ico dinheiro"><i data-lucide="banknote"></i></div>
+            <div class="pay-info">
+              <div class="pay-name">Dinheiro</div>
+              <div class="pay-bar"><div class="pay-bar-fill dinheiro" style="width:20%"></div></div>
+            </div>
+            <div class="pay-value">
+              <div class="pay-val-main">R$ 5.680</div>
+              <div class="pay-val-pct">20,0%</div>
+            </div>
+          </div>
+
+          <div class="pay-row">
+            <div class="pay-ico credito"><i data-lucide="credit-card"></i></div>
+            <div class="pay-info">
+              <div class="pay-name">Crédito</div>
+              <div class="pay-bar"><div class="pay-bar-fill credito" style="width:41%"></div></div>
+            </div>
+            <div class="pay-value">
+              <div class="pay-val-main">R$ 11.644</div>
+              <div class="pay-val-pct">41,0%</div>
+            </div>
+          </div>
+
+          <div class="pay-row">
+            <div class="pay-ico debito"><i data-lucide="credit-card"></i></div>
+            <div class="pay-info">
+              <div class="pay-name">Débito</div>
+              <div class="pay-bar"><div class="pay-bar-fill debito" style="width:29%"></div></div>
+            </div>
+            <div class="pay-value">
+              <div class="pay-val-main">R$ 8.236</div>
+              <div class="pay-val-pct">29,0%</div>
+            </div>
+          </div>
+
+          <div class="pay-row">
+            <div class="pay-ico pix"><i data-lucide="zap"></i></div>
+            <div class="pay-info">
+              <div class="pay-name">PIX</div>
+              <div class="pay-bar"><div class="pay-bar-fill pix" style="width:9%"></div></div>
+            </div>
+            <div class="pay-value">
+              <div class="pay-val-main">R$ 2.556</div>
+              <div class="pay-val-pct">9,0%</div>
+            </div>
+          </div>
+
+          <div class="pay-row">
+            <div class="pay-ico fiado"><i data-lucide="clock"></i></div>
+            <div class="pay-info">
+              <div class="pay-name">Fiado (a prazo)</div>
+              <div class="pay-bar"><div class="pay-bar-fill fiado" style="width:1%"></div></div>
+            </div>
+            <div class="pay-value">
+              <div class="pay-val-main">R$ 284</div>
+              <div class="pay-val-pct">1,0%</div>
+            </div>
+          </div>
+
+          <div class="pay-total">
+            <span>Total até 14:32</span>
+            <span class="pay-total-val">R$ 22.667</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Heatmap do mês -->
+      <div class="heatmap-card">
+        <div class="heatmap-head">
+          <div>
+            <h3>Intensidade diária — abril/2026</h3>
+            <div class="heatmap-sub">Clique em um dia pra ver o fechamento completo</div>
+          </div>
+          <div class="hm-legend">
+            <span>Baixa</span>
+            <div class="hm-legend-scale">
+              <div class="hm-legend-box" style="background:var(--accent-soft);opacity:.35"></div>
+              <div class="hm-legend-box" style="background:var(--accent-soft);opacity:.6"></div>
+              <div class="hm-legend-box" style="background:var(--accent);opacity:.5"></div>
+              <div class="hm-legend-box" style="background:var(--accent);opacity:.75"></div>
+              <div class="hm-legend-box" style="background:var(--accent)"></div>
+            </div>
+            <span>Alta</span>
+          </div>
+        </div>
+        <div class="hm-grid">
+          <div class="hm-dow">Dom</div>
+          <div class="hm-dow">Seg</div>
+          <div class="hm-dow">Ter</div>
+          <div class="hm-dow">Qua</div>
+          <div class="hm-dow">Qui</div>
+          <div class="hm-dow">Sex</div>
+          <div class="hm-dow">Sáb</div>
+        </div>
+        <div class="hm-grid" id="hmGrid" style="margin-top:4px"></div>
+      </div>
+
+      <!-- Tabela lançamentos -->
+      <div class="records-card">
+        <div class="records-head">
+          <h3>Últimos 15 fechamentos</h3>
+          <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar CSV</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th class="ctr">Status</th>
+                <th>Mix de pagamentos</th>
+                <th class="num">Dinheiro</th>
+                <th class="num">Crédito</th>
+                <th class="num">Débito</th>
+                <th class="num">PIX</th>
+                <th class="num">Total</th>
+              </tr>
+            </thead>
+            <tbody id="recordsTable">
+              <!-- preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal Fechamento (conciliação iCommerce × Realizado) -->
+  <div class="modal-bg" id="modal">
+    <div class="modal" style="max-width:640px">
+      <div class="modal-head">
+        <div>
+          <h2>Fechamento do dia · conciliação</h2>
+          <div class="modal-head-sub">Sábado · 19/04/2026 · <span style="color:var(--success)">iCommerce informou os valores — confira contra maquininhas/caixa</span></div>
+        </div>
+        <button class="close-btn" onclick="closeModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="recon-head">
+          <div></div>
+          <div>Forma</div>
+          <div class="col-icom"><i data-lucide="database"></i>iCommerce</div>
+          <div class="col-real">Realizado</div>
+          <div></div>
+        </div>
+
+        <div class="pay-input-row">
+          <div class="pay-ico dinheiro"><i data-lucide="banknote"></i></div>
+          <div>
+            <div class="pay-input-label">Dinheiro em caixa</div>
+            <div class="pay-input-hint">Contagem física do caixa</div>
+          </div>
+          <div class="icom-val">8.420,00</div>
+          <input class="pay-input" value="8.420,00" oninput="recalc()">
+          <div class="diff-ind ok"><i data-lucide="check"></i></div>
+        </div>
+
+        <div class="pay-input-row">
+          <div class="pay-ico credito"><i data-lucide="credit-card"></i></div>
+          <div>
+            <div class="pay-input-label">Crédito</div>
+            <div class="pay-input-hint">Z das maquininhas Cielo</div>
+          </div>
+          <div class="icom-val">17.280,00</div>
+          <input class="pay-input" value="17.280,00" oninput="recalc()">
+          <div class="diff-ind ok"><i data-lucide="check"></i></div>
+        </div>
+
+        <div class="pay-input-row">
+          <div class="pay-ico debito"><i data-lucide="credit-card"></i></div>
+          <div>
+            <div class="pay-input-label">Débito</div>
+            <div class="pay-input-hint">Z das maquininhas Cielo</div>
+          </div>
+          <div class="icom-val">12.220,00</div>
+          <input class="pay-input" value="12.180,00" oninput="recalc()">
+          <div class="diff-ind warn"><i data-lucide="alert-triangle"></i></div>
+        </div>
+
+        <div class="pay-input-row">
+          <div class="pay-ico pix"><i data-lucide="zap"></i></div>
+          <div>
+            <div class="pay-input-label">PIX</div>
+            <div class="pay-input-hint">Extrato Santander (entrada CNPJ)</div>
+          </div>
+          <div class="icom-val">3.790,00</div>
+          <input class="pay-input" value="3.790,00" oninput="recalc()">
+          <div class="diff-ind ok"><i data-lucide="check"></i></div>
+        </div>
+
+        <div class="pay-input-row">
+          <div class="pay-ico fiado"><i data-lucide="clock"></i></div>
+          <div>
+            <div class="pay-input-label">Fiado (a prazo)</div>
+            <div class="pay-input-hint">Clientes que vão pagar depois</div>
+          </div>
+          <div class="icom-val">470,00</div>
+          <input class="pay-input" value="470,00" oninput="recalc()">
+          <div class="diff-ind ok"><i data-lucide="check"></i></div>
+        </div>
+
+        <div class="pay-input-total">
+          <span class="pay-input-total-label">Total do dia</span>
+          <span class="pay-input-total-val" id="totalCalc">R$ 42.140,00</span>
+        </div>
+
+        <div style="margin-top:12px;padding:10px 12px;background:var(--warn-soft);border-radius:7px;font-size:12px;display:flex;align-items:flex-start;gap:8px;color:var(--warn)">
+          <i data-lucide="alert-triangle" style="width:14px;height:14px;margin-top:1px;flex-shrink:0"></i>
+          <span><b>Divergência de R$ 40 no débito.</b> iCommerce R$ 12.220 × Z da Cielo R$ 12.180. Verifique se alguma venda foi cancelada ou estornada na maquininha.</span>
+        </div>
+
+        <div style="margin-top:8px;padding:10px 12px;background:var(--success-soft);border-radius:7px;font-size:12px;display:flex;align-items:flex-start;gap:8px;color:var(--success)">
+          <i data-lucide="trending-up" style="width:14px;height:14px;margin-top:1px;flex-shrink:0"></i>
+          <span><b>+R$ 3.240 vs sábado passado (12/04).</b> Dia veio mais forte que a média do fim de semana.</span>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost"><i data-lucide="refresh-cw"></i>Re-sincronizar</button>
+          <button class="btn btn-primary" onclick="closeModal()"><i data-lucide="lock"></i>Confirmar e fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Importação Manual (fallback) -->
+  <div class="modal-bg" id="modalImport">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-head">
+        <div>
+          <h2>Importação manual de vendas</h2>
+          <div class="modal-head-sub">Quando o iCommerce estiver offline ou pra dias retroativos</div>
+        </div>
+        <button class="close-btn" onclick="closeImport()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 16px;font-size:12.5px;color:var(--text-muted);line-height:1.55">3 formas de alimentar vendas sem depender da integração automática:</p>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;gap:12px;padding:14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:.15s;align-items:flex-start" onmouseover="this.style.borderColor='var(--border-strong)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex-shrink:0"><i data-lucide="upload" style="width:16px;height:16px"></i></div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:2px">Upload CSV do iCommerce</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.5">Exporta o relatório de vendas do iCommerce em CSV e sobe aqui. O DM Pay reconhece o layout automaticamente.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;padding:14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:.15s;align-items:flex-start" onmouseover="this.style.borderColor='var(--border-strong)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width:36px;height:36px;border-radius:8px;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;flex-shrink:0"><i data-lucide="file-spreadsheet" style="width:16px;height:16px"></i></div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:2px">Planilha Excel (modelo DM Pay)</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.5">Baixa o modelo, preenche por dia e forma de pagamento, e sobe de volta.</div>
+              <button style="margin-top:6px;background:transparent;border:none;font-size:11.5px;color:var(--warn);font-weight:600;cursor:pointer;text-decoration:underline;padding:0">Baixar modelo</button>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;padding:14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:.15s;align-items:flex-start" onmouseover="this.style.borderColor='var(--border-strong)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width:36px;height:36px;border-radius:8px;background:var(--bg-soft);color:var(--text-muted);display:grid;place-items:center;flex-shrink:0"><i data-lucide="keyboard" style="width:16px;height:16px"></i></div>
+            <div>
+              <div style="font-size:13px;font-weight:600;margin-bottom:2px">Digitar manualmente</div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:1.5">Pra ajustar um dia específico ou incluir fechamento retroativo.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;padding:10px 12px;background:var(--accent-soft);border-radius:7px;font-size:12px;display:flex;gap:8px;color:var(--accent);align-items:flex-start">
+          <i data-lucide="info" style="width:14px;height:14px;margin-top:1px;flex-shrink:0"></i>
+          <span>Depois de importar, o DM Pay atualiza <b>Fluxo de Caixa</b> e <b>DRE</b> automaticamente.</span>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeImport()">Fechar</button>
+        <button class="btn btn-primary"><i data-lucide="check"></i>Continuar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    function toggleTheme(){
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+      renderChart();
+    }
+
+    // Mock vendas dia a dia de abril (até 19/04 o resto futuro vazio)
+    // Volume médio: dia útil ~33k, sábado ~42k, domingo ~27k
+    const vendasAbr26 = {
+       1:31200,  2:32800,  3:34100,  4:41800,  5:26900,  6:33200,  7:32400,
+       8:33900,  9:34500, 10:35200, 11:43500, 12:51800, 13:28900, 14:34200,
+      15:34800, 16:35100, 17:35900, 18:45400, 19:28400  // 19 é hoje parcial
+    };
+    const vendasAbr25 = {  // mesmo dia do ano passado
+       1:28400,  2:30100,  3:31800,  4:38900,  5:24500,  6:31200,  7:30500,
+       8:31900,  9:32100, 10:33400, 11:40800, 12:48500, 13:27200, 14:31800,
+      15:32100, 16:33000, 17:33500, 18:42800, 19:25120
+    };
+
+    // Heatmap — gerar abril/2026 (começa numa quarta, 01/04)
+    function dowOf(day, month, year){ return new Date(year, month-1, day).getDay(); }
+    const hmGrid = document.getElementById('hmGrid');
+    // primeiro dia: 01/04/2026 = quarta (dow=3). Preencher células vazias antes
+    const firstDow = dowOf(1, 4, 2026);
+    for (let i = 0; i < firstDow; i++){
+      const c = document.createElement('div'); c.className = 'hm-cell empty'; hmGrid.appendChild(c);
+    }
+    const maxVal = Math.max(...Object.values(vendasAbr26));
+    for (let d = 1; d <= 30; d++){
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell';
+      const val = vendasAbr26[d];
+      if (d === 19) cell.classList.add('today');
+      if (d > 19) cell.classList.add('future');
+
+      let bgStyle = '';
+      if (val){
+        const intensity = val / maxVal;
+        let opacity, bg;
+        if (intensity < 0.55){ bg = 'var(--accent-soft)'; opacity = 0.35 + intensity; }
+        else if (intensity < 0.75){ bg = 'var(--accent)'; opacity = 0.5 + (intensity-0.55); }
+        else { bg = 'var(--accent)'; opacity = 0.75 + (intensity-0.75); }
+        cell.style.background = bg;
+        cell.style.opacity = Math.min(opacity, 1);
+        cell.style.color = intensity > 0.7 ? 'white' : 'var(--text)';
+      } else if (d > 19){
+        cell.style.color = 'var(--text-soft)';
+      }
+
+      cell.innerHTML = `<div class="hm-num">${String(d).padStart(2,'0')}</div>` + (val ? `<div class="hm-val">${(val/1000).toFixed(1)}k</div>` : '');
+      hmGrid.appendChild(cell);
+    }
+
+    // Tabela últimos 15 fechamentos
+    const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const diasSem = ['dom','seg','ter','qua','qui','sex','sáb'];
+    function fmtInt(v){ return Math.round(v).toLocaleString('pt-BR'); }
+    const tbody = document.getElementById('recordsTable');
+    const ultimos15 = [];
+    for (let d = 18; d >= 4; d--){
+      const total = vendasAbr26[d];
+      if (!total) continue;
+      const dinheiro = Math.round(total * 0.20);
+      const credito = Math.round(total * 0.41);
+      const debito = Math.round(total * 0.29);
+      const pix = Math.round(total * 0.09);
+      const fiado = total - dinheiro - credito - debito - pix;
+      const dow = dowOf(d, 4, 2026);
+      ultimos15.push({d, total, dinheiro, credito, debito, pix, fiado, dow});
+    }
+    ultimos15.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <div class="date-cell">${String(r.d).padStart(2,'0')}/abr</div>
+          <div class="date-day">${diasSem[r.dow]}</div>
+        </td>
+        <td class="ctr"><span class="status-pill fechado"><span class="status-pill-dot"></span>Fechado</span></td>
+        <td>
+          <div class="pay-mix">
+            <div class="pay-mix-seg dinheiro" style="flex:20"></div>
+            <div class="pay-mix-seg credito" style="flex:41"></div>
+            <div class="pay-mix-seg debito" style="flex:29"></div>
+            <div class="pay-mix-seg pix" style="flex:9"></div>
+            <div class="pay-mix-seg fiado" style="flex:1"></div>
+          </div>
+        </td>
+        <td class="num">${fmtInt(r.dinheiro)}</td>
+        <td class="num">${fmtInt(r.credito)}</td>
+        <td class="num">${fmtInt(r.debito)}</td>
+        <td class="num">${fmtInt(r.pix)}</td>
+        <td class="num" style="color:var(--accent)">R$ ${fmtInt(r.total)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Chart Abril × Abril anterior
+    let salesChart;
+    function renderChart(){
+      if (salesChart) salesChart.destroy();
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const textColor = isDark ? '#9CA3AF' : '#6B7280';
+      const gridColor = isDark ? '#222832' : '#E5E7EB';
+      const accent = isDark ? '#3B82F6' : '#2563EB';
+      const accentSoft = isDark ? 'rgba(59,130,246,.2)' : 'rgba(37,99,235,.12)';
+      const muted = isDark ? 'rgba(156,163,175,.4)' : 'rgba(156,163,175,.6)';
+
+      const labels = [];
+      const d2026 = [];
+      const d2025 = [];
+      for (let d = 1; d <= 30; d++){
+        labels.push(String(d).padStart(2,'0'));
+        d2026.push(vendasAbr26[d] || null);
+        d2025.push(vendasAbr25[d] || null);
+      }
+
+      salesChart = new Chart(document.getElementById('salesChart'), {
+        type:'line',
+        data:{
+          labels,
+          datasets:[
+            {label:'Abril/25', data:d2025, borderColor:muted, backgroundColor:'transparent', tension:0.35, borderDash:[4,3], borderWidth:1.5, pointRadius:0},
+            {label:'Abril/26', data:d2026, borderColor:accent, backgroundColor:accentSoft, fill:true, tension:0.35, borderWidth:2.5, pointBackgroundColor:accent, pointRadius:2.5, pointHoverRadius:6}
+          ]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          interaction:{mode:'index',intersect:false},
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              backgroundColor: isDark ? '#1A1F27' : '#111827',
+              titleColor:'#F3F4F6',
+              bodyColor:'#F3F4F6',
+              padding:10,
+              callbacks:{
+                label: ctx => ctx.dataset.label + ': R$ ' + (ctx.parsed.y || 0).toLocaleString('pt-BR')
+              }
+            }
+          },
+          scales:{
+            x:{grid:{display:false}, ticks:{color:textColor, font:{family:'Geist Mono', size:10}, maxTicksLimit:15}},
+            y:{grid:{color:gridColor}, ticks:{color:textColor, font:{family:'Geist Mono', size:10}, callback: v => 'R$ '+(v/1000)+'k'}}
+          }
+        }
+      });
+    }
+    renderChart();
+
+    // Modais
+    function openModal(){ document.getElementById('modal').classList.add('open'); lucide.createIcons(); }
+    function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+    function openImport(){ document.getElementById('modalImport').classList.add('open'); lucide.createIcons(); }
+    function closeImport(){ document.getElementById('modalImport').classList.remove('open'); }
+    document.getElementById('modal').addEventListener('click', e => {
+      if (e.target.id === 'modal') closeModal();
+    });
+    document.getElementById('modalImport').addEventListener('click', e => {
+      if (e.target.id === 'modalImport') closeImport();
+    });
+
+    function recalc(){
+      const inputs = document.querySelectorAll('.pay-input');
+      let total = 0;
+      inputs.forEach(i => {
+        const v = parseFloat(i.value.replace(/\./g,'').replace(',','.')) || 0;
+        total += v;
+      });
+      document.getElementById('totalCalc').textContent = 'R$ ' + total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Despesas fixas · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --cat-geral:#6366F1; --cat-geral-soft:#E0E7FF;
+      --cat-vendas:#8B5CF6; --cat-vendas-soft:#EDE9FE;
+      --cat-admin:#F97316; --cat-admin-soft:#FFEDD5;
+      --cat-comercial:#10B981; --cat-comercial-soft:#D1FAE5;
+      --cat-financ:#EC4899; --cat-financ-soft:#FCE7F3;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --cat-geral:#818CF8; --cat-geral-soft:rgba(129,140,248,.15);
+      --cat-vendas:#A78BFA; --cat-vendas-soft:rgba(167,139,250,.15);
+      --cat-admin:#FB923C; --cat-admin-soft:rgba(251,146,60,.15);
+      --cat-comercial:#34D399; --cat-comercial-soft:rgba(52,211,153,.15);
+      --cat-financ:#F472B6; --cat-financ-soft:rgba(244,114,182,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    /* Sidebar padrão */
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    /* Topbar */
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+
+    main{padding:24px 28px 80px}
+
+    /* Hero */
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:.15s}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+    .kpi-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .kpi-label svg{width:12px;height:12px}
+    .kpi-value{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:2px}
+    .kpi-sub{font-size:12px;color:var(--text-muted)}
+    .kpi.highlight{background:linear-gradient(135deg,var(--warn-soft) 0%,transparent 100%);border-color:var(--warn)}
+    .kpi.highlight .kpi-label{color:var(--warn)}
+    .kpi-sub .up{color:var(--danger);font-weight:600}
+    .kpi-sub .down{color:var(--success);font-weight:600}
+
+    /* Alert banner */
+    .alert{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;background:var(--warn-soft);border:1px solid var(--warn);border-radius:10px;margin-bottom:18px}
+    .alert svg{width:18px;height:18px;color:var(--warn);flex-shrink:0;margin-top:1px}
+    .alert-text{font-size:13px;color:var(--text);line-height:1.5;flex:1}
+    .alert-text b{color:var(--warn);font-weight:600}
+    .alert-close{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:4px}
+
+    /* Distribuição por dia (mini gráfico horizontal) */
+    .distrib{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:18px}
+    .distrib-title{font-size:13px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .distrib-title svg{width:14px;height:14px;color:var(--accent)}
+    .distrib-sub{font-size:12px;color:var(--text-muted);margin-bottom:14px}
+    .distrib-chart{display:flex;gap:2px;align-items:flex-end;height:90px;position:relative;padding-bottom:22px}
+    .distrib-bar{flex:1;background:var(--accent-soft);border-radius:3px 3px 0 0;position:relative;min-height:2px;transition:.2s;cursor:pointer}
+    .distrib-bar:hover{background:var(--accent)}
+    .distrib-bar.heavy{background:var(--warn);opacity:.9}
+    .distrib-bar.heavy:hover{opacity:1}
+    .distrib-bar-tip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:4px 8px;border-radius:4px;font-size:11px;font-family:'Geist Mono',monospace;white-space:nowrap;opacity:0;pointer-events:none;transition:.15s;margin-bottom:4px;font-weight:500}
+    .distrib-bar:hover .distrib-bar-tip{opacity:1}
+    .distrib-day-label{position:absolute;bottom:0;left:0;right:0;display:flex;gap:2px;font-size:10px;color:var(--text-soft);font-family:'Geist Mono',monospace}
+    .distrib-day-label span{flex:1;text-align:center}
+
+    /* Filtros */
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .chip{padding:6px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--text-muted);cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+    .chip:hover{border-color:var(--border-strong)}
+    .chip.active{background:var(--accent);color:white;border-color:var(--accent)}
+    .chip-dot{width:8px;height:8px;border-radius:50%;background:var(--text-soft)}
+    .chip.cat-geral .chip-dot{background:var(--cat-geral)}
+    .chip.cat-vendas .chip-dot{background:var(--cat-vendas)}
+    .chip.cat-admin .chip-dot{background:var(--cat-admin)}
+    .chip.cat-comercial .chip-dot{background:var(--cat-comercial)}
+    .chip.cat-financ .chip-dot{background:var(--cat-financ)}
+    .chip.active .chip-dot{background:white}
+    .search{position:relative;min-width:240px;margin-left:auto}
+    .search input{width:100%;padding:7px 12px 7px 32px;border:1px solid var(--border);border-radius:6px;background:var(--bg-soft);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+    .search input:focus{border-color:var(--accent)}
+    .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-soft)}
+
+    /* Tabela despesas */
+    .expenses{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .exp-row{display:grid;grid-template-columns:32px 1fr 140px 120px 120px 120px 80px;gap:16px;padding:14px 18px;align-items:center;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+    .exp-row:hover{background:var(--bg-hover)}
+    .exp-row:last-child{border-bottom:none}
+    .exp-row.head{background:var(--bg-soft);font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;cursor:default}
+    .exp-row.head:hover{background:var(--bg-soft)}
+    .exp-ico{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;flex-shrink:0}
+    .exp-ico svg{width:15px;height:15px}
+    .exp-ico.cat-geral{background:var(--cat-geral-soft);color:var(--cat-geral)}
+    .exp-ico.cat-vendas{background:var(--cat-vendas-soft);color:var(--cat-vendas)}
+    .exp-ico.cat-admin{background:var(--cat-admin-soft);color:var(--cat-admin)}
+    .exp-ico.cat-comercial{background:var(--cat-comercial-soft);color:var(--cat-comercial)}
+    .exp-ico.cat-financ{background:var(--cat-financ-soft);color:var(--cat-financ)}
+    .exp-name{font-size:14px;font-weight:500;line-height:1.2;letter-spacing:-.01em}
+    .exp-sub{font-size:12px;color:var(--text-soft);margin-top:2px}
+    .exp-cat-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+    .exp-cat-pill.cat-geral{background:var(--cat-geral-soft);color:var(--cat-geral)}
+    .exp-cat-pill.cat-vendas{background:var(--cat-vendas-soft);color:var(--cat-vendas)}
+    .exp-cat-pill.cat-admin{background:var(--cat-admin-soft);color:var(--cat-admin)}
+    .exp-cat-pill.cat-comercial{background:var(--cat-comercial-soft);color:var(--cat-comercial)}
+    .exp-cat-pill.cat-financ{background:var(--cat-financ-soft);color:var(--cat-financ)}
+    .exp-val{font-size:14px;font-weight:600;font-family:'Geist Mono',monospace;letter-spacing:-.01em;text-align:right}
+    .exp-day{font-size:13px;font-family:'Geist Mono',monospace;color:var(--text-muted);text-align:center}
+    .exp-day b{color:var(--text);font-weight:600}
+    .exp-payment{font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+    .exp-payment svg{width:12px;height:12px}
+    .exp-status{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:500}
+    .exp-status.active{background:var(--success-soft);color:var(--success)}
+    .exp-status.paused{background:var(--bg-hover);color:var(--text-soft)}
+    .exp-status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .exp-actions{display:flex;gap:4px;justify-content:flex-end}
+    .exp-actions .icon-btn{width:28px;height:28px}
+    .exp-actions .icon-btn svg{width:13px;height:13px}
+
+    /* Rodapé da tabela */
+    .exp-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--bg-soft);font-size:12px;color:var(--text-muted);border-top:1px solid var(--border)}
+    .exp-footer b{color:var(--text);font-weight:600;font-family:'Geist Mono',monospace;letter-spacing:-.01em}
+
+    /* Insight banner */
+    .insight{background:linear-gradient(135deg,var(--accent-soft) 0%,transparent 60%);border:1px solid var(--accent);border-radius:12px;padding:16px 18px;margin-top:18px;display:flex;gap:12px;align-items:flex-start}
+    .insight-ico{width:32px;height:32px;border-radius:8px;background:var(--accent);color:white;display:grid;place-items:center;flex-shrink:0}
+    .insight-ico svg{width:16px;height:16px}
+    .insight h3{margin:0 0 4px;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:-.01em}
+    .insight p{margin:0;font-size:12.5px;color:var(--text);line-height:1.55}
+    .insight p b{font-weight:600}
+
+    /* Modal */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+    .modal-bg.open{display:flex}
+    .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;max-width:560px;width:100%;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+    .modal-head h2{margin:0;font-size:16px;font-weight:600;letter-spacing:-.01em}
+    .modal-body{padding:20px 22px}
+    .modal-foot{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-top:1px solid var(--border);background:var(--bg-soft)}
+    .close-btn{width:30px;height:30px;display:grid;place-items:center;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer}
+    .close-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .close-btn svg{width:16px;height:16px}
+
+    /* Form */
+    .form-row{display:grid;gap:12px;margin-bottom:14px}
+    .form-grid-2{grid-template-columns:1fr 1fr}
+    .form-grid-3{grid-template-columns:1fr 1fr 1fr}
+    .field label{display:block;font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:5px;letter-spacing:-.01em}
+    .field input,.field select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:.15s}
+    .field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+    .field-hint{font-size:11px;color:var(--text-soft);margin-top:4px}
+    .input-prefix{position:relative}
+    .input-prefix .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-soft);font-family:'Geist Mono',monospace}
+    .input-prefix input{padding-left:38px;font-family:'Geist Mono',monospace}
+
+    /* Cat picker */
+    .cat-picker{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    .cat-option{padding:10px 8px;border:1px solid var(--border);border-radius:7px;cursor:pointer;text-align:center;transition:.15s;background:var(--bg)}
+    .cat-option:hover{border-color:var(--border-strong)}
+    .cat-option.selected{border-color:var(--accent);background:var(--accent-soft)}
+    .cat-option-ico{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;margin:0 auto 5px}
+    .cat-option-ico svg{width:14px;height:14px}
+    .cat-option-name{font-size:11px;font-weight:500;color:var(--text)}
+    .cat-option.cat-geral .cat-option-ico{background:var(--cat-geral-soft);color:var(--cat-geral)}
+    .cat-option.cat-vendas .cat-option-ico{background:var(--cat-vendas-soft);color:var(--cat-vendas)}
+    .cat-option.cat-admin .cat-option-ico{background:var(--cat-admin-soft);color:var(--cat-admin)}
+    .cat-option.cat-comercial .cat-option-ico{background:var(--cat-comercial-soft);color:var(--cat-comercial)}
+    .cat-option.cat-financ .cat-option-ico{background:var(--cat-financ-soft);color:var(--cat-financ)}
+
+    /* Payment picker */
+    .payment-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+    .pay-option{padding:10px 6px;border:1px solid var(--border);border-radius:7px;cursor:pointer;text-align:center;transition:.15s;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:4px}
+    .pay-option:hover{border-color:var(--border-strong)}
+    .pay-option.selected{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+    .pay-option svg{width:18px;height:18px;color:var(--text-muted)}
+    .pay-option.selected svg{color:var(--accent)}
+    .pay-option-name{font-size:11px;font-weight:500}
+
+    .replicar-block{background:var(--success-soft);border:1px solid var(--success);border-radius:8px;padding:10px 14px;margin-top:6px;display:flex;align-items:center;gap:10px}
+    .replicar-block svg{width:16px;height:16px;color:var(--success);flex-shrink:0}
+    .replicar-block span{font-size:12px;color:var(--text);flex:1}
+    .replicar-block b{color:var(--success);font-weight:600}
+
+    @media (max-width:1200px){
+      .exp-row{grid-template-columns:32px 1fr 120px 100px 100px 80px}
+      .exp-row .exp-payment{display:none}
+    }
+    @media (max-width:860px){
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+      .exp-row{grid-template-columns:32px 1fr 100px 80px}
+      .exp-row .exp-cat-pill,.exp-row .exp-day,.exp-row .exp-payment{display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item" href="whatsapp-preview.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item active"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Financeiro</a>
+        <span class="sep">/</span>
+        <b>Despesas fixas</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn"><i data-lucide="help-circle"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>Despesas fixas</h1>
+          <p>Contas que todo mês vencem sem falta — aluguel, folha, energia, contador. Cadastra uma vez e o sistema replica automaticamente em <b>Contas a Pagar</b> todo mês.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar</button>
+          <button class="btn btn-primary" onclick="openModal()"><i data-lucide="plus"></i> Nova despesa fixa</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="wallet"></i> Total mensal fixo</div>
+          <div class="kpi-value">R$ 34.450,00</div>
+          <div class="kpi-sub">11 despesas ativas · <span class="up">+R$ 1.200 vs mês passado</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="percent"></i> % sobre faturamento</div>
+          <div class="kpi-value">3,59%</div>
+          <div class="kpi-sub">Base: R$ 960k/mês · saudável (&lt; 5%)</div>
+        </div>
+        <div class="kpi highlight">
+          <div class="kpi-label"><i data-lucide="alert-triangle"></i> Próximo vencimento</div>
+          <div class="kpi-value">Em 2 dias</div>
+          <div class="kpi-sub">Folha R$ 18.500 · dia 5</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="calendar-check"></i> Pagas em abril</div>
+          <div class="kpi-value">6 / 11</div>
+          <div class="kpi-sub">R$ 15.830 liquidados · 45% do mês</div>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert">
+        <i data-lucide="alert-triangle"></i>
+        <div class="alert-text">
+          <b>85% das despesas fixas (R$ 29.200) caem nos dias 5 e 10.</b> A primeira semana do mês fica pesada. Considere renegociar vencimento do aluguel ou limpeza pra meio do mês — alivia o fluxo.
+        </div>
+        <button class="alert-close"><i data-lucide="x"></i></button>
+      </div>
+
+      <!-- Distribuição por dia do mês -->
+      <div class="distrib">
+        <div class="distrib-title"><i data-lucide="bar-chart"></i> Distribuição pelos dias do mês</div>
+        <div class="distrib-sub">Concentração do fluxo de saída fixa · abril 2026</div>
+        <div class="distrib-chart" id="distribChart">
+          <!-- dias gerados via JS -->
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <span class="chip active" onclick="filterCat('all', this)">Todas <span style="opacity:.7">· 11</span></span>
+        <span class="chip cat-geral" onclick="filterCat('geral', this)"><span class="chip-dot"></span>Geral · 5</span>
+        <span class="chip cat-vendas" onclick="filterCat('vendas', this)"><span class="chip-dot"></span>Vendas · 2</span>
+        <span class="chip cat-admin" onclick="filterCat('admin', this)"><span class="chip-dot"></span>Administrativa · 3</span>
+        <span class="chip cat-comercial" onclick="filterCat('comercial', this)"><span class="chip-dot"></span>Comercial · 1</span>
+        <div class="search">
+          <i data-lucide="search"></i>
+          <input type="text" placeholder="Buscar despesa ou beneficiário…">
+        </div>
+      </div>
+
+      <!-- Lista -->
+      <div class="expenses">
+        <div class="exp-row head">
+          <div></div>
+          <div>Despesa</div>
+          <div>Categoria</div>
+          <div style="text-align:center">Vence dia</div>
+          <div>Forma</div>
+          <div style="text-align:right">Valor médio</div>
+          <div style="text-align:right">Ações</div>
+        </div>
+
+        <div class="exp-row" data-cat="geral">
+          <div class="exp-ico cat-geral"><i data-lucide="home"></i></div>
+          <div>
+            <div class="exp-name">Aluguel</div>
+            <div class="exp-sub">Imobiliária Jupi · 87.123.456/0001-90</div>
+          </div>
+          <div><span class="exp-cat-pill cat-geral">Geral</span></div>
+          <div class="exp-day"><b>05</b></div>
+          <div class="exp-payment"><i data-lucide="barcode"></i> Boleto</div>
+          <div class="exp-val">R$ 4.500,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="vendas">
+          <div class="exp-ico cat-vendas"><i data-lucide="users"></i></div>
+          <div>
+            <div class="exp-name">Folha de pagamento</div>
+            <div class="exp-sub">12 funcionários · operacional</div>
+          </div>
+          <div><span class="exp-cat-pill cat-vendas">Vendas</span></div>
+          <div class="exp-day"><b>05</b></div>
+          <div class="exp-payment"><i data-lucide="zap"></i> PIX</div>
+          <div class="exp-val">R$ 18.500,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="admin">
+          <div class="exp-ico cat-admin"><i data-lucide="user-circle"></i></div>
+          <div>
+            <div class="exp-name">Pró-labore Reginaldo</div>
+            <div class="exp-sub">Sócio-administrador</div>
+          </div>
+          <div><span class="exp-cat-pill cat-admin">Administrativa</span></div>
+          <div class="exp-day"><b>05</b></div>
+          <div class="exp-payment"><i data-lucide="arrow-right-left"></i> Transferência</div>
+          <div class="exp-val">R$ 5.000,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="geral">
+          <div class="exp-ico cat-geral"><i data-lucide="sparkles"></i></div>
+          <div>
+            <div class="exp-name">Limpeza / zeladoria</div>
+            <div class="exp-sub">Terceirizado · Maria Silva</div>
+          </div>
+          <div><span class="exp-cat-pill cat-geral">Geral</span></div>
+          <div class="exp-day"><b>05</b></div>
+          <div class="exp-payment"><i data-lucide="zap"></i> PIX</div>
+          <div class="exp-val">R$ 1.200,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="geral">
+          <div class="exp-ico cat-geral"><i data-lucide="zap"></i></div>
+          <div>
+            <div class="exp-name">Energia elétrica</div>
+            <div class="exp-sub">CELPE · UC 1234567</div>
+          </div>
+          <div><span class="exp-cat-pill cat-geral">Geral</span></div>
+          <div class="exp-day"><b>10</b></div>
+          <div class="exp-payment"><i data-lucide="barcode"></i> Boleto</div>
+          <div class="exp-val">R$ 2.800,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="admin">
+          <div class="exp-ico cat-admin"><i data-lucide="calculator"></i></div>
+          <div>
+            <div class="exp-name">Contador</div>
+            <div class="exp-sub">Contábil Rocha · Serviços contábeis</div>
+          </div>
+          <div><span class="exp-cat-pill cat-admin">Administrativa</span></div>
+          <div class="exp-day"><b>10</b></div>
+          <div class="exp-payment"><i data-lucide="zap"></i> PIX</div>
+          <div class="exp-val">R$ 800,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="geral">
+          <div class="exp-ico cat-geral"><i data-lucide="droplet"></i></div>
+          <div>
+            <div class="exp-name">Água</div>
+            <div class="exp-sub">COMPESA · Matrícula 987654</div>
+          </div>
+          <div><span class="exp-cat-pill cat-geral">Geral</span></div>
+          <div class="exp-day"><b>15</b></div>
+          <div class="exp-payment"><i data-lucide="barcode"></i> Boleto</div>
+          <div class="exp-val">R$ 450,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="admin">
+          <div class="exp-ico cat-admin"><i data-lucide="monitor"></i></div>
+          <div>
+            <div class="exp-name">Software iCommerce</div>
+            <div class="exp-sub">Ideia Sistema · ERP mensalidade</div>
+          </div>
+          <div><span class="exp-cat-pill cat-admin">Administrativa</span></div>
+          <div class="exp-day"><b>15</b></div>
+          <div class="exp-payment"><i data-lucide="barcode"></i> Boleto</div>
+          <div class="exp-val">R$ 350,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="vendas">
+          <div class="exp-ico cat-vendas"><i data-lucide="credit-card"></i></div>
+          <div>
+            <div class="exp-name">Taxas maquininhas</div>
+            <div class="exp-sub">Cielo · média mensal das taxas</div>
+          </div>
+          <div><span class="exp-cat-pill cat-vendas">Vendas</span></div>
+          <div class="exp-day"><b>15</b></div>
+          <div class="exp-payment"><i data-lucide="building-2"></i> Débito automático</div>
+          <div class="exp-val">R$ 450,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="geral">
+          <div class="exp-ico cat-geral"><i data-lucide="wifi"></i></div>
+          <div>
+            <div class="exp-name">Internet + telefone</div>
+            <div class="exp-sub">Oi · plano empresarial</div>
+          </div>
+          <div><span class="exp-cat-pill cat-geral">Geral</span></div>
+          <div class="exp-day"><b>20</b></div>
+          <div class="exp-payment"><i data-lucide="building-2"></i> Débito automático</div>
+          <div class="exp-val">R$ 220,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-row" data-cat="geral">
+          <div class="exp-ico cat-geral"><i data-lucide="shield"></i></div>
+          <div>
+            <div class="exp-name">Segurança / alarme</div>
+            <div class="exp-sub">GolPhone Monitoramento</div>
+          </div>
+          <div><span class="exp-cat-pill cat-geral">Geral</span></div>
+          <div class="exp-day"><b>20</b></div>
+          <div class="exp-payment"><i data-lucide="building-2"></i> Débito automático</div>
+          <div class="exp-val">R$ 180,00</div>
+          <div class="exp-actions">
+            <button class="icon-btn" title="Editar"><i data-lucide="pencil"></i></button>
+            <button class="icon-btn" title="Pausar"><i data-lucide="pause"></i></button>
+          </div>
+        </div>
+
+        <div class="exp-footer">
+          <span>11 despesas fixas ativas</span>
+          <span>Total mensal: <b>R$ 34.450,00</b></span>
+        </div>
+      </div>
+
+      <!-- Insight -->
+      <div class="insight">
+        <div class="insight-ico"><i data-lucide="lightbulb"></i></div>
+        <div>
+          <h3>O que o DM Pay vai fazer com essas despesas</h3>
+          <p>Toda virada de mês o sistema <b>cria automaticamente</b> essas 11 contas em <b>Contas a Pagar</b> com os valores e vencimentos cadastrados aqui. Elas aparecem no <b>Calendário</b> pros boletos vencerem no dia certo, entram no <b>Fluxo de Caixa</b> como saída prevista, e alimentam o <b>DRE</b> classificadas por categoria (Geral, Vendas, Administrativa). <b>Cadastra uma vez, o sistema cuida dos próximos meses.</b></p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Nova Despesa -->
+  <div class="modal-bg" id="modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Nova despesa fixa</h2>
+        <button class="close-btn" onclick="closeModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="form-row">
+          <div class="field">
+            <label>Descrição</label>
+            <input type="text" placeholder="Ex: Aluguel, Energia, Folha de pagamento…">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Categoria</label>
+            <div class="cat-picker">
+              <div class="cat-option cat-geral selected" onclick="selCat(this)">
+                <div class="cat-option-ico"><i data-lucide="home"></i></div>
+                <div class="cat-option-name">Geral</div>
+              </div>
+              <div class="cat-option cat-vendas" onclick="selCat(this)">
+                <div class="cat-option-ico"><i data-lucide="shopping-cart"></i></div>
+                <div class="cat-option-name">Vendas</div>
+              </div>
+              <div class="cat-option cat-admin" onclick="selCat(this)">
+                <div class="cat-option-ico"><i data-lucide="briefcase"></i></div>
+                <div class="cat-option-name">Administrativa</div>
+              </div>
+              <div class="cat-option cat-comercial" onclick="selCat(this)">
+                <div class="cat-option-ico"><i data-lucide="megaphone"></i></div>
+                <div class="cat-option-name">Comercial</div>
+              </div>
+              <div class="cat-option cat-financ" onclick="selCat(this)">
+                <div class="cat-option-ico"><i data-lucide="landmark"></i></div>
+                <div class="cat-option-name">Financeira</div>
+              </div>
+            </div>
+            <div class="field-hint">Define como aparece no DRE</div>
+          </div>
+        </div>
+
+        <div class="form-row form-grid-2">
+          <div class="field">
+            <label>Valor médio (R$)</label>
+            <div class="input-prefix">
+              <span class="prefix">R$</span>
+              <input type="text" placeholder="0,00">
+            </div>
+            <div class="field-hint">Se varia mês a mês, use a média</div>
+          </div>
+          <div class="field">
+            <label>Vence dia</label>
+            <input type="number" min="1" max="31" placeholder="5">
+            <div class="field-hint">Dia do mês em que vence</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Forma de pagamento</label>
+            <div class="payment-picker">
+              <div class="pay-option selected" onclick="selPay(this)">
+                <i data-lucide="barcode"></i>
+                <div class="pay-option-name">Boleto</div>
+              </div>
+              <div class="pay-option" onclick="selPay(this)">
+                <i data-lucide="zap"></i>
+                <div class="pay-option-name">PIX</div>
+              </div>
+              <div class="pay-option" onclick="selPay(this)">
+                <i data-lucide="building-2"></i>
+                <div class="pay-option-name">Débito aut.</div>
+              </div>
+              <div class="pay-option" onclick="selPay(this)">
+                <i data-lucide="arrow-right-left"></i>
+                <div class="pay-option-name">Transferência</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Beneficiário (opcional)</label>
+            <input type="text" placeholder="Nome ou razão social de quem recebe">
+          </div>
+        </div>
+
+        <div class="replicar-block">
+          <i data-lucide="repeat"></i>
+          <span><b>Replicação automática ativa.</b> O sistema vai criar essa despesa em Contas a Pagar todo mês no dia configurado.</span>
+        </div>
+
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="closeModal()"><i data-lucide="check"></i> Salvar despesa</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    function toggleTheme(){
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+    }
+
+    // Distribuição por dia (mini chart)
+    const valoresPorDia = {5:29200,10:3600,15:1250,20:400};
+    const maxDia = 30;
+    const maxVal = Math.max(...Object.values(valoresPorDia));
+    const chart = document.getElementById('distribChart');
+    const labelsShown = new Set([1,5,10,15,20,25,30]);
+    const labelRow = document.createElement('div');
+    labelRow.className = 'distrib-day-label';
+    for (let d = 1; d <= maxDia; d++) {
+      const v = valoresPorDia[d] || 0;
+      const pct = v / maxVal;
+      const bar = document.createElement('div');
+      bar.className = 'distrib-bar' + (v >= 10000 ? ' heavy' : '');
+      bar.style.height = (v > 0 ? Math.max(pct * 68, 4) : 2) + 'px';
+      if (v > 0) {
+        const tip = document.createElement('div');
+        tip.className = 'distrib-bar-tip';
+        tip.textContent = 'Dia '+d+' · R$ '+v.toLocaleString('pt-BR');
+        bar.appendChild(tip);
+      }
+      chart.appendChild(bar);
+
+      const lbl = document.createElement('span');
+      lbl.textContent = labelsShown.has(d) ? d : '';
+      labelRow.appendChild(lbl);
+    }
+    chart.appendChild(labelRow);
+
+    // Filtro de categoria
+    function filterCat(cat, el) {
+      document.querySelectorAll('.toolbar .chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.exp-row:not(.head)').forEach(r => {
+        const rc = r.dataset.cat;
+        r.style.display = (cat === 'all' || rc === cat) ? '' : 'none';
+      });
+    }
+
+    // Modal
+    function openModal(){ document.getElementById('modal').classList.add('open'); lucide.createIcons(); }
+    function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+    document.getElementById('modal').addEventListener('click', e => {
+      if (e.target.id === 'modal') closeModal();
+    });
+
+    // Category picker
+    function selCat(el){
+      document.querySelectorAll('.cat-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+    function selPay(el){
+      document.querySelectorAll('.pay-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+  </script>
+</body>
+</html>

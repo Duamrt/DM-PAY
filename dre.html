@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DRE gerencial · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="dmpay-data.js"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    /* Sidebar padrão */
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    /* Topbar */
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:.15s}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+
+    main{padding:24px 28px 80px;max-width:1240px}
+
+    /* Hero */
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:18px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:12px}
+    .hero h1 .preview-pill{font-size:10px;font-weight:700;background:var(--warn);color:white;padding:3px 9px;border-radius:999px;letter-spacing:.06em;text-transform:uppercase}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+
+    .hero-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .mode-toggle{display:inline-flex;gap:2px;background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:3px}
+    .mode-toggle button{background:transparent;border:none;padding:7px 14px;font-size:12px;font-weight:500;color:var(--text-muted);border-radius:6px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+    .mode-toggle button.active{background:var(--bg-card);color:var(--text);box-shadow:var(--shadow)}
+    .month-select{padding:8px 32px 8px 14px;border:1px solid var(--border);border-radius:7px;background:var(--bg) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 10px center;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;appearance:none;outline:none}
+
+    /* Disclaimer */
+    .disclaimer{background:var(--warn-soft);border:1px solid var(--warn);border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;gap:10px;align-items:flex-start;font-size:12.5px}
+    .disclaimer svg{width:16px;height:16px;color:var(--warn);flex-shrink:0;margin-top:1px}
+    .disclaimer b{color:var(--warn);font-weight:600}
+    .disclaimer a{color:var(--warn);font-weight:600;text-decoration:underline}
+
+    /* Reconciliação */
+    .recon{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px}
+    .recon-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .recon-title h3{margin:0;font-size:13px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .recon-title h3 svg{width:14px;height:14px;color:var(--success)}
+    .recon-title .status-pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--success-soft);color:var(--success);letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px}
+    .recon-title .status-pill.warn{background:var(--warn-soft);color:var(--warn)}
+    .recon-title .status-pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .recon-grid{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:14px;align-items:stretch}
+    .recon-box{padding:14px 16px;background:var(--bg-soft);border:1px solid var(--border);border-radius:9px}
+    .recon-label{font-size:10.5px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .recon-label svg{width:11px;height:11px}
+    .recon-val{font-size:18px;font-weight:700;font-family:'Geist',sans-serif;letter-spacing:-.02em}
+    .recon-sub{font-size:11px;color:var(--text-soft);margin-top:2px}
+    .recon-eq{display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--success);padding:0 4px}
+    @media (max-width:860px){.recon-grid{grid-template-columns:1fr;gap:8px}.recon-eq{display:none}}
+
+    /* DRE cascata */
+    .cascade-grid{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start;margin-bottom:18px}
+    @media (max-width:1100px){.cascade-grid{grid-template-columns:1fr}}
+    .cascade{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .cascade-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .cascade-head h2{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+    .cascade-head .col-labels{font-size:10.5px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:flex;gap:32px}
+
+    .cas-row{padding:10px 20px;display:grid;grid-template-columns:1fr 140px 80px;gap:14px;align-items:center;border-bottom:1px solid var(--border);font-size:13.5px;cursor:pointer;transition:.15s}
+    .cas-row:hover{background:var(--bg-hover)}
+    .cas-row:last-child{border-bottom:none}
+    .cas-row.sub{padding-left:40px;background:var(--bg-soft);font-size:12.5px}
+    .cas-row.sub:hover{background:var(--bg-hover)}
+    .cas-row.total{background:var(--bg-soft);font-weight:600;padding-top:14px;padding-bottom:14px;border-top:2px solid var(--border);border-bottom:2px solid var(--border)}
+    .cas-row.total:hover{background:var(--bg-soft)}
+    .cas-row.grand{background:linear-gradient(135deg,var(--accent-soft) 0%,transparent 100%);font-weight:700;padding-top:16px;padding-bottom:16px;border-top:2px solid var(--accent);border-bottom:none;font-size:15px}
+    .cas-row.grand:hover{background:linear-gradient(135deg,var(--accent-soft) 0%,transparent 100%)}
+    .cas-label{color:var(--text);display:flex;align-items:center;gap:8px}
+    .cas-label .op{font-family:'Geist Mono',monospace;color:var(--text-soft);font-size:13px;width:12px;text-align:center;font-weight:600;flex-shrink:0}
+    .cas-label.minus .op{color:var(--danger)}
+    .cas-label.plus .op{color:var(--success)}
+    .cas-label.total .op{color:var(--accent);font-weight:700}
+    .cas-label.grand .op{display:none}
+    .cas-val{font-family:'Geist Mono',monospace;font-weight:600;text-align:right;letter-spacing:-.01em}
+    .cas-val.minus{color:var(--danger)}
+    .cas-val.plus{color:var(--success)}
+    .cas-val.total{color:var(--accent);font-weight:700}
+    .cas-val.grand{color:var(--accent);font-size:17px}
+    .cas-pct{font-size:11.5px;color:var(--text-soft);text-align:right;font-family:'Geist Mono',monospace;font-weight:500}
+    .cas-pct.bright{color:var(--text);font-weight:600}
+
+    .cas-delta{font-size:10.5px;color:var(--text-soft);margin-left:6px;font-family:'Geist Mono',monospace;font-weight:500}
+    .cas-delta.up{color:var(--success)}
+    .cas-delta.down{color:var(--danger)}
+    .cas-delta-positive-is-bad.up{color:var(--danger)}
+    .cas-delta-positive-is-bad.down{color:var(--success)}
+
+    /* Painel lateral */
+    .side-panel{display:flex;flex-direction:column;gap:14px;position:sticky;top:80px}
+    .side-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+    .side-card h3{margin:0 0 12px;font-size:13px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .side-card h3 svg{width:14px;height:14px;color:var(--accent)}
+
+    .margem-row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--border);font-size:12.5px}
+    .margem-row:last-child{border-bottom:none}
+    .margem-label{color:var(--text-muted)}
+    .margem-val{font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.01em;color:var(--text)}
+    .margem-val.good{color:var(--success)}
+    .margem-val.warn{color:var(--warn)}
+    .margem-val.bad{color:var(--danger)}
+    .margem-bench{font-size:10.5px;color:var(--text-soft);text-align:right;margin-top:1px;font-weight:500}
+
+    /* Alertas mini */
+    .alert-mini{padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
+    .alert-mini svg{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+    .alert-mini.ok{background:var(--success-soft);color:var(--success)}
+    .alert-mini.warn{background:var(--warn-soft);color:var(--warn)}
+    .alert-mini b{font-weight:600}
+    .alert-mini span{color:var(--text)}
+    [data-theme="dark"] .alert-mini.warn span,[data-theme="dark"] .alert-mini.ok span{color:var(--text)}
+
+    /* Evolução 12 meses */
+    .chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:18px}
+    .chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:14px;flex-wrap:wrap}
+    .chart-title{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+    .chart-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .chart-legend{display:flex;gap:16px;font-size:12px;color:var(--text-muted);margin-top:8px;flex-wrap:wrap}
+    .chart-legend span{display:inline-flex;align-items:center;gap:6px}
+    .legend-dot{width:10px;height:10px;border-radius:3px}
+    .chart-box{height:280px;position:relative}
+
+    /* Drill-down Drawer */
+    .drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:.2s;z-index:90}
+    .drawer-bg.open{opacity:1;pointer-events:auto}
+    .drawer{position:fixed;top:0;right:0;width:480px;max-width:92vw;height:100vh;background:var(--bg-card);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.7,.2,1);z-index:100;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+    .drawer.open{transform:translateX(0)}
+    .drawer-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .drawer-head h2{margin:0 0 2px;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .drawer-head-sub{font-size:11px;color:var(--text-muted);font-family:'Geist Mono',monospace}
+    .close-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .close-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .close-btn svg{width:15px;height:15px}
+    .drawer-body{flex:1;overflow-y:auto;padding:22px}
+
+    .drill-big{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;font-family:'Geist',sans-serif}
+    .drill-big.minus{color:var(--danger)}
+    .drill-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+
+    .drill-section{margin-bottom:18px}
+    .drill-title{font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+    .drill-list{background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+    .drill-item{display:grid;grid-template-columns:1fr auto;gap:14px;padding:10px 14px;align-items:center;border-bottom:1px solid var(--border);font-size:12.5px}
+    .drill-item:last-child{border-bottom:none}
+    .drill-item-name{color:var(--text)}
+    .drill-item-val{font-weight:600;font-family:'Geist Mono',monospace;letter-spacing:-.01em;color:var(--text)}
+
+    @media (max-width:860px){
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item" href="alertas.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item active"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Financeiro</a>
+        <span class="sep">/</span>
+        <b>DRE gerencial</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn"><i data-lucide="help-circle"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>DRE gerencial <span class="preview-pill">Preview · validar segunda</span></h1>
+          <p>Demonstrativo do Resultado — mostra quanto o mercadinho <b>ganhou</b> e quanto <b>sobrou de fato</b> no mês. Números abaixo são esqueleto com padrões do Lucro Real — valores reais entram depois da conversa com contador dia 20/04.</p>
+        </div>
+        <div class="hero-actions">
+          <div class="mode-toggle">
+            <button class="active" data-mode="competencia"><i data-lucide="scale"></i>Competência</button>
+            <button data-mode="caixa"><i data-lucide="wallet"></i>Caixa</button>
+          </div>
+          <select class="month-select">
+            <option>Abril / 2026</option>
+            <option>Março / 2026</option>
+            <option>Fevereiro / 2026</option>
+            <option>Janeiro / 2026</option>
+          </select>
+          <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar PDF</button>
+          <button class="btn btn-ghost"><i data-lucide="send"></i> Enviar contador</button>
+        </div>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="disclaimer">
+        <i data-lucide="info"></i>
+        <div>
+          <b>DRE gerencial — não substitui demonstrativo contábil oficial.</b>
+          Estimativa gerencial pra tomada de decisão do dono. Apuração formal é responsabilidade do contador.
+          <a href="configuracoes.html#dre">Ajustar disclaimer</a>
+        </div>
+      </div>
+
+      <!-- Reconciliação cruzada -->
+      <div class="recon">
+        <div class="recon-title">
+          <h3><i data-lucide="shield-check"></i> Reconciliação cruzada do mês</h3>
+          <span class="status-pill"><span class="status-pill-dot"></span>Os 3 bateram (tolerância R$ 10)</span>
+        </div>
+        <div class="recon-grid">
+          <div class="recon-box">
+            <div class="recon-label"><i data-lucide="wallet"></i>Saldo final de caixa</div>
+            <div class="recon-val">R$ 18.340,00</div>
+            <div class="recon-sub">Santander + BB em 18/04</div>
+          </div>
+          <div class="recon-eq">=</div>
+          <div class="recon-box">
+            <div class="recon-label"><i data-lucide="bar-chart-3"></i>Lucro DRE (modo caixa)</div>
+            <div class="recon-val">R$ 18.338,00</div>
+            <div class="recon-sub">Calculado pela apuração</div>
+          </div>
+          <div class="recon-box">
+            <div class="recon-label"><i data-lucide="arrow-right-left"></i>Variação extrato</div>
+            <div class="recon-val">R$ 18.345,00</div>
+            <div class="recon-sub">Entradas − saídas do banco</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DRE cascata + painel lateral -->
+      <div class="cascade-grid">
+
+        <div class="cascade">
+          <div class="cascade-head">
+            <h2>Abril / 2026</h2>
+            <div class="col-labels"><span>% RL</span><span>Δ mês</span></div>
+          </div>
+
+          <!-- RECEITA -->
+          <div class="cas-row" onclick="drill('receita-bruta','Receita Bruta de Vendas','800.017,00')">
+            <div class="cas-label"><span class="op">+</span>Receita Bruta de Vendas</div>
+            <div class="cas-val plus">800.017,00</div>
+            <div class="cas-pct bright">—</div>
+          </div>
+
+          <div class="cas-row sub" onclick="drill('icms','ICMS s/ vendas','65.775,00')">
+            <div class="cas-label minus"><span class="op">−</span>ICMS s/ vendas</div>
+            <div class="cas-val minus">65.775,00</div>
+            <div class="cas-pct">9,4%</div>
+          </div>
+          <div class="cas-row sub" onclick="drill('pis','PIS s/ vendas','13.023,00')">
+            <div class="cas-label minus"><span class="op">−</span>PIS s/ vendas</div>
+            <div class="cas-val minus">13.023,00</div>
+            <div class="cas-pct">1,9%</div>
+          </div>
+          <div class="cas-row sub" onclick="drill('cofins','COFINS s/ vendas','59.984,00')">
+            <div class="cas-label minus"><span class="op">−</span>COFINS s/ vendas</div>
+            <div class="cas-val minus">59.984,00</div>
+            <div class="cas-pct">8,6%</div>
+          </div>
+          <div class="cas-row sub" onclick="drill('dev','Devoluções de clientes','2.021,00')">
+            <div class="cas-label minus"><span class="op">−</span>Devoluções</div>
+            <div class="cas-val minus">2.021,00</div>
+            <div class="cas-pct">0,3%</div>
+          </div>
+
+          <div class="cas-row total">
+            <div class="cas-label total"><span class="op">=</span>Receita Líquida</div>
+            <div class="cas-val total">659.214,00</div>
+            <div class="cas-pct bright">100,0% <span class="cas-delta up">+2,3%</span></div>
+          </div>
+
+          <!-- CMV -->
+          <div class="cas-row" onclick="drill('cmv','CMV — Custo das Mercadorias Vendidas','464.746,00')">
+            <div class="cas-label minus"><span class="op">−</span>CMV (compras do mês)</div>
+            <div class="cas-val minus">464.746,00</div>
+            <div class="cas-pct">72,1%</div>
+          </div>
+
+          <div class="cas-row total">
+            <div class="cas-label total"><span class="op">=</span>Lucro Bruto</div>
+            <div class="cas-val total">194.468,00</div>
+            <div class="cas-pct bright">29,5% <span class="cas-delta down cas-delta-positive-is-bad">+1 p.p.</span></div>
+          </div>
+
+          <!-- Despesas operacionais -->
+          <div class="cas-row" onclick="drill('op-vendas','Despesas com Vendas','18.950,00')">
+            <div class="cas-label minus"><span class="op">−</span>Despesas com Vendas</div>
+            <div class="cas-val minus">18.950,00</div>
+            <div class="cas-pct">2,4%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Folha operacional (12 func)</div>
+            <div class="cas-val">18.500,00</div>
+            <div class="cas-pct">2,3%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Maquininhas (taxas Cielo)</div>
+            <div class="cas-val">450,00</div>
+            <div class="cas-pct">0,1%</div>
+          </div>
+
+          <div class="cas-row" onclick="drill('op-adm','Despesas Administrativas','6.150,00')">
+            <div class="cas-label minus"><span class="op">−</span>Despesas Administrativas</div>
+            <div class="cas-val minus">6.150,00</div>
+            <div class="cas-pct">0,8%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Pró-labore sócios</div>
+            <div class="cas-val">5.000,00</div>
+            <div class="cas-pct">0,6%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Contador + software</div>
+            <div class="cas-val">1.150,00</div>
+            <div class="cas-pct">0,2%</div>
+          </div>
+
+          <div class="cas-row" onclick="drill('op-gerais','Despesas Gerais','9.350,00')">
+            <div class="cas-label minus"><span class="op">−</span>Despesas Gerais</div>
+            <div class="cas-val minus">9.350,00</div>
+            <div class="cas-pct">1,2%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Aluguel + Energia + Água</div>
+            <div class="cas-val">7.750,00</div>
+            <div class="cas-pct">1,0%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Internet + Segurança + Limpeza</div>
+            <div class="cas-val">1.600,00</div>
+            <div class="cas-pct">0,2%</div>
+          </div>
+
+          <div class="cas-row total">
+            <div class="cas-label total"><span class="op">=</span>Lucro Operacional (EBITDA)</div>
+            <div class="cas-val total">160.018,00</div>
+            <div class="cas-pct bright">24,3%</div>
+          </div>
+
+          <!-- Resultado financeiro -->
+          <div class="cas-row" onclick="drill('fin','Resultado financeiro','−730,00')">
+            <div class="cas-label minus"><span class="op">±</span>Resultado financeiro líquido</div>
+            <div class="cas-val minus">−730,00</div>
+            <div class="cas-pct">−0,1%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label"><span class="op">•</span>Juros e tarifas bancárias</div>
+            <div class="cas-val">−850,00</div>
+            <div class="cas-pct">−0,1%</div>
+          </div>
+          <div class="cas-row sub">
+            <div class="cas-label plus"><span class="op">+</span>Rendimento aplicação</div>
+            <div class="cas-val plus">120,00</div>
+            <div class="cas-pct">0,0%</div>
+          </div>
+
+          <div class="cas-row total">
+            <div class="cas-label total"><span class="op">=</span>Lucro Antes do IR (LAIR)</div>
+            <div class="cas-val total">160.018,00</div>
+            <div class="cas-pct bright">24,3%</div>
+          </div>
+
+          <!-- Impostos sobre lucro -->
+          <div class="cas-row" onclick="drill('irpj-base','IRPJ base 15%','24.003,00')">
+            <div class="cas-label minus"><span class="op">−</span>IRPJ (15%)</div>
+            <div class="cas-val minus">24.003,00</div>
+            <div class="cas-pct">3,5%</div>
+          </div>
+          <div class="cas-row" onclick="drill('irpj-ad','IRPJ adicional 10%','14.002,00')">
+            <div class="cas-label minus"><span class="op">−</span>IRPJ adicional (10%)</div>
+            <div class="cas-val minus">14.002,00</div>
+            <div class="cas-pct">2,1%</div>
+          </div>
+          <div class="cas-row" onclick="drill('csll','CSLL 9%','14.402,00')">
+            <div class="cas-label minus"><span class="op">−</span>CSLL (9%)</div>
+            <div class="cas-val minus">14.402,00</div>
+            <div class="cas-pct">2,1%</div>
+          </div>
+
+          <!-- RESULTADO FINAL -->
+          <div class="cas-row grand">
+            <div class="cas-label grand"><span class="op">=</span>LUCRO LÍQUIDO</div>
+            <div class="cas-val grand">107.612,00</div>
+            <div class="cas-pct bright">16,3% <span class="cas-delta up">+R$ 8.230</span></div>
+          </div>
+
+          <!-- Não-operacionais (abaixo da linha) -->
+          <div class="cas-row sub" style="background:var(--bg-hover);padding-top:14px">
+            <div class="cas-label" style="color:var(--text-soft)"><span class="op">•</span>Distribuição de lucros (não é despesa)</div>
+            <div class="cas-val" style="color:var(--text-soft)">—</div>
+            <div class="cas-pct">saí PL</div>
+          </div>
+          <div class="cas-row sub" style="background:var(--bg-hover)">
+            <div class="cas-label" style="color:var(--text-soft)"><span class="op">•</span>Consumo próprio do sócio (neutralizado)</div>
+            <div class="cas-val" style="color:var(--text-soft)">800,00</div>
+            <div class="cas-pct">0,1%</div>
+          </div>
+        </div>
+
+        <!-- Painel lateral -->
+        <div class="side-panel">
+          <!-- Margens -->
+          <div class="side-card">
+            <h3><i data-lucide="percent"></i> Margens do mês</h3>
+            <div class="margem-row">
+              <div>
+                <div class="margem-label">Margem Bruta</div>
+                <div class="margem-bench">Benchmark: 25-35% · mercadinho</div>
+              </div>
+              <div class="margem-val warn" style="text-align:right">29,5%</div>
+            </div>
+            <div class="margem-row">
+              <div>
+                <div class="margem-label">Margem Operacional</div>
+                <div class="margem-bench">EBITDA / RL</div>
+              </div>
+              <div class="margem-val good" style="text-align:right">24,3%</div>
+            </div>
+            <div class="margem-row">
+              <div>
+                <div class="margem-label">Margem Líquida</div>
+                <div class="margem-bench">Benchmark: 3-8% · mercadinho</div>
+              </div>
+              <div class="margem-val good" style="text-align:right">16,3%</div>
+            </div>
+          </div>
+
+          <!-- Alertas DRE -->
+          <div class="side-card">
+            <h3><i data-lucide="lightbulb"></i> Observações</h3>
+            <div class="alert-mini warn">
+              <i data-lucide="trending-down"></i>
+              <span><b>Margem bruta caiu 5 p.p.</b> vs março (33% → 28%). Principal: IMPACTO subiu 8% + NESTLÉ renegociação em aberto.</span>
+            </div>
+            <div class="alert-mini ok">
+              <i data-lucide="check-circle"></i>
+              <span><b>Reconciliação OK.</b> Saldo × Lucro × Extrato batem dentro da tolerância R$ 10.</span>
+            </div>
+            <div class="alert-mini warn">
+              <i data-lucide="alert-triangle"></i>
+              <span><b>Margem líquida 16,3%</b> está acima do benchmark típico (3-8%). Revisar alíquotas tributárias no fechamento — pode estar subestimada.</span>
+            </div>
+          </div>
+
+          <!-- Comparativo -->
+          <div class="side-card">
+            <h3><i data-lucide="arrow-right-left"></i> Vs. mês anterior</h3>
+            <div class="margem-row">
+              <div class="margem-label">Receita Bruta</div>
+              <div style="text-align:right">
+                <div class="margem-val good">+2,3%</div>
+                <div class="margem-bench">+R$ 21.800</div>
+              </div>
+            </div>
+            <div class="margem-row">
+              <div class="margem-label">Lucro Bruto</div>
+              <div style="text-align:right">
+                <div class="margem-val bad">−12,4%</div>
+                <div class="margem-bench">−R$ 31.600</div>
+              </div>
+            </div>
+            <div class="margem-row">
+              <div class="margem-label">Despesas Oper.</div>
+              <div style="text-align:right">
+                <div class="margem-val bad">+8,1%</div>
+                <div class="margem-bench">+R$ 2.580 (folha)</div>
+              </div>
+            </div>
+            <div class="margem-row">
+              <div class="margem-label">Lucro Líquido</div>
+              <div style="text-align:right">
+                <div class="margem-val good">+7,0%</div>
+                <div class="margem-bench">+R$ 8.230</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Evolução 12 meses -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Evolução — últimos 12 meses</h3>
+            <div class="chart-sub">Receita Líquida, Lucro Bruto e Lucro Líquido · base Competência</div>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="dreChart"></canvas></div>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:var(--accent)"></span>Receita Líquida</span>
+          <span><span class="legend-dot" style="background:var(--warn)"></span>Lucro Bruto</span>
+          <span><span class="legend-dot" style="background:var(--success)"></span>Lucro Líquido</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Drill-down drawer -->
+  <div class="drawer-bg" id="drawerBg" onclick="closeDrill()"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div>
+        <h2 id="drillTitle"><i data-lucide="bar-chart-3"></i> Detalhe</h2>
+        <div class="drawer-head-sub" id="drillCode">—</div>
+      </div>
+      <button class="close-btn" onclick="closeDrill()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer-body">
+      <div class="drill-big" id="drillValue">R$ 0,00</div>
+      <div class="drill-sub" id="drillDesc">Abril / 2026</div>
+
+      <div class="drill-section">
+        <div class="drill-title">Composição</div>
+        <div class="drill-list" id="drillList">
+          <!-- populado via JS -->
+        </div>
+      </div>
+
+      <div class="drill-section">
+        <div class="drill-title">Histórico 6 meses</div>
+        <div class="drill-list">
+          <div class="drill-item"><span class="drill-item-name">Novembro/25</span><span class="drill-item-val">R$ 82.500</span></div>
+          <div class="drill-item"><span class="drill-item-name">Dezembro/25</span><span class="drill-item-val">R$ 95.800</span></div>
+          <div class="drill-item"><span class="drill-item-name">Janeiro/26</span><span class="drill-item-val">R$ 78.200</span></div>
+          <div class="drill-item"><span class="drill-item-name">Fevereiro/26</span><span class="drill-item-val">R$ 85.400</span></div>
+          <div class="drill-item"><span class="drill-item-name">Março/26</span><span class="drill-item-val">R$ 92.300</span></div>
+          <div class="drill-item" style="background:var(--accent-soft)"><span class="drill-item-name" style="color:var(--accent);font-weight:600">Abril/26 (atual)</span><span class="drill-item-val" id="drillCurrent" style="color:var(--accent)">—</span></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    lucide.createIcons();
+
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    function toggleTheme(){
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+      renderChart();
+    }
+
+    document.querySelectorAll('.mode-toggle button').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.mode-toggle button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+      });
+    });
+
+    // Drill-down simulado
+    const drillData = {
+      'receita-bruta': {
+        desc: 'Vendas brutas em abril antes de qualquer dedução',
+        items: [
+          ['Vendas no PDV (dinheiro)', 'R$ 192.000,00'],
+          ['Vendas cartão crédito', 'R$ 384.000,00'],
+          ['Vendas cartão débito', 'R$ 288.000,00'],
+          ['Vendas PIX', 'R$ 88.000,00'],
+          ['Vendas boleto/a prazo', 'R$ 8.000,00']
+        ]
+      },
+      'cmv': {
+        desc: 'Compras do período (aproximação — validar segunda)',
+        items: [
+          ['IMPACTO Distribuidora', 'R$ 185.400,00'],
+          ['JBS Foods', 'R$ 112.800,00'],
+          ['ATACADÃO Distribuição', 'R$ 96.200,00'],
+          ['NESTLÉ Brasil', 'R$ 64.500,00'],
+          ['BIMBO do Brasil', 'R$ 38.900,00'],
+          ['Outros fornecedores (12)', 'R$ 78.200,00']
+        ]
+      },
+      'op-vendas': {
+        desc: 'Custos variáveis ligados ao volume de vendas',
+        items: [
+          ['Folha operacional (12 func.)', 'R$ 18.500,00'],
+          ['Taxas maquininhas Cielo', 'R$ 450,00']
+        ]
+      },
+      'op-adm': {
+        desc: 'Estrutura administrativa do mercadinho',
+        items: [
+          ['Pró-labore Reginaldo', 'R$ 5.000,00'],
+          ['Contábil Rocha', 'R$ 800,00'],
+          ['iCommerce (ERP)', 'R$ 350,00']
+        ]
+      },
+      'op-gerais': {
+        desc: 'Despesas de estrutura e funcionamento',
+        items: [
+          ['Aluguel (Imobiliária Jupi)', 'R$ 4.500,00'],
+          ['Energia CELPE', 'R$ 2.800,00'],
+          ['Água COMPESA', 'R$ 450,00'],
+          ['Internet Oi', 'R$ 220,00'],
+          ['Segurança GolPhone', 'R$ 180,00'],
+          ['Limpeza terceirizada', 'R$ 1.200,00']
+        ]
+      },
+      'fin': {
+        desc: 'Resultado das movimentações financeiras do mês',
+        items: [
+          ['Juros de mora pagos', 'R$ 280,00'],
+          ['Tarifas bancárias', 'R$ 570,00'],
+          ['Rendimento aplicação', 'R$ 120,00']
+        ]
+      },
+      'icms': {desc: 'ICMS débito (17% PE) líquido de créditos', items:[['Débito sobre vendas','R$ 163.200,00'],['Crédito sobre compras','R$ 88.200,00']]},
+      'pis': {desc: 'PIS não-cumulativo 1,65% · validar com contador', items:[['Débito sobre vendas','R$ 15.840,00'],['Crédito sobre compras','R$ 990,00']]},
+      'cofins': {desc: 'COFINS não-cumulativo 7,60% · validar com contador', items:[['Débito sobre vendas','R$ 72.960,00'],['Crédito sobre compras','R$ 4.560,00']]},
+      'irpj-base': {desc: '15% sobre LAIR', items:[['LAIR × 15%','R$ 24.003,00']]},
+      'irpj-ad': {desc: 'Adicional 10% sobre LAIR excedente a R$ 20k/mês', items:[['(LAIR − 20.000) × 10%','R$ 14.002,00']]},
+      'csll': {desc: '9% sobre LAIR', items:[['LAIR × 9%','R$ 14.402,00']]},
+      'dev': {desc: 'Produtos devolvidos pelos clientes', items:[['Devoluções abril','R$ 2.021,00']]}
+    };
+
+    function drill(key, title, value){
+      const data = drillData[key] || {items:[]};
+      document.getElementById('drillTitle').innerHTML = '<i data-lucide="bar-chart-3"></i> ' + title;
+      document.getElementById('drillCode').textContent = 'Categoria DRE · ' + key;
+      document.getElementById('drillValue').textContent = 'R$ ' + value;
+      document.getElementById('drillValue').classList.toggle('minus', value.startsWith('−'));
+      document.getElementById('drillDesc').textContent = data.desc || 'Abril / 2026';
+      document.getElementById('drillCurrent').textContent = 'R$ ' + value;
+
+      const listEl = document.getElementById('drillList');
+      listEl.innerHTML = '';
+      (data.items || []).forEach(([n,v]) => {
+        const d = document.createElement('div');
+        d.className = 'drill-item';
+        d.innerHTML = `<span class="drill-item-name">${n}</span><span class="drill-item-val">${v}</span>`;
+        listEl.appendChild(d);
+      });
+
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('drawerBg').classList.add('open');
+      lucide.createIcons();
+    }
+    function closeDrill(){
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('drawerBg').classList.remove('open');
+    }
+
+    // Chart 12 meses
+    let dreChart;
+    function renderChart(){
+      if (dreChart) dreChart.destroy();
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const textColor = isDark ? '#9CA3AF' : '#6B7280';
+      const gridColor = isDark ? '#222832' : '#E5E7EB';
+      const accent = isDark ? '#3B82F6' : '#2563EB';
+      const warn = isDark ? '#FBBF24' : '#D97706';
+      const success = isDark ? '#10B981' : '#10B981';
+
+      const meses = ['mai/25','jun/25','jul/25','ago/25','set/25','out/25','nov/25','dez/25','jan/26','fev/26','mar/26','abr/26'];
+      const receita = [720, 735, 710, 755, 740, 780, 810, 920, 680, 745, 820, 799];
+      const lbruto  = [216, 220, 213, 226, 222, 234, 245, 290, 197, 223, 269, 223];
+      const lliq    = [62,  65,  58,  70,  66,  72,  82,  95,  55,  72,  92,  126];
+
+      dreChart = new Chart(document.getElementById('dreChart'), {
+        type:'line',
+        data:{
+          labels: meses,
+          datasets:[
+            {label:'Receita Líquida', data:receita, borderColor:accent, backgroundColor:'transparent', tension:0.35, borderWidth:2.5, pointRadius:3, pointHoverRadius:6, pointBackgroundColor:accent},
+            {label:'Lucro Bruto', data:lbruto, borderColor:warn, backgroundColor:'transparent', tension:0.35, borderWidth:2, pointRadius:2, pointHoverRadius:5, pointBackgroundColor:warn},
+            {label:'Lucro Líquido', data:lliq, borderColor:success, backgroundColor:'transparent', tension:0.35, borderWidth:2, pointRadius:2, pointHoverRadius:5, pointBackgroundColor:success}
+          ]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          interaction:{mode:'index',intersect:false},
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              backgroundColor: isDark ? '#1A1F27' : '#111827',
+              titleColor:'#F3F4F6',
+              bodyColor:'#F3F4F6',
+              padding:10,
+              callbacks:{
+                label: ctx => ctx.dataset.label + ': R$ ' + ctx.parsed.y.toLocaleString('pt-BR') + 'k'
+              }
+            }
+          },
+          scales:{
+            x:{grid:{display:false}, ticks:{color:textColor, font:{family:'Geist Mono', size:10}}},
+            y:{grid:{color:gridColor}, ticks:{color:textColor, font:{family:'Geist Mono', size:10}, callback: v => 'R$ '+v+'k'}}
+          }
+        }
+      });
+    }
+    renderChart();
+  </script>
+</body>
+</html>

@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alertas · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --info:#6366F1; --info-soft:#E0E7FF;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --info:#818CF8; --info-soft:rgba(129,140,248,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    /* Sidebar padrão */
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.danger{background:var(--danger);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    /* Topbar */
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:.15s}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+    .btn-danger-soft{background:var(--danger-soft);color:var(--danger);border:none}
+    .btn-danger-soft:hover{background:var(--danger);color:white}
+
+    main{padding:24px 28px 80px}
+
+    /* Hero */
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:.15s}
+    .kpi:hover{border-color:var(--border-strong)}
+    .kpi-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .kpi-label svg{width:12px;height:12px}
+    .kpi-value{font-size:24px;font-weight:600;letter-spacing:-.02em;margin-bottom:2px;font-family:'Geist',sans-serif}
+    .kpi-sub{font-size:12px;color:var(--text-muted)}
+    .kpi.danger{background:linear-gradient(135deg,var(--danger-soft) 0%,transparent 100%);border-color:var(--danger)}
+    .kpi.danger .kpi-label,.kpi.danger .kpi-value{color:var(--danger)}
+    .kpi.warn{background:linear-gradient(135deg,var(--warn-soft) 0%,transparent 100%);border-color:var(--warn)}
+    .kpi.warn .kpi-label,.kpi.warn .kpi-value{color:var(--warn)}
+    .kpi.info{background:linear-gradient(135deg,var(--info-soft) 0%,transparent 100%);border-color:var(--info)}
+    .kpi.info .kpi-label,.kpi.info .kpi-value{color:var(--info)}
+    .kpi.success{background:linear-gradient(135deg,var(--success-soft) 0%,transparent 100%);border-color:var(--success)}
+    .kpi.success .kpi-label,.kpi.success .kpi-value{color:var(--success)}
+
+    /* Layout lista + sidebar regras */
+    .alert-layout{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+    @media (max-width:1100px){.alert-layout{grid-template-columns:1fr}}
+
+    /* Filtros */
+    .tabs-filter{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+    .tab-filter{padding:7px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--text-muted);cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+    .tab-filter:hover{border-color:var(--border-strong)}
+    .tab-filter.active{background:var(--accent);color:white;border-color:var(--accent)}
+    .tab-filter .count{font-family:'Geist Mono',monospace;font-weight:600;opacity:.85}
+    .tab-filter .dot-sev{width:7px;height:7px;border-radius:50%}
+    .tab-filter .dot-sev.crit{background:var(--danger)}
+    .tab-filter .dot-sev.warn{background:var(--warn)}
+    .tab-filter .dot-sev.info{background:var(--info)}
+    .tab-filter .dot-sev.ok{background:var(--success)}
+    .bulk-actions{margin-left:auto;display:flex;gap:6px}
+
+    /* Lista de alertas */
+    .alerts-list{display:flex;flex-direction:column;gap:10px}
+    .alert-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;gap:14px;transition:.15s;position:relative;cursor:pointer}
+    .alert-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow)}
+    .alert-card.unread{border-left:3px solid var(--accent)}
+    .alert-card.sev-crit{border-left:3px solid var(--danger)}
+    .alert-card.sev-warn{border-left:3px solid var(--warn)}
+    .alert-card.sev-info{border-left:3px solid var(--info)}
+    .alert-card.sev-ok{border-left:3px solid var(--success);opacity:.85}
+    .alert-ico{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+    .alert-ico svg{width:18px;height:18px}
+    .alert-ico.sev-crit{background:var(--danger-soft);color:var(--danger)}
+    .alert-ico.sev-warn{background:var(--warn-soft);color:var(--warn)}
+    .alert-ico.sev-info{background:var(--info-soft);color:var(--info)}
+    .alert-ico.sev-ok{background:var(--success-soft);color:var(--success)}
+    .alert-main{flex:1;min-width:0}
+    .alert-head-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+    .alert-sev-pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+    .alert-sev-pill.sev-crit{background:var(--danger);color:white}
+    .alert-sev-pill.sev-warn{background:var(--warn);color:white}
+    .alert-sev-pill.sev-info{background:var(--info);color:white}
+    .alert-sev-pill.sev-ok{background:var(--success);color:white}
+    .alert-source{font-size:11px;color:var(--text-soft);display:inline-flex;align-items:center;gap:4px;font-family:'Geist Mono',monospace}
+    .alert-source svg{width:11px;height:11px}
+    .alert-when{font-size:11px;color:var(--text-soft);margin-left:auto;font-family:'Geist Mono',monospace}
+    .alert-title{font-size:14px;font-weight:600;letter-spacing:-.01em;color:var(--text);margin:0 0 3px;line-height:1.3}
+    .alert-desc{font-size:12.5px;color:var(--text-muted);line-height:1.5;margin:0}
+    .alert-desc b{color:var(--text);font-weight:600}
+    .alert-meta{display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--text-soft)}
+    .alert-meta span{display:inline-flex;align-items:center;gap:4px;font-family:'Geist Mono',monospace}
+    .alert-meta svg{width:11px;height:11px}
+
+    .alert-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+    .alert-btn{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;display:inline-flex;align-items:center;gap:5px;transition:.15s}
+    .alert-btn:hover{background:var(--bg-hover)}
+    .alert-btn svg{width:12px;height:12px}
+    .alert-btn.primary{background:var(--accent);color:white;border-color:var(--accent)}
+    .alert-btn.primary:hover{background:var(--accent-hover)}
+    .alert-btn.danger{color:var(--danger);border-color:var(--danger-soft)}
+    .alert-btn.danger:hover{background:var(--danger-soft)}
+
+    .alert-dismiss{position:absolute;top:12px;right:12px;width:24px;height:24px;display:grid;place-items:center;border-radius:6px;border:none;background:transparent;color:var(--text-soft);cursor:pointer;opacity:0;transition:.15s}
+    .alert-card:hover .alert-dismiss{opacity:1}
+    .alert-dismiss:hover{background:var(--bg-hover);color:var(--text)}
+    .alert-dismiss svg{width:14px;height:14px}
+
+    /* Painel regras */
+    .rules-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:sticky;top:80px}
+    .rules-head{padding:16px 18px;border-bottom:1px solid var(--border)}
+    .rules-head h3{margin:0 0 2px;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .rules-head h3 svg{width:14px;height:14px;color:var(--accent)}
+    .rules-head p{margin:0;font-size:11.5px;color:var(--text-muted);line-height:1.5}
+    .rules-body{padding:6px 8px 12px}
+    .rule-row{padding:10px 10px;border-radius:8px;cursor:pointer;transition:.15s}
+    .rule-row:hover{background:var(--bg-hover)}
+    .rule-head-row{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+    .rule-name{font-size:12.5px;font-weight:500;color:var(--text);letter-spacing:-.01em;flex:1}
+    .rule-desc{font-size:11.5px;color:var(--text-muted);line-height:1.45;padding-left:22px}
+    .rule-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .rule-dot.crit{background:var(--danger)}
+    .rule-dot.warn{background:var(--warn)}
+    .rule-dot.info{background:var(--info)}
+    .rule-channels{display:flex;gap:4px;margin-top:6px;padding-left:22px}
+    .rule-chip{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:var(--bg-soft);color:var(--text-soft);border:1px solid var(--border);display:inline-flex;align-items:center;gap:3px}
+    .rule-chip.on{background:var(--success-soft);color:var(--success);border-color:var(--success)}
+    .rule-chip svg{width:9px;height:9px}
+    .toggle{display:inline-block;position:relative;width:30px;height:18px;cursor:pointer;flex-shrink:0}
+    .toggle input{display:none}
+    .toggle-track{position:absolute;inset:0;background:var(--border-strong);border-radius:20px;transition:.2s}
+    .toggle-dot{position:absolute;left:2px;top:2px;width:14px;height:14px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .toggle input:checked + .toggle-track{background:var(--success)}
+    .toggle input:checked + .toggle-track .toggle-dot{left:14px}
+
+    .rules-foot{padding:12px 18px;background:var(--bg-soft);border-top:1px solid var(--border);font-size:11px;color:var(--text-soft);display:flex;align-items:center;gap:6px}
+    .rules-foot svg{width:12px;height:12px}
+
+    @media (max-width:860px){
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item active"><i data-lucide="bell"></i> Alertas <span class="nav-badge danger">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Principal</a>
+        <span class="sep">/</span>
+        <b>Alertas</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn"><i data-lucide="help-circle"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>Alertas</h1>
+          <p>Central de avisos. O sistema vigia o <b>caixa, estoque, fornecedores, margens e prazos</b> — e te avisa antes de virar problema. <b>Nada importante passa batido.</b></p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost"><i data-lucide="check-check"></i> Marcar tudo como lido</button>
+          <button class="btn btn-primary" onclick="window.location.href='whatsapp-preview.html'"><i data-lucide="smartphone"></i> Preview WhatsApp</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi danger">
+          <div class="kpi-label"><i data-lucide="alert-octagon"></i> Críticos</div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-sub">Exigem ação imediata</div>
+        </div>
+        <div class="kpi warn">
+          <div class="kpi-label"><i data-lucide="alert-triangle"></i> Avisos</div>
+          <div class="kpi-value">3</div>
+          <div class="kpi-sub">Atenção essa semana</div>
+        </div>
+        <div class="kpi info">
+          <div class="kpi-label"><i data-lucide="info"></i> Informações</div>
+          <div class="kpi-value">3</div>
+          <div class="kpi-sub">Eventos do sistema</div>
+        </div>
+        <div class="kpi success">
+          <div class="kpi-label"><i data-lucide="check-circle"></i> Resolvidos hoje</div>
+          <div class="kpi-value">6</div>
+          <div class="kpi-sub">4 pagos · 2 confirmados</div>
+        </div>
+      </div>
+
+      <div class="alert-layout">
+        <div>
+          <!-- Filtros -->
+          <div class="tabs-filter">
+            <span class="tab-filter active" onclick="filterSev('all',this)">Todos <span class="count">· 9</span></span>
+            <span class="tab-filter" onclick="filterSev('crit',this)"><span class="dot-sev crit"></span>Críticos <span class="count">· 2</span></span>
+            <span class="tab-filter" onclick="filterSev('warn',this)"><span class="dot-sev warn"></span>Avisos <span class="count">· 3</span></span>
+            <span class="tab-filter" onclick="filterSev('info',this)"><span class="dot-sev info"></span>Info <span class="count">· 3</span></span>
+            <span class="tab-filter" onclick="filterSev('ok',this)"><span class="dot-sev ok"></span>Resolvidos <span class="count">· 1</span></span>
+          </div>
+
+          <!-- Lista -->
+          <div class="alerts-list">
+
+            <!-- CRÍTICO 1 -->
+            <div class="alert-card sev-crit unread" data-sev="crit">
+              <div class="alert-ico sev-crit"><i data-lucide="calendar-x"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-crit">Crítico</span>
+                  <span class="alert-source"><i data-lucide="receipt"></i>Contas a pagar</span>
+                  <span class="alert-when">há 15 min</span>
+                </div>
+                <h3 class="alert-title">3 boletos vencem hoje — R$ 10.202,50 acumulado do fim de semana</h3>
+                <p class="alert-desc">Segunda-feira é o maior dia do mês. IMPACTO (R$ 4.282,50), CAFÉ 3 CORAÇÕES (R$ 2.400) e NESTLÉ (R$ 3.520) compensam hoje. <b>Se não pagar hoje, perde desconto e entra na próxima compensação terça.</b></p>
+                <div class="alert-meta">
+                  <span><i data-lucide="calendar"></i>Vencimento: 20/04/2026</span>
+                  <span><i data-lucide="users"></i>3 fornecedores</span>
+                </div>
+                <div class="alert-actions">
+                  <button class="alert-btn primary"><i data-lucide="credit-card"></i> Pagar agora</button>
+                  <button class="alert-btn"><i data-lucide="calendar"></i> Ver no calendário</button>
+                </div>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- CRÍTICO 2 -->
+            <div class="alert-card sev-crit unread" data-sev="crit">
+              <div class="alert-ico sev-crit"><i data-lucide="trending-down"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-crit">Crítico</span>
+                  <span class="alert-source"><i data-lucide="trending-up"></i>Fluxo de caixa</span>
+                  <span class="alert-when">há 2 horas</span>
+                </div>
+                <h3 class="alert-title">Saldo projetado negativo em 18 dias — 06/05 fecha em −R$ 2.340</h3>
+                <p class="alert-desc">A combinação folha + aluguel + pró-labore + 4 boletos de fornecedor (IMPACTO/JBS/NESTLÉ/BIMBO) vai consumir o caixa. <b>Antecipar NESTLÉ pra dia 10 resolve e deixa o saldo positivo em R$ 1.180.</b></p>
+                <div class="alert-meta">
+                  <span><i data-lucide="calendar"></i>Data crítica: 06/05/2026</span>
+                  <span><i data-lucide="dollar-sign"></i>Déficit: R$ 2.340</span>
+                </div>
+                <div class="alert-actions">
+                  <button class="alert-btn primary"><i data-lucide="trending-up"></i> Abrir fluxo de caixa</button>
+                  <button class="alert-btn"><i data-lucide="phone"></i> Simular renegociação</button>
+                </div>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- AVISO 1 -->
+            <div class="alert-card sev-warn unread" data-sev="warn">
+              <div class="alert-ico sev-warn"><i data-lucide="percent"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-warn">Aviso</span>
+                  <span class="alert-source"><i data-lucide="bar-chart-3"></i>DRE</span>
+                  <span class="alert-when">há 5 horas</span>
+                </div>
+                <h3 class="alert-title">Margem bruta caiu de 28% pra 23% em abril</h3>
+                <p class="alert-desc">Abaixo do benchmark do setor (25-35%) pela 1ª vez em 4 meses. Principal causa: aumento de ~8% no preço médio de 3 fornecedores (IMPACTO, JBS, DCL CARDEAL). <b>Renegociar ou repassar no PDV.</b></p>
+                <div class="alert-meta">
+                  <span><i data-lucide="arrow-down"></i>Variação: −5 p.p.</span>
+                  <span><i data-lucide="calendar"></i>Mês: abril/2026</span>
+                </div>
+                <div class="alert-actions">
+                  <button class="alert-btn primary"><i data-lucide="bar-chart-3"></i> Abrir DRE</button>
+                  <button class="alert-btn"><i data-lucide="building-2"></i> Ver fornecedores</button>
+                </div>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- AVISO 2 -->
+            <div class="alert-card sev-warn" data-sev="warn">
+              <div class="alert-ico sev-warn"><i data-lucide="arrow-up-right"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-warn">Aviso</span>
+                  <span class="alert-source"><i data-lucide="building-2"></i>Fornecedores</span>
+                  <span class="alert-when">ontem</span>
+                </div>
+                <h3 class="alert-title">IMPACTO subiu preço médio em 8% nos últimos 3 meses</h3>
+                <p class="alert-desc">Aumento gradual — fevereiro +2%, março +3%, abril +3%. Já representa R$ 1.850 a mais por mês no custo de compras. <b>Pode ser tabela nova ou fim de promoção.</b> Vale ligar pra confirmar e renegociar.</p>
+                <div class="alert-meta">
+                  <span><i data-lucide="trending-up"></i>+8% em 90 dias</span>
+                  <span><i data-lucide="dollar-sign"></i>Impacto: R$ 1.850/mês</span>
+                </div>
+                <div class="alert-actions">
+                  <button class="alert-btn primary"><i data-lucide="eye"></i> Ver histórico IMPACTO</button>
+                  <button class="alert-btn"><i data-lucide="phone"></i> Contato fornecedor</button>
+                </div>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- AVISO 3 -->
+            <div class="alert-card sev-warn" data-sev="warn">
+              <div class="alert-ico sev-warn"><i data-lucide="users"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-warn">Aviso</span>
+                  <span class="alert-source"><i data-lucide="plus-square"></i>Despesas</span>
+                  <span class="alert-when">ontem</span>
+                </div>
+                <h3 class="alert-title">Folha de pagamento cresceu 12% vs média dos últimos 6 meses</h3>
+                <p class="alert-desc">Saiu de R$ 16.500 pra R$ 18.500 em abril. Houve contratação? Hora extra? <b>Confirme se é estrutural ou pontual</b> — se for estrutural, revisa a margem bruta esperada.</p>
+                <div class="alert-meta">
+                  <span><i data-lucide="trending-up"></i>+12% · +R$ 2.000</span>
+                  <span><i data-lucide="users"></i>12 funcionários</span>
+                </div>
+                <div class="alert-actions">
+                  <button class="alert-btn primary"><i data-lucide="plus-square"></i> Ver detalhe</button>
+                  <button class="alert-btn"><i data-lucide="check"></i> É estrutural</button>
+                </div>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- INFO 1 -->
+            <div class="alert-card sev-info" data-sev="info">
+              <div class="alert-ico sev-info"><i data-lucide="file-check"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-info">Info</span>
+                  <span class="alert-source"><i data-lucide="upload"></i>NF-e</span>
+                  <span class="alert-when">há 3 horas</span>
+                </div>
+                <h3 class="alert-title">NF-e #000012345 de IMPACTO importada automaticamente</h3>
+                <p class="alert-desc">Total R$ 8.565,00 em 2 parcelas. Boletos agendados no Calendário pra 30/04 e 30/05. Nota arquivada em Histórico NF-e.</p>
+                <div class="alert-actions">
+                  <button class="alert-btn"><i data-lucide="file-text"></i> Ver NF-e</button>
+                </div>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- INFO 2 -->
+            <div class="alert-card sev-info" data-sev="info">
+              <div class="alert-ico sev-info"><i data-lucide="check-circle-2"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-info">Info</span>
+                  <span class="alert-source"><i data-lucide="credit-card"></i>Pagamentos</span>
+                  <span class="alert-when">ontem 17:42</span>
+                </div>
+                <h3 class="alert-title">3 boletos pagos ontem confirmados pelo banco</h3>
+                <p class="alert-desc">ATACADÃO (R$ 5.800), PARATY (R$ 2.100), DCL CARDEAL (R$ 3.200). <b>Total R$ 11.100 liquidado.</b> Fluxo de caixa e DRE atualizados automaticamente.</p>
+                <div class="alert-actions">
+                  <button class="alert-btn"><i data-lucide="receipt"></i> Ver comprovantes</button>
+                </div>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- INFO 3 -->
+            <div class="alert-card sev-info" data-sev="info">
+              <div class="alert-ico sev-info"><i data-lucide="message-circle"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-info">Info</span>
+                  <span class="alert-source"><i data-lucide="bell"></i>WhatsApp</span>
+                  <span class="alert-when">hoje 06:15</span>
+                </div>
+                <h3 class="alert-title">Briefing matinal enviado pro Reginaldo e Mikael</h3>
+                <p class="alert-desc">Mensagem entregue e lida por ambos. Ninguém respondeu comandos.</p>
+                <div class="alert-actions">
+                  <button class="alert-btn"><i data-lucide="smartphone"></i> Ver briefing</button>
+                </div>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- OK / RESOLVIDO -->
+            <div class="alert-card sev-ok" data-sev="ok">
+              <div class="alert-ico sev-ok"><i data-lucide="shield-check"></i></div>
+              <div class="alert-main">
+                <div class="alert-head-row">
+                  <span class="alert-sev-pill sev-ok">Resolvido</span>
+                  <span class="alert-source"><i data-lucide="check-circle"></i>Reconciliação</span>
+                  <span class="alert-when">hoje 08:00</span>
+                </div>
+                <h3 class="alert-title">Reconciliação bancária de ontem fechou sem divergência</h3>
+                <p class="alert-desc">Saldo Santander + BB bateu com movimentações registradas no DM Pay (tolerância R$ 10). Lucro do dia × caixa × extrato = <b>conformes</b>.</p>
+              </div>
+              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Regras de alerta -->
+        <div>
+          <div class="rules-card">
+            <div class="rules-head">
+              <h3><i data-lucide="sliders"></i> Regras de alerta</h3>
+              <p>O que dispara cada tipo de aviso. Dá pra desligar individualmente ou ajustar os limites.</p>
+            </div>
+
+            <div class="rules-body">
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot crit"></span>
+                  <span class="rule-name">Boleto vencendo em 2 dias</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">Avisa 48h antes do vencimento</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                  <span class="rule-chip on"><i data-lucide="message-circle"></i>WhatsApp</span>
+                </div>
+              </div>
+
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot crit"></span>
+                  <span class="rule-name">Saldo projetado negativo</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">Avisa quando projeção de 30 dias fica &lt; 0</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                  <span class="rule-chip on"><i data-lucide="message-circle"></i>WhatsApp</span>
+                </div>
+              </div>
+
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot warn"></span>
+                  <span class="rule-name">Margem fora do benchmark</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">Margem bruta &lt; 25% ou &gt; 35% (mercadinho)</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                  <span class="rule-chip"><i data-lucide="message-circle"></i>WhatsApp</span>
+                </div>
+              </div>
+
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot warn"></span>
+                  <span class="rule-name">Fornecedor subiu preço &gt; 5%</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">Média móvel 3 meses · por fornecedor</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                </div>
+              </div>
+
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot warn"></span>
+                  <span class="rule-name">Despesa fixa cresceu &gt; 10%</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">vs média dos últimos 6 meses · por categoria</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                </div>
+              </div>
+
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot warn"></span>
+                  <span class="rule-name">Dia com concentração alta</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">&gt; 20% das saídas do mês no mesmo dia</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                </div>
+              </div>
+
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot info"></span>
+                  <span class="rule-name">NF-e importada automaticamente</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">Notificação ao receber e-mail com XML válido</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                </div>
+              </div>
+
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot info"></span>
+                  <span class="rule-name">Boleto pago confirmado</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">Quando banco confirma liquidação via conciliação</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                </div>
+              </div>
+
+              <div class="rule-row">
+                <div class="rule-head-row">
+                  <span class="rule-dot info"></span>
+                  <span class="rule-name">Divergência de reconciliação</span>
+                  <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+                </div>
+                <div class="rule-desc">Quando lucro × caixa × extrato não batem &gt; R$ 10</div>
+                <div class="rule-channels">
+                  <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
+                  <span class="rule-chip on"><i data-lucide="message-circle"></i>WhatsApp</span>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="rules-foot">
+              <i data-lucide="info"></i>
+              <span>Canais: in-app sempre · WhatsApp configurado em <a href="configuracoes.html" style="color:var(--accent);text-decoration:none">Configurações</a></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    function toggleTheme(){
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+    }
+
+    function filterSev(sev, el){
+      document.querySelectorAll('.tab-filter').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.alert-card').forEach(c => {
+        c.style.display = (sev === 'all' || c.dataset.sev === sev) ? '' : 'none';
+      });
+    }
+
+    // Dismiss individual alert
+    document.querySelectorAll('.alert-dismiss').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const card = btn.closest('.alert-card');
+        card.style.transition = 'opacity .2s, transform .2s, margin .2s, padding .2s, max-height .3s';
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(40px)';
+        setTimeout(() => card.remove(), 250);
+      });
+    });
+  </script>
+</body>
+</html>

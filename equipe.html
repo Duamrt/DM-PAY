@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Equipe · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:.15s}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+    .btn-danger{background:transparent;color:var(--danger);border-color:var(--danger-soft)}
+    .btn-danger:hover{background:var(--danger-soft)}
+
+    main{padding:24px 28px 80px}
+
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+    .kpi-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .kpi-label svg{width:12px;height:12px}
+    .kpi-value{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:2px;font-family:'Geist',sans-serif}
+    .kpi-sub{font-size:12px;color:var(--text-muted)}
+    .kpi.success{background:linear-gradient(135deg,var(--success-soft) 0%,transparent 100%);border-color:var(--success)}
+    .kpi.success .kpi-label,.kpi.success .kpi-value{color:var(--success)}
+    .kpi.warn{background:linear-gradient(135deg,var(--warn-soft) 0%,transparent 100%);border-color:var(--warn)}
+    .kpi.warn .kpi-label,.kpi.warn .kpi-value{color:var(--warn)}
+
+    /* Alert convite pendente */
+    .alert{display:flex;gap:12px;padding:14px 16px;background:var(--warn-soft);border:1px solid var(--warn);border-radius:10px;margin-bottom:18px;align-items:flex-start}
+    .alert-icon{width:32px;height:32px;min-width:32px;border-radius:50%;background:var(--warn);color:white;display:grid;place-items:center;flex-shrink:0}
+    .alert-icon svg{width:16px;height:16px}
+    .alert-content{flex:1}
+    .alert-title{font-weight:600;font-size:13.5px;color:var(--text);margin-bottom:3px}
+    .alert-text{font-size:12.5px;color:var(--text-muted);line-height:1.5}
+    .alert-text b{color:var(--text)}
+    .alert-action{padding:6px 12px;background:var(--bg);border:1px solid var(--warn);color:var(--warn);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+    .alert-action:hover{background:var(--warn);color:white}
+
+    /* Layout 2 colunas */
+    .layout{display:grid;grid-template-columns:1fr 320px;gap:18px}
+
+    /* Tabela membros */
+    .mbr-table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .mbr-head{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg-soft);display:flex;align-items:center;justify-content:space-between}
+    .mbr-head h2{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .mbr-head h2 svg{width:15px;height:15px;color:var(--text-muted)}
+    .mbr-head .count{font-size:11.5px;color:var(--text-soft);font-weight:500}
+
+    .mbr-row{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+    .mbr-row:last-child{border-bottom:none}
+    .mbr-row:hover{background:var(--bg-hover)}
+    .mbr-avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:white;font-weight:600;font-size:14px;letter-spacing:-.01em;flex-shrink:0;position:relative}
+    .mbr-avatar .online-dot{position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;background:var(--success);border:2px solid var(--bg-card)}
+    .mbr-info .name{font-weight:600;font-size:13.5px;color:var(--text);letter-spacing:-.01em;display:flex;align-items:center;gap:6px}
+    .mbr-info .name .you{font-size:10px;font-weight:600;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+    .mbr-info .email{font-size:12px;color:var(--text-muted);margin-top:2px}
+
+    .role-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:500;letter-spacing:.01em}
+    .role-badge svg{width:11px;height:11px}
+    .role-dono{background:rgba(124,58,237,.15);color:#7C3AED}
+    .role-admin{background:rgba(37,99,235,.12);color:var(--accent)}
+    .role-financeiro{background:rgba(16,185,129,.15);color:var(--success)}
+    .role-viewer{background:rgba(107,114,128,.15);color:#4B5563}
+
+    .mbr-access{text-align:right;font-size:11.5px;color:var(--text-muted);min-width:120px}
+    .mbr-access .time{font-weight:500;color:var(--text);font-size:12.5px}
+    .mbr-access.pending .time{color:var(--warn)}
+    .mbr-access.blocked .time{color:var(--danger)}
+
+    .mbr-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+    .mbr-row:hover .mbr-actions{opacity:1}
+    .mbr-actions button{width:30px;height:30px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .mbr-actions button:hover{background:var(--bg-hover);color:var(--text)}
+    .mbr-actions button svg{width:13px;height:13px}
+
+    /* Roles panel */
+    .roles-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:sticky;top:72px;align-self:start}
+    .roles-head{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg-soft)}
+    .roles-head h2{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .roles-head h2 svg{width:15px;height:15px;color:var(--text-muted)}
+    .roles-head p{margin:4px 0 0;font-size:11.5px;color:var(--text-soft);line-height:1.5}
+
+    .role-item{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+    .role-item:last-child{border-bottom:none}
+    .role-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .role-item-head .role-badge{flex-shrink:0}
+    .role-item-head .count{font-size:11px;color:var(--text-soft);font-family:'Geist Mono',monospace;font-weight:500}
+    .role-item p{margin:0;font-size:12px;color:var(--text-muted);line-height:1.5}
+    .role-item p b{color:var(--text)}
+
+    /* Drawer */
+    .drawer-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+    .drawer-backdrop.open{opacity:1;pointer-events:auto}
+    .drawer{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:100%;background:var(--bg);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .25s;z-index:50;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+    .drawer.open{transform:translateX(0)}
+    .drawer-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .drawer-head h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+    .drawer-body{flex:1;overflow-y:auto;padding:22px}
+    .drawer-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--bg-soft)}
+
+    .dr-member-head{display:flex;gap:14px;padding:0 0 20px;border-bottom:1px solid var(--border);margin-bottom:20px;align-items:center}
+    .dr-member-head .mbr-avatar{width:52px;height:52px;font-size:18px}
+    .dr-member-head .name{font-size:17px;font-weight:600;letter-spacing:-.01em}
+    .dr-member-head .email{font-size:13px;color:var(--text-muted)}
+
+    .field{margin-bottom:22px}
+    .field-label{font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+    .field-label svg{width:13px;height:13px}
+    .field input,.field select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13.5px;outline:none}
+    .field input:focus,.field select:focus{border-color:var(--accent)}
+    .field input:disabled{background:var(--bg-soft);color:var(--text-muted)}
+    .field .hint{font-size:11.5px;color:var(--text-soft);margin-top:6px;line-height:1.5}
+
+    /* Role picker */
+    .role-picker{display:flex;flex-direction:column;gap:8px}
+    .role-opt{border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;display:flex;gap:10px;align-items:flex-start;transition:.15s}
+    .role-opt:hover{border-color:var(--border-strong);background:var(--bg-soft)}
+    .role-opt.selected{border-color:var(--accent);background:var(--accent-soft)}
+    .role-opt input{display:none}
+    .role-opt .rdo{width:16px;height:16px;min-width:16px;border-radius:50%;border:2px solid var(--border-strong);display:grid;place-items:center;margin-top:2px;flex-shrink:0}
+    .role-opt.selected .rdo{border-color:var(--accent)}
+    .role-opt.selected .rdo::after{content:'';width:7px;height:7px;background:var(--accent);border-radius:50%}
+    .role-opt-content{flex:1}
+    .role-opt-title{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+    .role-opt-desc{font-size:11.5px;color:var(--text-muted);margin-top:4px;line-height:1.55}
+
+    /* Permissions toggles */
+    .perm-list{display:flex;flex-direction:column;gap:2px}
+    .perm-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:7px;transition:background .12s}
+    .perm-row:hover{background:var(--bg-soft)}
+    .perm-row .label{font-size:13px;font-weight:500}
+    .perm-row .sub{font-size:11.5px;color:var(--text-muted);margin-top:1px}
+    .toggle{position:relative;width:34px;height:20px;flex-shrink:0;cursor:pointer}
+    .toggle input{opacity:0;width:0;height:0}
+    .toggle .slider{position:absolute;inset:0;background:var(--border-strong);border-radius:999px;transition:.2s}
+    .toggle .slider::before{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+    .toggle input:checked + .slider{background:var(--accent)}
+    .toggle input:checked + .slider::before{transform:translateX(14px)}
+
+    /* Sessions */
+    .session-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg-soft);border:1px solid var(--border);border-radius:7px;margin-bottom:6px;font-size:12.5px}
+    .session-row:last-child{margin-bottom:0}
+    .session-device{display:flex;align-items:center;gap:10px}
+    .session-device svg{width:14px;height:14px;color:var(--text-muted)}
+    .session-meta{font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-soft);margin-top:2px}
+    .session-current{font-size:10px;font-weight:600;background:var(--success-soft);color:var(--success);padding:2px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+
+    /* Insight */
+    .insight{background:linear-gradient(135deg,var(--accent-soft) 0%,transparent 100%);border:1px solid var(--accent);border-radius:12px;padding:16px 20px;margin-top:22px;display:flex;gap:14px}
+    .insight-icon{width:36px;height:36px;min-width:36px;border-radius:8px;background:var(--accent);color:white;display:grid;place-items:center}
+    .insight-icon svg{width:18px;height:18px}
+    .insight h3{margin:0 0 4px;font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+    .insight p{margin:0;font-size:12.5px;color:var(--text-muted);line-height:1.55}
+    .insight p b{color:var(--text)}
+
+    @media (max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}
+    @media (max-width:840px){body{grid-template-columns:1fr}.sidebar{display:none}.drawer{width:100%}.mbr-row{grid-template-columns:auto 1fr;gap:10px}.mbr-row .role-badge,.mbr-row .mbr-access,.mbr-row .mbr-actions{grid-column:2;justify-self:start}}
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">D</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item" href="alertas.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores <span class="nav-badge">8</span></a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias <span class="nav-badge">12</span></a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item active"><i data-lucide="users"></i> Equipe <span class="nav-badge">4</span></a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Config</a>
+        <span class="sep">/</span>
+        <b>Equipe</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn"><i data-lucide="help-circle"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>Equipe</h1>
+          <p>Quem entra no DM Pay e <b>o que pode ver ou fazer</b>. Dono tem tudo, contador só vê o DRE, funcionário só lança despesa — você define. Cada sessão fica registrada no histórico.</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost"><i data-lucide="shield"></i> Histórico de acesso</button>
+          <button class="btn btn-primary" onclick="openInvite()"><i data-lucide="user-plus"></i> Convidar membro</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="users"></i> Total membros</div>
+          <div class="kpi-value">4</div>
+          <div class="kpi-sub">3 ativos · 1 pendente</div>
+        </div>
+        <div class="kpi success">
+          <div class="kpi-label"><i data-lucide="user-check"></i> Ativos agora</div>
+          <div class="kpi-value">2</div>
+          <div class="kpi-sub">você + Reginaldo</div>
+        </div>
+        <div class="kpi warn">
+          <div class="kpi-label"><i data-lucide="mail"></i> Convites pendentes</div>
+          <div class="kpi-value">1</div>
+          <div class="kpi-sub">contador há 2 dias</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="clock"></i> Último acesso</div>
+          <div class="kpi-value">agora</div>
+          <div class="kpi-sub">Mikael · esta sessão</div>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert">
+        <div class="alert-icon"><i data-lucide="mail"></i></div>
+        <div class="alert-content">
+          <div class="alert-title">Convite pendente há 2 dias</div>
+          <div class="alert-text"><b>Sr. João (contador)</b> ainda não aceitou o convite enviado em 15/04. Se o e-mail tiver caído no spam, reenviar com 1 clique ou mudar endereço.</div>
+        </div>
+        <button class="alert-action" onclick="openEdit('contador')">Reenviar</button>
+      </div>
+
+      <div class="layout">
+        <!-- LISTA MEMBROS -->
+        <div>
+          <div class="mbr-table-wrap">
+            <div class="mbr-head">
+              <h2><i data-lucide="users"></i> Membros</h2>
+              <span class="count">4 no total</span>
+            </div>
+
+            <!-- Reginaldo -->
+            <div class="mbr-row" onclick="openEdit('reginaldo')">
+              <div class="mbr-avatar" style="background:#7C3AED">RL<span class="online-dot"></span></div>
+              <div class="mbr-info">
+                <div class="name">Reginaldo Liberato</div>
+                <div class="email">reginaldo@mercadinhoeliberato.com.br</div>
+              </div>
+              <div class="role-badge role-dono"><i data-lucide="crown"></i> Dono</div>
+              <div class="mbr-access">
+                <div class="time">há 2h</div>
+                <div>via WhatsApp</div>
+              </div>
+              <div class="mbr-actions">
+                <button onclick="event.stopPropagation();openEdit('reginaldo')"><i data-lucide="pencil"></i></button>
+              </div>
+            </div>
+
+            <!-- Mikael (você) -->
+            <div class="mbr-row" onclick="openEdit('mikael')">
+              <div class="mbr-avatar" style="background:#2563EB">MS<span class="online-dot"></span></div>
+              <div class="mbr-info">
+                <div class="name">Mikael Silva <span class="you">Você</span></div>
+                <div class="email">mikael@mercadinhoeliberato.com.br</div>
+              </div>
+              <div class="role-badge role-admin"><i data-lucide="shield"></i> Admin</div>
+              <div class="mbr-access">
+                <div class="time">agora</div>
+                <div>Chrome · Windows</div>
+              </div>
+              <div class="mbr-actions">
+                <button onclick="event.stopPropagation();openEdit('mikael')"><i data-lucide="pencil"></i></button>
+              </div>
+            </div>
+
+            <!-- Contador (pendente) -->
+            <div class="mbr-row" onclick="openEdit('contador')">
+              <div class="mbr-avatar" style="background:#D97706;opacity:.7">JC</div>
+              <div class="mbr-info">
+                <div class="name">Sr. João (contador)</div>
+                <div class="email">joao@contabilidade-liberato.com.br</div>
+              </div>
+              <div class="role-badge role-financeiro"><i data-lucide="calculator"></i> Financeiro</div>
+              <div class="mbr-access pending">
+                <div class="time">Convite pendente</div>
+                <div>enviado há 2 dias</div>
+              </div>
+              <div class="mbr-actions">
+                <button onclick="event.stopPropagation();"><i data-lucide="send"></i></button>
+                <button onclick="event.stopPropagation();"><i data-lucide="x"></i></button>
+              </div>
+            </div>
+
+            <!-- Duam (suporte) -->
+            <div class="mbr-row" onclick="openEdit('duam')">
+              <div class="mbr-avatar" style="background:#4B5563">DR</div>
+              <div class="mbr-info">
+                <div class="name">Duam Rodrigues</div>
+                <div class="email">suporte@dmstack.com.br</div>
+              </div>
+              <div class="role-badge role-viewer"><i data-lucide="eye"></i> Visualizador</div>
+              <div class="mbr-access">
+                <div class="time">há 1 dia</div>
+                <div>suporte técnico</div>
+              </div>
+              <div class="mbr-actions">
+                <button onclick="event.stopPropagation();openEdit('duam')"><i data-lucide="pencil"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Insight -->
+          <div class="insight">
+            <div class="insight-icon"><i data-lucide="lightbulb"></i></div>
+            <div>
+              <h3>Por que separar papéis?</h3>
+              <p>O DM Pay guarda <b>DRE, fluxo de caixa e extrato</b> — informação que nem todo mundo do mercadinho precisa ver. Funcionário de entrega só lança despesa (papel <b>Financeiro</b>). Contador só lê o DRE (papel <b>Visualizador</b>). Reginaldo tem tudo (papel <b>Dono</b>). <b>Quem vê o lucro líquido vira decisão estratégica, não acidente.</b></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROLES PANEL -->
+        <div class="roles-panel">
+          <div class="roles-head">
+            <h2><i data-lucide="shield-check"></i> Papéis</h2>
+            <p>O que cada papel pode fazer</p>
+          </div>
+          <div class="role-item">
+            <div class="role-item-head">
+              <span class="role-badge role-dono"><i data-lucide="crown"></i> Dono</span>
+              <span class="count">1</span>
+            </div>
+            <p><b>Tudo</b> — configuração, cobrança, remover conta. Único que pode transferir a titularidade.</p>
+          </div>
+          <div class="role-item">
+            <div class="role-item-head">
+              <span class="role-badge role-admin"><i data-lucide="shield"></i> Admin</span>
+              <span class="count">1</span>
+            </div>
+            <p>Tudo do dia a dia: <b>lança, edita, aprova, convida</b>. Sem cobrança nem remover conta.</p>
+          </div>
+          <div class="role-item">
+            <div class="role-item-head">
+              <span class="role-badge role-financeiro"><i data-lucide="calculator"></i> Financeiro</span>
+              <span class="count">1</span>
+            </div>
+            <p><b>Lança despesa, vê DRE, recebe WhatsApp.</b> Sem acesso à equipe e configurações.</p>
+          </div>
+          <div class="role-item">
+            <div class="role-item-head">
+              <span class="role-badge role-viewer"><i data-lucide="eye"></i> Visualizador</span>
+              <span class="count">1</span>
+            </div>
+            <p>Só leitura. Vê DRE, fluxo, contas a pagar — <b>não edita nada</b>. Ideal pra contador ou sócio silencioso.</p>
+          </div>
+          <div class="role-item" style="background:var(--bg-soft)">
+            <div style="font-size:12px;color:var(--text-muted);line-height:1.5">
+              <b style="color:var(--text)">Customizar?</b> No papel <b>Financeiro</b> e <b>Visualizador</b>, você ainda pode ligar/desligar permissões granulares por membro (ex: esconder o DRE do contador externo).
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- DRAWER editor -->
+  <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h3 id="dr-title">Editar membro</h3>
+      <button class="icon-btn" onclick="closeDrawer()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer-body" id="dr-body"></div>
+    <div class="drawer-foot" id="dr-foot"></div>
+  </aside>
+
+  <script>
+    const MEMBERS = {
+      reginaldo: {
+        name: 'Reginaldo Liberato', email: 'reginaldo@mercadinhoeliberato.com.br',
+        initials: 'RL', color: '#7C3AED', role: 'dono', online: true,
+        lastAccess: 'há 2h · WhatsApp',
+        sessions: [
+          { device: 'iPhone 13 · Safari', meta: 'Jupi-PE · agora', current: false },
+          { device: 'WhatsApp · DM Pay Bot', meta: 'notificações ativas', current: false }
+        ]
+      },
+      mikael: {
+        name: 'Mikael Silva', email: 'mikael@mercadinhoeliberato.com.br',
+        initials: 'MS', color: '#2563EB', role: 'admin', online: true, you: true,
+        lastAccess: 'agora · esta sessão',
+        sessions: [
+          { device: 'Chrome · Windows 11', meta: 'Jupi-PE · agora', current: true },
+          { device: 'iPhone 12 · Safari', meta: 'Jupi-PE · há 3 dias', current: false }
+        ]
+      },
+      contador: {
+        name: 'Sr. João (contador)', email: 'joao@contabilidade-liberato.com.br',
+        initials: 'JC', color: '#D97706', role: 'financeiro', pending: true,
+        lastAccess: 'Convite pendente · enviado há 2 dias',
+        sessions: []
+      },
+      duam: {
+        name: 'Duam Rodrigues', email: 'suporte@dmstack.com.br',
+        initials: 'DR', color: '#4B5563', role: 'viewer',
+        lastAccess: 'há 1 dia · suporte técnico',
+        sessions: [
+          { device: 'Chrome · Windows 11', meta: 'Jupi-PE · há 1 dia', current: false }
+        ]
+      }
+    };
+
+    const ROLES = [
+      { id:'dono', icon:'crown', label:'Dono', desc:'Tudo + cobrança + remover conta. Só 1 dono por empresa.', badgeClass:'role-dono' },
+      { id:'admin', icon:'shield', label:'Admin', desc:'Tudo do dia a dia: lança, edita, aprova, convida membros. Sem cobrança.', badgeClass:'role-admin' },
+      { id:'financeiro', icon:'calculator', label:'Financeiro', desc:'Lança despesa, vê DRE e fluxo, recebe WhatsApp. Sem equipe nem config.', badgeClass:'role-financeiro' },
+      { id:'viewer', icon:'eye', label:'Visualizador', desc:'Só leitura — contador ou sócio silencioso.', badgeClass:'role-viewer' }
+    ];
+
+    const PERMS = [
+      { id:'despesas', label:'Lançar e editar despesas', sub:'Contas a pagar, boletos, importar NF-e' },
+      { id:'dre', label:'Ver DRE e Lucro Líquido', sub:'Inclui receita, CMV, EBITDA e impostos' },
+      { id:'fluxo', label:'Ver fluxo de caixa e saldo', sub:'Projeção 30 dias e saldo bancário' },
+      { id:'vendas', label:'Ver vendas diárias', sub:'Integração iCommerce + fechamento' },
+      { id:'equipe', label:'Gerenciar equipe', sub:'Convidar, editar papéis, remover' },
+      { id:'config', label:'Configurações da empresa', sub:'Tributário, sócios, contas bancárias' },
+      { id:'cobranca', label:'Cobrança e plano DM Pay', sub:'Só Dono tem por padrão' },
+      { id:'whatsapp', label:'Receber briefing no WhatsApp', sub:'Resumo matinal 06:15' }
+    ];
+
+    const ROLE_PERMS = {
+      dono: { despesas:1, dre:1, fluxo:1, vendas:1, equipe:1, config:1, cobranca:1, whatsapp:1 },
+      admin: { despesas:1, dre:1, fluxo:1, vendas:1, equipe:1, config:1, cobranca:0, whatsapp:1 },
+      financeiro: { despesas:1, dre:1, fluxo:1, vendas:1, equipe:0, config:0, cobranca:0, whatsapp:1 },
+      viewer: { despesas:0, dre:1, fluxo:1, vendas:1, equipe:0, config:0, cobranca:0, whatsapp:0 }
+    };
+
+    function roleBadge(r) {
+      const ro = ROLES.find(x => x.id === r);
+      return `<span class="role-badge ${ro.badgeClass}"><i data-lucide="${ro.icon}"></i> ${ro.label}</span>`;
+    }
+
+    function renderDrawerEdit(key) {
+      const m = MEMBERS[key];
+      const isYou = !!m.you;
+      const isPending = !!m.pending;
+      const isDono = m.role === 'dono';
+
+      document.getElementById('dr-title').textContent = isPending ? 'Reenviar convite' : 'Editar membro';
+
+      const rolesHtml = ROLES.map(r => `
+        <label class="role-opt ${m.role === r.id ? 'selected' : ''}" onclick="selectRole('${r.id}')" data-role="${r.id}">
+          <div class="rdo"></div>
+          <div class="role-opt-content">
+            <div class="role-opt-title">
+              <span class="role-badge ${r.badgeClass}"><i data-lucide="${r.icon}"></i> ${r.label}</span>
+            </div>
+            <div class="role-opt-desc">${r.desc}</div>
+          </div>
+        </label>`).join('');
+
+      const permsHtml = PERMS.map(p => `
+        <div class="perm-row">
+          <div>
+            <div class="label">${p.label}</div>
+            <div class="sub">${p.sub}</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" data-perm="${p.id}" ${ROLE_PERMS[m.role][p.id] ? 'checked' : ''} ${isDono ? 'disabled' : ''}>
+            <span class="slider"></span>
+          </label>
+        </div>`).join('');
+
+      const sessionsHtml = m.sessions.length ? m.sessions.map(s => `
+        <div class="session-row">
+          <div>
+            <div class="session-device"><i data-lucide="monitor"></i> ${s.device}</div>
+            <div class="session-meta">${s.meta}</div>
+          </div>
+          ${s.current ? '<span class="session-current">Atual</span>' : '<button class="btn btn-ghost" style="padding:4px 10px;font-size:11px">Encerrar</button>'}
+        </div>`).join('') : '<div style="font-size:12.5px;color:var(--text-soft);padding:10px 12px">Nenhuma sessão ainda.</div>';
+
+      document.getElementById('dr-body').innerHTML = `
+        <div class="dr-member-head">
+          <div class="mbr-avatar" style="background:${m.color}">${m.initials}${m.online ? '<span class="online-dot"></span>' : ''}</div>
+          <div>
+            <div class="name">${m.name} ${isYou ? '<span class="you" style="font-size:10px;font-weight:600;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:999px;margin-left:6px">Você</span>' : ''}</div>
+            <div class="email">${m.email}</div>
+            <div style="font-size:11.5px;color:var(--text-soft);margin-top:4px">Último acesso: <b style="color:var(--text)">${m.lastAccess}</b></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><i data-lucide="shield-check"></i> Papel</div>
+          <div class="role-picker">${rolesHtml}</div>
+          ${isDono ? '<div class="hint"><b style="color:var(--warn)">Só o Dono pode transferir titularidade.</b> Pra mudar, abra a página Configurações → Empresa.</div>' : ''}
+        </div>
+
+        <div class="field">
+          <div class="field-label"><i data-lucide="key"></i> Permissões ${isDono ? '<span style="font-size:10px;background:var(--warn-soft);color:var(--warn);padding:2px 7px;border-radius:999px;margin-left:6px">Dono = tudo</span>' : ''}</div>
+          <div class="perm-list">${permsHtml}</div>
+          ${!isDono ? '<div class="hint">Ao trocar o papel acima, as permissões voltam pro padrão daquele papel. Você pode ajustar cada uma individualmente depois.</div>' : ''}
+        </div>
+
+        ${!isPending ? `
+        <div class="field">
+          <div class="field-label"><i data-lucide="monitor"></i> Sessões ativas</div>
+          ${sessionsHtml}
+        </div>` : `
+        <div class="field">
+          <div style="background:var(--warn-soft);border:1px solid var(--warn);border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+            <i data-lucide="mail" style="color:var(--warn);width:16px;height:16px;flex-shrink:0;margin-top:2px"></i>
+            <div style="font-size:12.5px;line-height:1.55">
+              <b>Convite pendente há 2 dias.</b> Se o contador não recebeu, o e-mail pode ter caído no spam. Reenviar com 1 clique ou mudar o endereço.
+            </div>
+          </div>
+        </div>`}
+      `;
+
+      const foot = isYou
+        ? `<button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button><button class="btn btn-primary" style="margin-left:auto"><i data-lucide="check"></i> Salvar</button>`
+        : isPending
+          ? `<button class="btn btn-danger"><i data-lucide="x"></i> Cancelar convite</button><button class="btn btn-primary" style="margin-left:auto"><i data-lucide="send"></i> Reenviar convite</button>`
+          : isDono
+            ? `<button class="btn btn-ghost" onclick="closeDrawer()">Fechar</button>`
+            : `<button class="btn btn-danger"><i data-lucide="user-x"></i> Remover membro</button><button class="btn btn-primary" style="margin-left:auto"><i data-lucide="check"></i> Salvar</button>`;
+
+      document.getElementById('dr-foot').innerHTML = foot;
+      lucide.createIcons();
+    }
+
+    function renderDrawerInvite() {
+      document.getElementById('dr-title').textContent = 'Convidar membro';
+
+      const rolesHtml = ROLES.filter(r => r.id !== 'dono').map(r => `
+        <label class="role-opt ${r.id === 'financeiro' ? 'selected' : ''}" onclick="selectRoleInvite('${r.id}')" data-role="${r.id}">
+          <div class="rdo"></div>
+          <div class="role-opt-content">
+            <div class="role-opt-title">
+              <span class="role-badge ${r.badgeClass}"><i data-lucide="${r.icon}"></i> ${r.label}</span>
+            </div>
+            <div class="role-opt-desc">${r.desc}</div>
+          </div>
+        </label>`).join('');
+
+      document.getElementById('dr-body').innerHTML = `
+        <div class="field">
+          <div class="field-label"><i data-lucide="at-sign"></i> E-mail</div>
+          <input type="email" placeholder="nome@empresa.com.br">
+          <div class="hint">Um link de convite vai ser enviado pra este e-mail. Expira em 7 dias.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><i data-lucide="user"></i> Nome (opcional)</div>
+          <input placeholder="Ex: Dona Maria — fechamento">
+          <div class="hint">Só pra você identificar na lista. Quem aceitar o convite pode trocar depois.</div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><i data-lucide="shield-check"></i> Papel</div>
+          <div class="role-picker">${rolesHtml}</div>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><i data-lucide="message-square"></i> Mensagem (opcional)</div>
+          <input placeholder="Ex: Bem-vindo ao DM Pay do Mercadinho!">
+        </div>
+
+        <div style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+          <i data-lucide="info" style="color:var(--accent);width:16px;height:16px;flex-shrink:0;margin-top:2px"></i>
+          <div style="font-size:12.5px;line-height:1.55;color:var(--text)">
+            <b>Gratuito</b> — convidar membros não altera o plano do DM Pay. Cobrança é por empresa, não por usuário.
+          </div>
+        </div>
+      `;
+
+      document.getElementById('dr-foot').innerHTML = `
+        <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+        <button class="btn btn-primary" style="margin-left:auto"><i data-lucide="send"></i> Enviar convite</button>
+      `;
+      lucide.createIcons();
+    }
+
+    function selectRole(r) {
+      document.querySelectorAll('.role-picker .role-opt').forEach(o => o.classList.toggle('selected', o.dataset.role === r));
+      // atualizar toggles de permissão
+      document.querySelectorAll('[data-perm]').forEach(tg => {
+        const p = tg.dataset.perm;
+        tg.checked = !!ROLE_PERMS[r][p];
+        tg.disabled = r === 'dono';
+      });
+    }
+
+    function selectRoleInvite(r) {
+      document.querySelectorAll('.role-picker .role-opt').forEach(o => o.classList.toggle('selected', o.dataset.role === r));
+    }
+
+    function openEdit(key) {
+      renderDrawerEdit(key);
+      document.querySelector('.drawer-backdrop').classList.add('open');
+      document.getElementById('drawer').classList.add('open');
+    }
+
+    function openInvite() {
+      renderDrawerInvite();
+      document.querySelector('.drawer-backdrop').classList.add('open');
+      document.getElementById('drawer').classList.add('open');
+    }
+
+    function closeDrawer() {
+      document.querySelector('.drawer-backdrop').classList.remove('open');
+      document.getElementById('drawer').classList.remove('open');
+    }
+
+    function toggleTheme() {
+      const h = document.documentElement;
+      const next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      h.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+    }
+    const saved = localStorage.getItem('dmpay-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>

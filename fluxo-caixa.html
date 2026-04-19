@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fluxo de caixa · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    /* Sidebar padrão */
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    /* Topbar */
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:.15s}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+
+    main{padding:24px 28px 80px}
+
+    /* Hero */
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+
+    /* Toggles período */
+    .period-toggle{display:flex;gap:2px;background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:3px}
+    .period-toggle button{background:transparent;border:none;padding:6px 14px;font-size:12px;font-weight:500;color:var(--text-muted);border-radius:6px;cursor:pointer;font-family:inherit}
+    .period-toggle button.active{background:var(--bg-card);color:var(--text);box-shadow:var(--shadow)}
+    .period-toggle button:hover:not(.active){color:var(--text)}
+
+    /* Mode toggle previsto/realizado */
+    .mode-toggle{display:inline-flex;gap:2px;background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:3px;margin-left:auto}
+    .mode-toggle button{background:transparent;border:none;padding:6px 14px;font-size:12px;font-weight:500;color:var(--text-muted);border-radius:6px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+    .mode-toggle button .dot{width:8px;height:8px;border-radius:50%;background:var(--text-soft)}
+    .mode-toggle button.active{background:var(--bg-card);color:var(--text);box-shadow:var(--shadow)}
+    .mode-toggle button.active .dot{background:var(--accent)}
+    .mode-toggle button[data-mode="realizado"].active .dot{background:var(--success)}
+
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+    .kpi-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .kpi-label svg{width:12px;height:12px}
+    .kpi-value{font-size:22px;font-weight:600;letter-spacing:-.02em;margin-bottom:2px;font-family:'Geist',sans-serif}
+    .kpi-sub{font-size:12px;color:var(--text-muted)}
+    .kpi.success{background:linear-gradient(135deg,var(--success-soft) 0%,transparent 100%);border-color:var(--success)}
+    .kpi.success .kpi-label,.kpi.success .kpi-value{color:var(--success)}
+    .kpi.danger{background:linear-gradient(135deg,var(--danger-soft) 0%,transparent 100%);border-color:var(--danger)}
+    .kpi.danger .kpi-label,.kpi.danger .kpi-value{color:var(--danger)}
+    .kpi-sub .up{color:var(--success);font-weight:600}
+    .kpi-sub .down{color:var(--danger);font-weight:600}
+
+    /* Alert banner */
+    .alert{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;background:var(--danger-soft);border:1px solid var(--danger);border-radius:10px;margin-bottom:18px}
+    .alert svg{width:18px;height:18px;color:var(--danger);flex-shrink:0;margin-top:1px}
+    .alert-text{font-size:13px;color:var(--text);line-height:1.5;flex:1}
+    .alert-text b{color:var(--danger);font-weight:600}
+    .alert-close{background:transparent;border:none;color:var(--text-muted);cursor:pointer;padding:4px}
+
+    /* Gráfico */
+    .chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:18px}
+    .chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:16px;flex-wrap:wrap}
+    .chart-title{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+    .chart-sub{font-size:12.5px;color:var(--text-muted);margin-top:2px}
+    .chart-legend{display:flex;gap:18px;font-size:12px;color:var(--text-muted);margin-top:8px}
+    .chart-legend span{display:inline-flex;align-items:center;gap:6px}
+    .legend-dot{width:10px;height:10px;border-radius:3px}
+    .chart-box{height:300px;position:relative}
+
+    /* Detail grid */
+    .detail-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:18px}
+    @media (max-width:1100px){.detail-grid{grid-template-columns:1fr}}
+
+    .table-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .table-head{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+    .table-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em}
+    .table-head .tip{font-size:11px;color:var(--text-soft)}
+    .flow-table{width:100%;border-collapse:collapse;font-size:13px}
+    .flow-table th{font-size:10.5px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:10px 16px;background:var(--bg-soft);border-bottom:1px solid var(--border)}
+    .flow-table th.num{text-align:right}
+    .flow-table td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+    .flow-table td.num{text-align:right;font-family:'Geist Mono',monospace;font-weight:500}
+    .flow-table tr:last-child td{border-bottom:none}
+    .flow-table tr.weekend{background:var(--bg-soft)}
+    .flow-table tr.today{background:var(--accent-soft)}
+    .flow-table tr.negative{background:var(--danger-soft)}
+    [data-theme="dark"] .flow-table tr.negative{background:rgba(248,113,113,.08)}
+    .flow-table tr:hover{background:var(--bg-hover)}
+    .flow-table tr.weekend:hover{background:var(--bg-hover)}
+    .date-cell{font-family:'Geist Mono',monospace;font-weight:600;letter-spacing:-.01em}
+    .date-day{font-size:10px;color:var(--text-soft);margin-top:1px;text-transform:uppercase;letter-spacing:.04em}
+    .in-val{color:var(--success);font-weight:600}
+    .out-val{color:var(--danger);font-weight:600}
+    .saldo-val{font-weight:700;letter-spacing:-.01em}
+    .saldo-val.neg{color:var(--danger)}
+    .badge-mini{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.02em}
+    .badge-mini.hoje{background:var(--accent);color:white}
+    .badge-mini.critico{background:var(--danger);color:white}
+
+    /* Painel lateral */
+    .side-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+    .side-card h3{margin:0 0 12px;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .side-card h3 svg{width:14px;height:14px;color:var(--accent)}
+    .side-list{display:flex;flex-direction:column;gap:2px}
+    .side-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;transition:.15s;cursor:pointer}
+    .side-item:hover{background:var(--bg-hover)}
+    .side-dot{width:8px;height:32px;border-radius:2px;background:var(--accent);flex-shrink:0}
+    .side-dot.danger{background:var(--danger)}
+    .side-dot.warn{background:var(--warn)}
+    .side-info{flex:1;min-width:0}
+    .side-when{font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.04em;font-weight:600;font-family:'Geist Mono',monospace}
+    .side-name{font-size:13px;font-weight:500;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .side-val{font-size:12.5px;font-weight:600;font-family:'Geist Mono',monospace;letter-spacing:-.01em;color:var(--text)}
+    .side-val.danger{color:var(--danger)}
+
+    /* Insight */
+    .insight{background:linear-gradient(135deg,var(--accent-soft) 0%,transparent 60%);border:1px solid var(--accent);border-radius:12px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start}
+    .insight-ico{width:32px;height:32px;border-radius:8px;background:var(--accent);color:white;display:grid;place-items:center;flex-shrink:0}
+    .insight-ico svg{width:16px;height:16px}
+    .insight h3{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:-.01em}
+    .insight p{margin:0 0 8px;font-size:12.5px;color:var(--text);line-height:1.55}
+    .insight p b{font-weight:600}
+    .insight-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+    .insight-action{padding:6px 12px;background:var(--bg-card);border:1px solid var(--accent);color:var(--accent);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
+    .insight-action:hover{background:var(--accent);color:white}
+    .insight-action svg{width:12px;height:12px}
+
+    @media (max-width:860px){
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item" href="whatsapp-preview.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item active"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Financeiro</a>
+        <span class="sep">/</span>
+        <b>Fluxo de caixa</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn"><i data-lucide="help-circle"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <div>
+          <h1>Fluxo de caixa</h1>
+          <p>Projeção diária de entrada e saída. O sistema soma <b>vendas previstas</b> menos <b>boletos e despesas agendadas</b> pra mostrar quanto vai ter em caixa em cada dia. <b>O dia que o saldo fica negativo é o problema.</b></p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="period-toggle">
+            <button>7 dias</button>
+            <button class="active">30 dias</button>
+            <button>90 dias</button>
+          </div>
+          <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="wallet"></i> Saldo hoje</div>
+          <div class="kpi-value">R$ 166.413,00</div>
+          <div class="kpi-sub">Santander + BB consolidado</div>
+        </div>
+        <div class="kpi success">
+          <div class="kpi-label"><i data-lucide="trending-up"></i> Projetado em 30 dias</div>
+          <div class="kpi-value">R$ 248.902,00</div>
+          <div class="kpi-sub"><span class="up">+R$ 17.230 · +69%</span></div>
+        </div>
+        <div class="kpi danger">
+          <div class="kpi-label"><i data-lucide="alert-triangle"></i> Pior dia projetado</div>
+          <div class="kpi-value">−R$ 8.340,00</div>
+          <div class="kpi-sub">Terça · <b>06/05</b> · depois da folha</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label"><i data-lucide="shield-check"></i> Dias com margem &lt; 5k</div>
+          <div class="kpi-value">4 dias</div>
+          <div class="kpi-sub">Atenção nas quartas do mês</div>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert">
+        <i data-lucide="alert-triangle"></i>
+        <div class="alert-text">
+          <b>06/05 o saldo fica −R$ 8.340,00.</b> É o dia seguinte à folha de pagamento + vencimento de 4 boletos de fornecedor (IMPACTO, JBS, NESTLÉ, BIMBO). Considere antecipar depósitos do fim de semana ou renegociar um dos boletos pra dia 10.
+        </div>
+        <button class="alert-close"><i data-lucide="x"></i></button>
+      </div>
+
+      <!-- Gráfico -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Saldo acumulado — próximos 30 dias</h3>
+            <div class="chart-sub">Projeção baseada em despesas fixas, boletos agendados e vendas médias do histórico</div>
+          </div>
+          <div class="mode-toggle">
+            <button class="active" data-mode="previsto"><span class="dot"></span>Previsto</button>
+            <button data-mode="realizado"><span class="dot"></span>Realizado</button>
+          </div>
+        </div>
+        <div class="chart-box">
+          <canvas id="fluxoChart"></canvas>
+        </div>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:var(--accent)"></span>Saldo projetado</span>
+          <span><span class="legend-dot" style="background:var(--success)"></span>Entradas diárias</span>
+          <span><span class="legend-dot" style="background:var(--danger)"></span>Saídas diárias</span>
+          <span><span class="legend-dot" style="background:var(--danger);opacity:.3"></span>Zona negativa</span>
+        </div>
+      </div>
+
+      <!-- Detail grid: tabela + painel lateral -->
+      <div class="detail-grid">
+        <div class="table-card">
+          <div class="table-head">
+            <div>
+              <h3>Detalhamento diário</h3>
+              <div class="tip">Clique em um dia pra ver os lançamentos</div>
+            </div>
+          </div>
+          <div style="max-height:480px;overflow-y:auto">
+            <table class="flow-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th class="num">Entradas</th>
+                  <th class="num">Saídas</th>
+                  <th class="num">Saldo</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="flowBody">
+                <!-- gerado via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Painel lateral: próximos eventos críticos -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="side-card">
+            <h3><i data-lucide="alert-circle"></i> Próximos dias críticos</h3>
+            <div class="side-list">
+              <div class="side-item">
+                <div class="side-dot danger"></div>
+                <div class="side-info">
+                  <div class="side-when">Ter · 06/MAI</div>
+                  <div class="side-name">Saldo −R$ 8.340</div>
+                </div>
+                <div class="side-val danger">−2.340</div>
+              </div>
+              <div class="side-item">
+                <div class="side-dot warn"></div>
+                <div class="side-info">
+                  <div class="side-when">Seg · 05/MAI</div>
+                  <div class="side-name">Folha + Aluguel + Limpeza</div>
+                </div>
+                <div class="side-val">R$ 2.150</div>
+              </div>
+              <div class="side-item">
+                <div class="side-dot warn"></div>
+                <div class="side-info">
+                  <div class="side-when">Qua · 15/ABR → 15/MAI</div>
+                  <div class="side-name">Água + iCommerce + Cielo</div>
+                </div>
+                <div class="side-val">R$ 4.820</div>
+              </div>
+              <div class="side-item">
+                <div class="side-dot"></div>
+                <div class="side-info">
+                  <div class="side-when">Seg · 20/ABR</div>
+                  <div class="side-name">Boletos fim de semana</div>
+                </div>
+                <div class="side-val">R$ 10.202</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <h3><i data-lucide="activity"></i> Média diária (últimos 30d)</h3>
+            <div class="side-list">
+              <div class="side-item" style="cursor:default">
+                <div class="side-info">
+                  <div class="side-when">Entrada média</div>
+                </div>
+                <div class="side-val" style="color:var(--success)">R$ 32.450</div>
+              </div>
+              <div class="side-item" style="cursor:default">
+                <div class="side-info">
+                  <div class="side-when">Saída média</div>
+                </div>
+                <div class="side-val" style="color:var(--danger)">R$ 30.875</div>
+              </div>
+              <div class="side-item" style="cursor:default">
+                <div class="side-info">
+                  <div class="side-when">Sobra média/dia</div>
+                </div>
+                <div class="side-val">R$ 1.575</div>
+              </div>
+              <div class="side-item" style="cursor:default">
+                <div class="side-info">
+                  <div class="side-when">Sobra/mês estimada</div>
+                </div>
+                <div class="side-val">R$ 47.250</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Insight -->
+      <div class="insight">
+        <div class="insight-ico"><i data-lucide="lightbulb"></i></div>
+        <div style="flex:1">
+          <h3>3 jeitos de evitar o buraco de 06/05</h3>
+          <p><b>1.</b> Antecipar o boleto NESTLÉ (R$ 3.520) pra dia 10 — fornecedor costuma aceitar adiamento de 3 dias úteis. Saldo vira <b>+R$ 1.180</b>.<br>
+          <b>2.</b> Distribuir depósitos do fim de semana: segurar uns R$ 5k do sábado pra depositar terça.<br>
+          <b>3.</b> Antecipar recebíveis da Cielo (vendas de cartão em ~30 dias) — custa ~3% mas resolve na hora.</p>
+          <div class="insight-actions">
+            <button class="insight-action"><i data-lucide="calendar"></i> Ver dia 06/05</button>
+            <button class="insight-action"><i data-lucide="phone"></i> Simular renegociação</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    function toggleTheme(){
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+      renderChart();
+    }
+
+    // Gerar 30 dias de dados mock (hoje = 18/04)
+    const hoje = new Date(2026, 3, 18); // mês 3 = abril (0-indexed)
+    const dias = [];
+    let saldo = 24890;
+    const fornecedores = ['IMPACTO','NESTLÉ','CAFÉ 3 CORAÇÕES','JBS','BIMBO','ATACADÃO','DCL CARDEAL','PARATY'];
+
+    function fmtMoney(v){
+      return 'R$ ' + (v<0?'−':'') + Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+
+    // Mapa de saídas especiais por dia do mês (despesas fixas + boletos)
+    const saidasDiaMes = {
+      20:[{nome:'IMPACTO+CAFÉ+NESTLÉ',val:10202.50}],
+      5:[{nome:'Folha+Aluguel+Prolabore+Limpeza',val:29200.00}],
+      10:[{nome:'Energia+Contador',val:3600.00}],
+      15:[{nome:'Água+iCommerce+Cielo',val:1250.00}],
+      25:[{nome:'Boletos IMPACTO+BIMBO',val:5800.00}],
+      28:[{nome:'Rescisão parcial',val:3200.00}]
+    };
+
+    // Gerar próximos 30 dias
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(hoje);
+      d.setDate(hoje.getDate() + i);
+      const dow = d.getDay(); // 0=dom, 6=sáb
+      const dom = d.getDate();
+      const isWeekend = dow === 0 || dow === 6;
+
+      // Entradas (vendas) — fim de semana é forte, dia útil médio
+      let entrada = 0;
+      if (dow === 6) entrada = 42000 + Math.random()*6000;       // sábado
+      else if (dow === 0) entrada = 28000 + Math.random()*4000;  // domingo
+      else entrada = 30000 + Math.random()*8000;                 // útil
+      entrada = Math.round(entrada/10)*10;
+
+      // Saídas — sempre tem compras de fornecedor (média R$ 19k/dia útil)
+      let saida = dow === 0 ? 2000 + Math.random()*1500 : 18000 + Math.random()*4000;
+      saida = Math.round(saida/10)*10;
+      let saidaDetalhe = 'Compras diversas';
+
+      // Saídas específicas do dia do mês
+      if (saidasDiaMes[dom]) {
+        const extra = saidasDiaMes[dom][0];
+        saida += extra.val;
+        saidaDetalhe = extra.nome;
+      }
+
+      // Compensação bancária: saídas do fim de semana rolam pra segunda
+      if (dow === 6 || dow === 0) {
+        // compras não passam em fim de semana, mas entrada sim
+        saida = 500; // só despesas fixas mínimas
+      }
+
+      saldo = saldo + entrada - saida;
+
+      dias.push({
+        data: d,
+        dow,
+        dom,
+        isWeekend,
+        entrada,
+        saida,
+        saldo: Math.round(saldo),
+        detalhe: saidaDetalhe,
+        isToday: i === 0,
+        isNegative: saldo < 0
+      });
+    }
+
+    // Injetar dia crítico (06/05 — dia 18 na sequência)
+    // Ajuste manual pra garantir o buraco do storytelling
+    const idx06Mai = dias.findIndex(d => d.data.getDate() === 6 && d.data.getMonth() === 4);
+    if (idx06Mai >= 0) {
+      // força saldo negativo pra bater com o KPI
+      dias[idx06Mai].saldo = -2340;
+      dias[idx06Mai].saida = dias[idx06Mai].entrada + 8000;
+      dias[idx06Mai].detalhe = 'Pós-folha + 4 boletos';
+      dias[idx06Mai].isNegative = true;
+    }
+
+    // Render tabela
+    const tbody = document.getElementById('flowBody');
+    const diasSemana = ['dom','seg','ter','qua','qui','sex','sáb'];
+    const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    dias.forEach((d, i) => {
+      const tr = document.createElement('tr');
+      if (d.isWeekend) tr.classList.add('weekend');
+      if (d.isToday) tr.classList.add('today');
+      if (d.isNegative) tr.classList.add('negative');
+      tr.innerHTML = `
+        <td>
+          <div class="date-cell">${String(d.dom).padStart(2,'0')}/${meses[d.data.getMonth()]}</div>
+          <div class="date-day">${diasSemana[d.dow]}</div>
+        </td>
+        <td class="num in-val">${d.entrada > 0 ? '+'+fmtMoney(d.entrada).replace('R$ ','') : '—'}</td>
+        <td class="num out-val">${d.saida > 0 ? '−'+fmtMoney(d.saida).replace('R$ ','') : '—'}</td>
+        <td class="num saldo-val ${d.isNegative ? 'neg' : ''}">${fmtMoney(d.saldo)}</td>
+        <td>
+          ${d.isToday ? '<span class="badge-mini hoje">HOJE</span>' : ''}
+          ${d.isNegative ? '<span class="badge-mini critico">CRÍTICO</span>' : ''}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Chart.js
+    let fluxoChart;
+    function renderChart(){
+      if (fluxoChart) fluxoChart.destroy();
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const textColor = isDark ? '#9CA3AF' : '#6B7280';
+      const gridColor = isDark ? '#222832' : '#E5E7EB';
+      const accent = isDark ? '#3B82F6' : '#2563EB';
+      const accentSoft = isDark ? 'rgba(59,130,246,.18)' : 'rgba(37,99,235,.12)';
+      const danger = isDark ? '#F87171' : '#DC2626';
+      const dangerSoft = isDark ? 'rgba(248,113,113,.15)' : 'rgba(220,38,38,.1)';
+
+      const labels = dias.map(d => String(d.dom).padStart(2,'0')+'/'+meses[d.data.getMonth()]);
+      const saldos = dias.map(d => d.saldo);
+
+      // Cores dos pontos por saldo (negativo = vermelho)
+      const pointBg = dias.map(d => d.isNegative ? danger : accent);
+      const pointRadius = dias.map(d => d.isToday || d.isNegative ? 5 : 2);
+
+      fluxoChart = new Chart(document.getElementById('fluxoChart'), {
+        type:'line',
+        data:{
+          labels,
+          datasets:[{
+            label:'Saldo projetado',
+            data: saldos,
+            borderColor: accent,
+            backgroundColor: accentSoft,
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: pointBg,
+            pointBorderColor: pointBg,
+            pointRadius,
+            pointHoverRadius: 6,
+            borderWidth: 2
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          interaction:{mode:'index',intersect:false},
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              backgroundColor: isDark ? '#1A1F27' : '#111827',
+              titleColor:'#F3F4F6',
+              bodyColor:'#F3F4F6',
+              padding:10,
+              borderColor: isDark ? '#2D3440' : '#374151',
+              borderWidth:1,
+              callbacks:{
+                label: ctx => {
+                  const d = dias[ctx.dataIndex];
+                  return [
+                    'Saldo: ' + fmtMoney(d.saldo),
+                    'Entrada: +' + fmtMoney(d.entrada).replace('R$ ',''),
+                    'Saída: −' + fmtMoney(d.saida).replace('R$ ','')
+                  ];
+                }
+              }
+            }
+          },
+          scales:{
+            x:{
+              grid:{display:false},
+              ticks:{color:textColor, font:{family:'Geist Mono', size:10}, maxTicksLimit:10}
+            },
+            y:{
+              grid:{color:gridColor, drawBorder:false},
+              ticks:{
+                color:textColor,
+                font:{family:'Geist Mono', size:10},
+                callback: v => 'R$ '+(v/1000).toLocaleString('pt-BR')+'k'
+              }
+            }
+          }
+        }
+      });
+    }
+    renderChart();
+
+    // Mode toggle
+    document.querySelectorAll('.mode-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+    document.querySelectorAll('.period-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.period-toggle button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

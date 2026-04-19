@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Briefing WhatsApp · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+      --wa-green:#25D366; --wa-teal:#128C7E; --wa-bg:#EFEAE2;
+      --wa-bubble-received:#FFFFFF; --wa-bubble-sent:#D9FDD3;
+      --wa-text:#111B21; --wa-meta:#667781;
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    /* Sidebar padrão DM Pay */
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-item.active .nav-badge{background:var(--accent);color:white}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    /* Topbar */
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+
+    /* Main */
+    main{padding:24px 28px 80px}
+    .hero{margin-bottom:22px}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px;max-width:640px}
+
+    /* Layout: phone + painel config */
+    .grid-2{display:grid;grid-template-columns:400px 1fr;gap:32px;align-items:start}
+    @media (max-width:1100px){.grid-2{grid-template-columns:1fr}}
+
+    /* Phone Mockup */
+    .phone-wrap{display:flex;justify-content:center;padding:20px 0}
+    .phone{width:360px;height:740px;background:#1a1a1a;border-radius:48px;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.25),0 10px 20px rgba(0,0,0,.15),inset 0 0 0 1.5px #2a2a2a;position:relative}
+    .phone-screen{width:100%;height:100%;background:var(--wa-bg);border-radius:38px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+    /* Dynamic Island */
+    .island{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:110px;height:32px;background:#000;border-radius:20px;z-index:10}
+
+    /* Status bar */
+    .status-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 24px 6px;font-family:'Geist',sans-serif;font-weight:600;font-size:14px;color:#000;height:44px;flex-shrink:0}
+    .status-time{letter-spacing:-.02em;font-weight:700}
+    .status-icons{display:flex;gap:5px;align-items:center;margin-left:auto;padding-left:80px}
+    .status-icons svg{width:14px;height:14px}
+
+    /* WhatsApp header */
+    .wa-header{background:#008069;color:#fff;padding:8px 10px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    [data-theme="dark"] .wa-header{background:#005c4b}
+    .wa-back{display:grid;place-items:center;color:#fff}
+    .wa-back svg{width:18px;height:18px}
+    .wa-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+    .wa-contact{flex:1;min-width:0}
+    .wa-contact-name{font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+    .wa-contact-status{font-size:11px;opacity:.85;margin-top:1px}
+    .wa-header-actions{display:flex;gap:16px;align-items:center;color:#fff}
+    .wa-header-actions svg{width:18px;height:18px}
+
+    /* Chat area */
+    .wa-chat{flex:1;overflow-y:auto;padding:10px 9px 4px;background:var(--wa-bg);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' opacity='0.08'><g fill='%23000'><circle cx='10' cy='10' r='1'/><circle cx='50' cy='30' r='.8'/><circle cx='100' cy='15' r='1'/><circle cx='160' cy='40' r='.8'/><circle cx='30' cy='80' r='1'/><circle cx='130' cy='90' r='.8'/><circle cx='180' cy='120' r='1'/><circle cx='70' cy='140' r='.8'/><circle cx='20' cy='170' r='1'/><circle cx='110' cy='180' r='.8'/></g></svg>");display:flex;flex-direction:column;gap:4px}
+    .wa-date{align-self:center;background:#e1f3fb;color:var(--wa-meta);font-size:12px;padding:5px 12px;border-radius:8px;margin:6px 0;box-shadow:0 1px 0.5px rgba(0,0,0,.1)}
+    [data-theme="dark"] .wa-date{background:#182229;color:#8696a0}
+
+    .wa-bubble{max-width:82%;padding:7px 9px 6px;border-radius:8px;font-size:14px;line-height:1.4;color:var(--wa-text);box-shadow:0 1px 0.5px rgba(0,0,0,.13);position:relative;font-family:'Geist',sans-serif}
+    .wa-bubble.received{align-self:flex-start;background:var(--wa-bubble-received);border-top-left-radius:0}
+    .wa-bubble.received:before{content:"";position:absolute;top:0;left:-8px;width:0;height:0;border-top:8px solid var(--wa-bubble-received);border-left:8px solid transparent}
+    [data-theme="dark"] .wa-bubble.received{background:#202c33;color:#e9edef}
+    [data-theme="dark"] .wa-bubble.received:before{border-top-color:#202c33}
+    .wa-bubble b{font-weight:700}
+    .wa-bubble .wa-emoji{font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif;font-size:15px}
+    .wa-bubble .wa-time{font-size:10.5px;color:var(--wa-meta);float:right;margin:6px -3px -2px 8px;font-weight:400}
+    [data-theme="dark"] .wa-bubble .wa-time{color:#8696a0}
+    .wa-bubble .wa-ttl{display:block;font-weight:700;color:var(--wa-text);letter-spacing:-.01em;margin-bottom:4px;font-size:15px}
+    [data-theme="dark"] .wa-bubble .wa-ttl{color:#e9edef}
+    .wa-bubble hr{border:none;border-top:1px solid #e5e7eb;margin:8px 0}
+    [data-theme="dark"] .wa-bubble hr{border-top-color:#2a3942}
+    .wa-kpi{background:linear-gradient(135deg,#25D366 0%,#128C7E 100%);color:#fff;border-radius:10px;padding:10px 12px;margin:6px 0;text-align:center}
+    .wa-kpi-val{font-size:22px;font-weight:700;letter-spacing:-.02em;font-family:'Geist',sans-serif;line-height:1}
+    .wa-kpi-lbl{font-size:11px;opacity:.95;margin-top:3px;letter-spacing:.02em}
+    .wa-list{margin:6px 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px}
+    .wa-list li{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0}
+    .wa-list li span:first-child{color:var(--wa-text)}
+    [data-theme="dark"] .wa-list li span:first-child{color:#e9edef}
+    .wa-list li span:last-child{font-weight:600;font-family:'Geist Mono',monospace;color:var(--wa-text)}
+    [data-theme="dark"] .wa-list li span:last-child{color:#e9edef}
+    .wa-warn{background:#fff3cd;border-left:3px solid #d97706;padding:8px 10px;margin:6px 0;border-radius:4px;font-size:13px;color:#7a5a00}
+    [data-theme="dark"] .wa-warn{background:rgba(251,191,36,.12);color:#fbbf24;border-left-color:#fbbf24}
+    .wa-tip{background:#dbeafe;border-left:3px solid #2563EB;padding:8px 10px;margin:6px 0;border-radius:4px;font-size:13px;color:#1e3a8a}
+    [data-theme="dark"] .wa-tip{background:rgba(59,130,246,.12);color:#60a5fa;border-left-color:#60a5fa}
+    .wa-ctas{display:flex;gap:6px;margin-top:10px;margin-bottom:-2px;flex-direction:column}
+    .wa-cta{background:transparent;border:none;border-top:1px solid #e5e7eb;padding:8px 0;font-size:14px;color:#0091FF;font-weight:500;cursor:pointer;text-align:center;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+    [data-theme="dark"] .wa-cta{border-top-color:#2a3942;color:#53bdeb}
+    .wa-cta svg{width:14px;height:14px}
+
+    /* Input bar mockup */
+    .wa-input{background:var(--wa-bg);padding:6px 8px 10px;display:flex;align-items:center;gap:6px;flex-shrink:0}
+    .wa-input-box{flex:1;background:#fff;border-radius:22px;padding:9px 14px;font-size:13px;color:var(--wa-meta);display:flex;align-items:center;gap:8px}
+    [data-theme="dark"] .wa-input-box{background:#2a3942;color:#8696a0}
+    .wa-input-box svg{width:16px;height:16px}
+    .wa-input-mic{width:38px;height:38px;border-radius:50%;background:#008069;display:grid;place-items:center;color:#fff}
+    [data-theme="dark"] .wa-input-mic{background:#00a884}
+    .wa-input-mic svg{width:18px;height:18px}
+
+    /* Home indicator */
+    .home-indicator{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:130px;height:5px;background:#000;border-radius:3px;opacity:.3}
+
+    /* Painel lateral */
+    .panel-hero{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+    .panel-hero h2{margin:0 0 6px;font-size:16px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .panel-hero h2 svg{width:16px;height:16px;color:var(--wa-green)}
+    .panel-hero p{margin:0;color:var(--text-muted);font-size:13px;line-height:1.55}
+
+    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+    .card-title{font-size:13px;font-weight:600;margin:0 0 14px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+    .card-title svg{width:15px;height:15px;color:var(--accent)}
+
+    /* Config rows */
+    .cfg-row{display:grid;grid-template-columns:140px 1fr auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+    .cfg-row:last-child{border-bottom:none}
+    .cfg-label{font-size:13px;color:var(--text);font-weight:500}
+    .cfg-hint{font-size:11px;color:var(--text-soft);margin-top:2px}
+    .cfg-val{font-size:13px;color:var(--text-muted);font-family:'Geist Mono',monospace}
+    .cfg-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg-soft);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);font-family:'Geist Mono',monospace;cursor:pointer}
+    .cfg-chip:hover{border-color:var(--accent);color:var(--accent)}
+    .cfg-chip svg{width:11px;height:11px}
+
+    /* Toggle */
+    .toggle{display:inline-block;position:relative;width:34px;height:20px;cursor:pointer}
+    .toggle input{display:none}
+    .toggle-track{position:absolute;inset:0;background:var(--border-strong);border-radius:20px;transition:.2s}
+    .toggle-dot{position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+    .toggle input:checked + .toggle-track{background:var(--wa-green)}
+    .toggle input:checked + .toggle-track .toggle-dot{left:16px}
+
+    /* Pills */
+    .pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+    .pill{padding:5px 11px;background:var(--bg-soft);border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--text-muted);cursor:pointer;font-weight:500}
+    .pill.active{background:var(--accent);color:white;border-color:var(--accent)}
+    .pill:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+
+    /* Conteúdo toggles (o que vai dentro) */
+    .content-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer}
+    .content-toggle:hover{border-color:var(--border-strong)}
+    .content-toggle.on{background:var(--success-soft);border-color:var(--success)}
+    [data-theme="dark"] .content-toggle.on{background:rgba(16,185,129,.1)}
+    .content-toggle-left{display:flex;align-items:center;gap:10px}
+    .content-toggle-ico{width:30px;height:30px;border-radius:6px;background:var(--bg-soft);display:grid;place-items:center;color:var(--text-muted);flex-shrink:0}
+    .content-toggle.on .content-toggle-ico{background:var(--success);color:white}
+    .content-toggle-ico svg{width:14px;height:14px}
+    .content-toggle-text{font-size:13px;font-weight:500}
+    .content-toggle-hint{font-size:11px;color:var(--text-soft);margin-top:1px}
+
+    /* Destinatários */
+    .recipient{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+    .recipient-av{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:600;font-size:12px;flex-shrink:0}
+    .recipient-info{flex:1;min-width:0}
+    .recipient-name{font-size:13px;font-weight:500;line-height:1.2}
+    .recipient-phone{font-size:11px;color:var(--text-soft);font-family:'Geist Mono',monospace;margin-top:2px}
+    .recipient .toggle{flex-shrink:0}
+    .btn-add{width:100%;padding:10px;border:1px dashed var(--border-strong);border-radius:8px;background:transparent;color:var(--text-muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit}
+    .btn-add:hover{border-color:var(--accent);color:var(--accent)}
+    .btn-add svg{width:14px;height:14px}
+
+    /* Botões */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:.15s}
+    .btn svg{width:14px;height:14px}
+    .btn-primary{background:var(--wa-green);color:white}
+    .btn-primary:hover{background:var(--wa-teal)}
+    .btn-ghost{background:transparent;color:var(--text);border-color:var(--border)}
+    .btn-ghost:hover{background:var(--bg-hover)}
+
+    /* Insight block */
+    .insight{background:linear-gradient(135deg,var(--accent-soft) 0%,transparent 60%);border:1px solid var(--accent);border-radius:12px;padding:16px 18px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start}
+    .insight-ico{width:32px;height:32px;border-radius:8px;background:var(--accent);color:white;display:grid;place-items:center;flex-shrink:0}
+    .insight-ico svg{width:16px;height:16px}
+    .insight h3{margin:0 0 4px;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:-.01em}
+    .insight p{margin:0;font-size:12.5px;color:var(--text);line-height:1.55}
+    .insight p b{font-weight:600}
+
+    /* Bottom actions */
+    .bottom-actions{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
+    .bottom-actions .left{font-size:12px;color:var(--text-soft)}
+
+    @media (max-width:860px){
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item active"><i data-lucide="bell"></i> Alertas <span class="nav-badge">3</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar <span class="nav-badge">34</span></a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Alertas</a>
+        <span class="sep">/</span>
+        <b>Briefing matinal via WhatsApp</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn"><i data-lucide="help-circle"></i></button>
+        <div class="avatar">MS</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>Briefing matinal via WhatsApp</h1>
+        <p>Toda manhã às 6h15 o DM Pay manda um resumo pro Reginaldo no WhatsApp. Ele lê tomando café, sabe o tamanho do dia antes de sair de casa. <b>Sem app novo pra aprender.</b></p>
+      </div>
+
+      <!-- Insight -->
+      <div class="insight">
+        <div class="insight-ico"><i data-lucide="lightbulb"></i></div>
+        <div>
+          <h3>Por que WhatsApp e não e-mail ou notificação push?</h3>
+          <p>O Reginaldo já vive no WhatsApp — conversa com fornecedor, família, cliente. Mensagem do DM Pay chega no <b>mesmo lugar que ele já confere 30× por dia</b>. Abertura é praticamente garantida. E-mail e app novo exigem hábito novo — WhatsApp já tem.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Phone Preview -->
+        <div class="phone-wrap">
+          <div class="phone">
+            <div class="island"></div>
+            <div class="phone-screen">
+
+              <!-- Status bar -->
+              <div class="status-bar">
+                <div class="status-time">6:15</div>
+                <div class="status-icons">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 4h-3V2h-4v2H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H7V6h10v14z"/><rect x="9" y="16" width="6" height="2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4zM13 18h-2v-2h2v2zm0-4h-2V9h2v5z"/></svg>
+                </div>
+              </div>
+
+              <!-- WhatsApp header -->
+              <div class="wa-header">
+                <div class="wa-back"><i data-lucide="chevron-left"></i></div>
+                <div class="wa-avatar">P</div>
+                <div class="wa-contact">
+                  <div class="wa-contact-name">DM Pay</div>
+                  <div class="wa-contact-status">online</div>
+                </div>
+                <div class="wa-header-actions">
+                  <i data-lucide="video"></i>
+                  <i data-lucide="phone"></i>
+                  <i data-lucide="more-vertical"></i>
+                </div>
+              </div>
+
+              <!-- Chat -->
+              <div class="wa-chat">
+                <div class="wa-date">HOJE</div>
+
+                <div class="wa-bubble received">
+                  <span class="wa-ttl"><span class="wa-emoji">🌅</span> Bom dia, Reginaldo!</span>
+                  Segunda-feira, 20/04/2026.
+                  <div class="wa-time">6:15</div>
+                </div>
+
+                <div class="wa-bubble received" style="max-width:92%">
+                  <span class="wa-ttl">Resumo do dia</span>
+
+                  <div class="wa-kpi">
+                    <div class="wa-kpi-val">R$ 10.202,50</div>
+                    <div class="wa-kpi-lbl">VENCEM HOJE · 3 BOLETOS</div>
+                  </div>
+
+                  <div style="font-size:13px;margin:8px 0 4px;color:var(--wa-meta);font-weight:500">VENCIMENTOS</div>
+                  <ul class="wa-list">
+                    <li><span>IMPACTO</span><span>R$ 4.282,50</span></li>
+                    <li><span>CAFÉ 3 CORAÇÕES</span><span>R$ 2.400,00</span></li>
+                    <li><span>NESTLÉ</span><span>R$ 3.520,00</span></li>
+                  </ul>
+
+                  <div class="wa-warn">
+                    <b><span class="wa-emoji">⚠️</span> É o maior dia do mês.</b><br>
+                    Acumulou do fim de semana (sáb e dom não compensam).
+                  </div>
+
+                  <div class="wa-tip">
+                    <b><span class="wa-emoji">💡</span> Dica:</b> na próxima, antecipe boletos de sábado/domingo pra sexta se tiver caixa.
+                  </div>
+
+                  <div class="wa-ctas">
+                    <button class="wa-cta"><i data-lucide="calendar"></i> Ver calendário</button>
+                    <button class="wa-cta"><i data-lucide="credit-card"></i> Pagar agora</button>
+                  </div>
+
+                  <div class="wa-time">6:15</div>
+                </div>
+
+                <div class="wa-bubble received">
+                  <span class="wa-ttl"><span class="wa-emoji">📊</span> Saldo projetado</span>
+                  Se pagar tudo hoje: <b>R$ 18.340,00</b> no caixa.<br>
+                  <span style="color:var(--wa-meta);font-size:12px">Considerando R$ 28.542 de vendas do fim de semana (sáb+dom).</span>
+                  <div class="wa-time">6:15</div>
+                </div>
+              </div>
+
+              <!-- Input bar -->
+              <div class="wa-input">
+                <div class="wa-input-box">
+                  <i data-lucide="smile"></i>
+                  <span style="flex:1">Mensagem</span>
+                  <i data-lucide="paperclip"></i>
+                  <i data-lucide="camera"></i>
+                </div>
+                <div class="wa-input-mic"><i data-lucide="mic"></i></div>
+              </div>
+
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+
+        <!-- Painel de configuração -->
+        <div>
+          <div class="panel-hero">
+            <h2><i data-lucide="message-circle"></i> Como funciona</h2>
+            <p>O DM Pay se conecta à <b>API Oficial do WhatsApp Business</b> e dispara a mensagem automaticamente no horário definido. Os destinatários recebem como qualquer outra mensagem — podem responder, e o sistema entende comandos simples (tipo "pagou 1" pra marcar boleto como pago).</p>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="clock"></i> Quando disparar</div>
+
+            <div class="cfg-row">
+              <div>
+                <div class="cfg-label">Horário</div>
+                <div class="cfg-hint">Hora local · Jupi-PE</div>
+              </div>
+              <div class="cfg-val">06:15</div>
+              <button class="cfg-chip"><i data-lucide="pencil"></i> Alterar</button>
+            </div>
+
+            <div class="cfg-row">
+              <div>
+                <div class="cfg-label">Dias</div>
+                <div class="cfg-hint">Quando a mensagem é enviada</div>
+              </div>
+              <div style="grid-column:2 / 4">
+                <div class="pills">
+                  <span class="pill active">Seg</span>
+                  <span class="pill active">Ter</span>
+                  <span class="pill active">Qua</span>
+                  <span class="pill active">Qui</span>
+                  <span class="pill active">Sex</span>
+                  <span class="pill active">Sáb</span>
+                  <span class="pill">Dom</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="cfg-row">
+              <div>
+                <div class="cfg-label">Fuso horário</div>
+                <div class="cfg-hint">Definido no cadastro</div>
+              </div>
+              <div class="cfg-val">America/Recife (UTC-3)</div>
+              <span></span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="users"></i> Quem recebe</div>
+
+            <div class="recipient">
+              <div class="recipient-av" style="background:#8b5cf6">R</div>
+              <div class="recipient-info">
+                <div class="recipient-name">Reginaldo (Dono)</div>
+                <div class="recipient-phone">+55 87 98888-1234</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" checked>
+                <span class="toggle-track"><span class="toggle-dot"></span></span>
+              </label>
+            </div>
+
+            <div class="recipient">
+              <div class="recipient-av">MS</div>
+              <div class="recipient-info">
+                <div class="recipient-name">Mikael (Administrador)</div>
+                <div class="recipient-phone">+55 87 99999-5678</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" checked>
+                <span class="toggle-track"><span class="toggle-dot"></span></span>
+              </label>
+            </div>
+
+            <button class="btn-add"><i data-lucide="plus"></i> Adicionar destinatário</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="list"></i> O que vai no briefing</div>
+
+            <div class="content-toggle on">
+              <div class="content-toggle-left">
+                <div class="content-toggle-ico"><i data-lucide="calendar-clock"></i></div>
+                <div>
+                  <div class="content-toggle-text">Vencimentos de hoje</div>
+                  <div class="content-toggle-hint">Lista com fornecedor e valor</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+            </div>
+
+            <div class="content-toggle on">
+              <div class="content-toggle-left">
+                <div class="content-toggle-ico"><i data-lucide="trending-up"></i></div>
+                <div>
+                  <div class="content-toggle-text">Saldo projetado</div>
+                  <div class="content-toggle-hint">Estimativa se tudo for pago hoje</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+            </div>
+
+            <div class="content-toggle on">
+              <div class="content-toggle-left">
+                <div class="content-toggle-ico"><i data-lucide="alert-triangle"></i></div>
+                <div>
+                  <div class="content-toggle-text">Alerta de dias pesados</div>
+                  <div class="content-toggle-hint">Quando o dia foge da média</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+            </div>
+
+            <div class="content-toggle on">
+              <div class="content-toggle-left">
+                <div class="content-toggle-ico"><i data-lucide="lightbulb"></i></div>
+                <div>
+                  <div class="content-toggle-text">Dica do sistema</div>
+                  <div class="content-toggle-hint">Sugestão baseada em padrão (antecipar, parcelar, etc)</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+            </div>
+
+            <div class="content-toggle">
+              <div class="content-toggle-left">
+                <div class="content-toggle-ico"><i data-lucide="shopping-cart"></i></div>
+                <div>
+                  <div class="content-toggle-text">Vendas do dia anterior</div>
+                  <div class="content-toggle-hint">Resumo do faturamento de ontem</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox"><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+            </div>
+
+            <div class="content-toggle">
+              <div class="content-toggle-left">
+                <div class="content-toggle-ico"><i data-lucide="package-check"></i></div>
+                <div>
+                  <div class="content-toggle-text">Boletos pagos ontem</div>
+                  <div class="content-toggle-hint">Confirmação do que foi liquidado</div>
+                </div>
+              </div>
+              <label class="toggle"><input type="checkbox"><span class="toggle-track"><span class="toggle-dot"></span></span></label>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="zap"></i> Comandos respondendo o bot</div>
+            <p style="margin:0 0 12px;font-size:12.5px;color:var(--text-muted);line-height:1.55">Reginaldo pode responder o bot com atalhos. O sistema processa a resposta e devolve confirmação.</p>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:var(--bg-soft);border-radius:6px">
+                <code style="font-family:'Geist Mono',monospace;font-size:12px;background:var(--bg-card);padding:3px 7px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;color:var(--accent)">pago 1</code>
+                <span style="font-size:12.5px;color:var(--text-muted)">Marca o 1º boleto da lista como pago</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:var(--bg-soft);border-radius:6px">
+                <code style="font-family:'Geist Mono',monospace;font-size:12px;background:var(--bg-card);padding:3px 7px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;color:var(--accent)">saldo</code>
+                <span style="font-size:12.5px;color:var(--text-muted)">Retorna saldo atual de todos os bancos</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:var(--bg-soft);border-radius:6px">
+                <code style="font-family:'Geist Mono',monospace;font-size:12px;background:var(--bg-card);padding:3px 7px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;color:var(--accent)">amanha</code>
+                <span style="font-size:12.5px;color:var(--text-muted)">Adianta o briefing do dia seguinte</span>
+              </div>
+            </div>
+            <div style="margin-top:10px;padding:8px 10px;background:var(--warn-soft);border-radius:6px;font-size:11.5px;color:var(--warn);display:flex;gap:6px;align-items:center">
+              <i data-lucide="info" style="width:12px;height:12px"></i>
+              <span>Comandos respondendo o bot chegam na <b>v2</b> junto com o Copiloto</span>
+            </div>
+          </div>
+
+          <div class="bottom-actions">
+            <div class="left">Última simulação enviada: hoje, 6:15</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost"><i data-lucide="send"></i> Testar envio agora</button>
+              <button class="btn btn-primary"><i data-lucide="check"></i> Salvar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    function toggleTheme(){
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+    }
+
+    // Toggle de pills (dias)
+    document.querySelectorAll('.pills .pill').forEach(p => {
+      p.addEventListener('click', () => p.classList.toggle('active'));
+    });
+
+    // Toggle de content-toggle (cards de conteúdo)
+    document.querySelectorAll('.content-toggle').forEach(t => {
+      const cb = t.querySelector('input[type=checkbox]');
+      t.addEventListener('click', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        cb.checked = !cb.checked;
+        t.classList.toggle('on', cb.checked);
+      });
+    });
+  </script>
+</body>
+</html>
