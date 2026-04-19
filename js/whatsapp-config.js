@@ -67,13 +67,17 @@
     });
   }
 
+  function getRecipientParent() {
+    // Ancora no botão "Adicionar destinatário" — sempre existe
+    const addBtn = document.querySelector('.btn-add');
+    return addBtn ? addBtn.parentElement : null;
+  }
+
   function renderDestinatarios() {
-    // Substitui os 2 cards hardcoded de destinatário por dados reais + toggle + remover
-    const cards = document.querySelectorAll('.recipient');
-    if (cards.length === 0) return;
-    const parent = cards[0].parentElement;
-    // Remove todos cards de recipient
-    cards.forEach(c => c.remove());
+    const parent = getRecipientParent();
+    if (!parent) return;
+    // Remove todos cards de recipient existentes
+    parent.querySelectorAll('.recipient').forEach(c => c.remove());
     // Renderiza destinatários salvos
     SETTINGS.recipients.forEach((r, idx) => {
       const div = document.createElement('div');
