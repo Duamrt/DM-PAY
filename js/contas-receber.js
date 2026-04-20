@@ -94,9 +94,45 @@
     return out;
   }
 
+  function renderBuscaResumo() {
+    const box = document.getElementById('cr-busca-resumo');
+    if (!box) return;
+    if (!BUSCA || !BUSCA.trim()) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    const q = BUSCA.toLowerCase();
+    // Ignora o FILTRO aqui — queremos o TOTAL do cliente, não só do status corrente
+    const doCliente = RECVS.filter(r =>
+      (r.customers?.name || '').toLowerCase().includes(q) ||
+      (r.description || '').toLowerCase().includes(q)
+    );
+    if (!doCliente.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+
+    const abertas = doCliente.filter(r => r.status === 'open' || r.status === 'overdue');
+    const totalAberto = abertas.reduce((s,r) => s + Number(r.amount||0), 0);
+    const atrasadas = abertas.filter(r => diffDays(r.due_date) < 0);
+    const totalAtraso = atrasadas.reduce((s,r) => s + Number(r.amount||0), 0);
+    const recebidas = doCliente.filter(r => r.status === 'received');
+    const totalRecebido = recebidas.reduce((s,r) => s + Number(r.amount||0), 0);
+
+    // Nome a exibir: único cliente OU N clientes
+    const nomes = [...new Set(doCliente.map(r => r.customers?.name).filter(Boolean))];
+    const labelNome = nomes.length === 1
+      ? nomes[0]
+      : (nomes.length > 1 ? `${nomes.length} clientes encontrados` : `Busca "${BUSCA}"`);
+    const subLabel = `${abertas.length} em aberto${atrasadas.length ? ` · ${atrasadas.length} atrasada${atrasadas.length!==1?'s':''}` : ''}${recebidas.length ? ` · ${recebidas.length} já recebida${recebidas.length!==1?'s':''}` : ''}`;
+
+    box.style.display = '';
+    box.innerHTML = `
+      <div class="busca-resumo-nome">${labelNome}<small>${subLabel}</small></div>
+      <div class="busca-resumo-kpi"><div class="busca-resumo-kpi-label">Total em aberto</div><div class="busca-resumo-kpi-val">${fmtBRL(totalAberto)}</div></div>
+      <div class="busca-resumo-kpi danger"><div class="busca-resumo-kpi-label">Atrasado</div><div class="busca-resumo-kpi-val">${fmtBRL(totalAtraso)}</div></div>
+      <div class="busca-resumo-kpi success"><div class="busca-resumo-kpi-label">Já recebido</div><div class="busca-resumo-kpi-val">${fmtBRL(totalRecebido)}</div></div>
+    `;
+  }
+
   function render() {
     const tbody = document.getElementById('cr-tbody');
     if (!tbody) return;
+    renderBuscaResumo();
     const list = applyFilter(RECVS);
 
     if (list.length === 0) {
