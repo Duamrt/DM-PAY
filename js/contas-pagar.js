@@ -383,6 +383,7 @@
         ? `<button class="btn btn-ghost btn-sm" onclick="DMPAY_CP.markOpen('${p.id}')"><i data-lucide="undo-2"></i> Desfazer pagamento</button>
            <button class="btn btn-secondary btn-sm" onclick="DMPAY_CP.removePayable('${p.id}')"><i data-lucide="trash-2"></i> Excluir</button>`
         : `<button class="btn btn-ghost btn-sm" onclick="DMPAY_CP.removePayable('${p.id}')"><i data-lucide="trash-2"></i> Excluir</button>
+           <button class="btn btn-secondary btn-sm" onclick="DMPAY_CP.editPayable('${p.id}')"><i data-lucide="pencil"></i> Editar</button>
            <button class="btn btn-primary btn-sm" onclick="DMPAY_CP.markPaid('${p.id}')"><i data-lucide="check-circle-2"></i> Marcar como pago</button>`;
     }
     document.getElementById('drawerOverlay').classList.add('open');
@@ -457,6 +458,70 @@
     render();
   }
 
+  async function editPayable(id) {
+    const p = PAYABLES.find(x => x.id === id);
+    if (!p) return;
+    if (!window.DMPAY_UI) { alert('UI não carregada'); return; }
+
+    const amountBefore   = p.amount;
+    const dueBefore      = (p.due_date || '').split('T')[0];
+    const methodBefore   = p.payment_method || 'outro';
+    const boletoBefore   = p.boleto_line || '';
+    const notesBefore    = p.notes || '';
+
+    const vals = await window.DMPAY_UI.open({
+      title: 'Editar lançamento',
+      desc: 'Altere vencimento, valor, forma ou linha digitável.',
+      fields: [
+        { key: 'amount',     label: 'Valor (R$) *',          type: 'number',  value: Number(amountBefore).toFixed(2) },
+        { key: 'due_date',   label: 'Vencimento *',           type: 'date',    value: dueBefore },
+        { key: 'method',     label: 'Forma de pagamento',     options: [
+            { value: 'boleto',   label: 'Boleto' },
+            { value: 'pix',      label: 'PIX' },
+            { value: 'dinheiro', label: 'À vista / Dinheiro' },
+            { value: 'outro',    label: 'Outro' }
+          ], value: methodBefore },
+        { key: 'boleto_line', label: 'Linha digitável do boleto', multiline: true, value: boletoBefore,
+          placeholder: '23793.38128 00000.000000 00000.000000 1 99990000000000',
+          hint: '44, 47 ou 48 dígitos. Deixe em branco se não for boleto.' },
+        { key: 'notes', label: 'Observação / motivo', multiline: true, value: notesBefore }
+      ],
+      submitLabel: 'Salvar',
+      cancelLabel: 'Cancelar',
+      onSubmit: (v) => {
+        const n = Number(String(v.amount).replace(',', '.'));
+        if (!isFinite(n) || n <= 0) throw new Error('Valor precisa ser maior que zero.');
+        if (!v.due_date) throw new Error('Vencimento é obrigatório.');
+        const raw = (v.boleto_line || '').replace(/\D/g, '');
+        if (raw && ![44, 47, 48].includes(raw.length)) throw new Error(`Linha digitável com ${raw.length} dígitos (precisa ter 44, 47 ou 48).`);
+        if (Math.abs(n - amountBefore) > 0.001 && !(v.notes || '').trim()) throw new Error('Valor alterado — preencha a observação com o motivo.');
+        return true;
+      }
+    });
+
+    if (!vals) return;
+
+    const amount       = Number(String(vals.amount).replace(',', '.'));
+    const due_date     = vals.due_date;
+    const payment_method = vals.method || null;
+    const boleto_line  = payment_method === 'boleto' ? ((vals.boleto_line || '').replace(/\s/g, '') || null) : null;
+    const notes        = (vals.notes || '').trim() || null;
+
+    const { error } = await sb.from('payables').update({ amount, due_date, payment_method, boleto_line, notes }).eq('id', id);
+    if (error) { alert('Erro ao salvar: ' + error.message); return; }
+
+    if (window.DMPAY_AUDIT) {
+      window.DMPAY_AUDIT.update('payable', id,
+        { amount: amountBefore, due_date: dueBefore, payment_method: methodBefore, boleto_line: boletoBefore, notes: notesBefore },
+        { amount, due_date, payment_method, boleto_line, notes }
+      );
+    }
+
+    Object.assign(p, { amount, due_date, payment_method, boleto_line, notes });
+    closeDrawer();
+    await loadPayables(); render();
+  }
+
   // Expoe API
   window.DMPAY_CP = {
     openCreate: openCreate,
@@ -467,8 +532,11 @@
     markPaid: markPaid,
     markOpen: markOpen,
     removePayable: removePayable,
+    editPayable: editPayable,
     refresh: () => loadPayables().then(render)
   };
+  // Alias global pra ESC e overlay onclick do HTML
+  window.closeDrawer = closeDrawer;
 
   // Aguarda guard terminar
   if (window.DMPAY_COMPANY) init();

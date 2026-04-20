@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11/dist/JsBarcode.all.min.js"></script>
-<script src="js/contas-pagar.js" defer></script>
+<script src="js/contas-pagar.js?v=04201825" defer></script>
 <style>
 /* ========================= TOKENS ========================= */
 :root[data-theme="dark"] {
@@ -440,11 +440,11 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
 </div>
 
 <!-- DRAWER -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer-overlay" id="drawerOverlay" onclick="DMPAY_CP.closeDrawer()"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true">
   <div class="drawer-header">
     <div class="drawer-title">Detalhes do boleto <span class="muted" id="drawerNF">NF —</span></div>
-    <button class="icon-btn" onclick="closeDrawer()" aria-label="Fechar"><i data-lucide="x" class="icon"></i></button>
+    <button class="icon-btn" onclick="DMPAY_CP.closeDrawer()" aria-label="Fechar"><i data-lucide="x" class="icon"></i></button>
   </div>
   <div class="drawer-body" id="drawerBody">
     <!-- conteúdo dinâmico -->

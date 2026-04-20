@@ -196,11 +196,12 @@
       if (invRes.error) {
         if (invRes.error.code === '23505') {
           if (window.DMPAY_UI) {
-            await window.DMPAY_UI.confirm({ title: 'NF-e já importada', desc: 'Esta NF-e já está no Histórico NF-e. Consulte lá para ver parcelas e status.', okLabel: 'Ver Histórico', cancelLabel: 'Fechar' });
+            const ir = await window.DMPAY_UI.confirm({ title: 'NF-e já importada', desc: 'Esta NF-e já está no Histórico NF-e. Consulte lá para ver parcelas e status.', okLabel: 'Ver Histórico', cancelLabel: 'Fechar' });
+            if (ir) window.location.href = 'historico-nfe.html';
           } else {
             alert('Esta NF-e já está no Histórico NF-e.');
           }
-          window.location.href = 'historico-nfe.html';
+          btn.disabled = false; btn.innerHTML = original;
           return;
         }
         throw invRes.error;
