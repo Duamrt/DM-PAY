@@ -117,11 +117,12 @@ window.DMPAY_EXPORT = (() => {
     const wb = new ExcelJS.Workbook();
     wb.creator = 'DM Pay';
     const ws = wb.addWorksheet('Contas a Pagar', { properties: { defaultColWidth: 18 } });
-    const NC = 7;
+    const NC = 8;
 
     ws.columns = [
+      { width: 14 }, // Emissão
+      { width: 18 }, // NF
       { width: 30 }, // Fornecedor
-      { width: 34 }, // Descrição
       { width: 14 }, // Vencimento
       { width: 16 }, // Valor
       { width: 14 }, // Pago em
@@ -140,23 +141,26 @@ window.DMPAY_EXPORT = (() => {
 
     const kRow = ws.addRow([
       `Em aberto: ${fmt(totAberto)}`,
+      '',
       `Atrasadas: ${atrasadas.length} contas`,
+      '',
       `Pagas (período): ${fmt(totPago)}`,
-      '', '', '', ''
+      '', '', ''
     ]);
     kRow.height = 24;
-    [1,2,3].forEach((ci, i) => {
-      const bgs = [AMARELO_BG, VERM_BG, VERDE_BG];
-      const fgs = [AMARELO_FG, VERMELHO, VERDE];
-      kRow.getCell(ci).font  = { name: 'Arial', size: 10, bold: true, color: { argb: fgs[i] } };
-      kRow.getCell(ci).fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgs[i] } };
-      kRow.getCell(ci).alignment = { horizontal: 'center', vertical: 'middle' };
+    [[1,2, AMARELO_BG, AMARELO_FG], [3,4, VERM_BG, VERMELHO], [5,6, VERDE_BG, VERDE]].forEach(([ci1, ci2, bg, fg]) => {
+      [ci1, ci2].forEach(ci => {
+        kRow.getCell(ci).fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+        kRow.getCell(ci).font  = { name: 'Arial', size: 10, bold: true, color: { argb: fg } };
+        kRow.getCell(ci).alignment = { horizontal: 'center', vertical: 'middle' };
+      });
     });
 
     ws.addRow([]);
 
-    // Cabeçalho colunas
-    const hRow = ws.addRow(['Fornecedor', 'Descrição', 'Vencimento', 'Valor (R$)', 'Pago em', 'Status', 'Categoria']);
+    // Cabeçalho colunas + AutoFilter
+    const hRow = ws.addRow(['Emissão', 'NF', 'Fornecedor', 'Vencimento', 'Valor (R$)', 'Pago em', 'Status', 'Categoria']);
+    const hRowNum = hRow.number;
     hRow.height = 24;
     hRow.eachCell(c => {
       c.font      = { name: 'Arial', size: 9, bold: true, color: { argb: BRANCO } };
@@ -164,6 +168,13 @@ window.DMPAY_EXPORT = (() => {
       c.alignment = { horizontal: 'center', vertical: 'middle' };
       c.border    = brd();
     });
+    ws.autoFilter = { from: { row: hRowNum, column: 1 }, to: { row: hRowNum, column: NC } };
+
+    // Helper: extrai número da NF da descrição ("NF 3465493 ...")
+    function extrairNF(desc) {
+      const m = String(desc || '').match(/^NF\s+(\S+)/i);
+      return m ? m[1] : (desc || '—');
+    }
 
     // Dados
     payables.forEach((p, i) => {
@@ -172,13 +183,16 @@ window.DMPAY_EXPORT = (() => {
       if (p.status === 'paid')    { stLabel = 'Pago';     stBg = VERDE_BG;  stFg = VERDE; }
       else if (diff < 0)          { stLabel = 'Atrasado'; stBg = VERM_BG;   stFg = VERMELHO; }
 
-      const sup = p.suppliers?.trade_name || p.suppliers?.legal_name || '—';
-      const cat = p.expense_categories?.name || '—';
-      const band = i % 2 === 0 ? CINZA_CLR : BRANCO;
+      const sup    = p.suppliers?.trade_name || p.suppliers?.legal_name || '—';
+      const cat    = p.expense_categories?.name || '—';
+      const emissao = brDate(p.created_at);
+      const nf      = extrairNF(p.description);
+      const band    = i % 2 === 0 ? CINZA_CLR : BRANCO;
 
       const row = ws.addRow([
+        emissao,
+        nf,
         sup,
-        p.description || '—',
         brDate(p.due_date),
         Number(p.amount || 0),
         brDate(p.paid_at),
@@ -187,20 +201,23 @@ window.DMPAY_EXPORT = (() => {
       ]);
       row.height = 20;
 
-      row.getCell(1).font = { name: 'Arial', size: 10, bold: true };
-      row.getCell(2).font = { name: 'Arial', size: 9 };
-      row.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
-      row.getCell(4).numFmt = '#,##0.00';
-      row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
-      row.getCell(4).font = { name: 'Arial', size: 10, bold: true };
-      row.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
-      row.getCell(5).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
-      row.getCell(6).font = { name: 'Arial', size: 9, bold: true, color: { argb: stFg } };
-      row.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: stBg } };
+      row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(1).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
+      row.getCell(2).font = { name: 'Arial', size: 9, bold: true };
+      row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(3).font = { name: 'Arial', size: 10, bold: true };
+      row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(5).numFmt = '#,##0.00';
+      row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
+      row.getCell(5).font = { name: 'Arial', size: 10, bold: true };
       row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
-      row.getCell(7).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
+      row.getCell(6).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
+      row.getCell(7).font = { name: 'Arial', size: 9, bold: true, color: { argb: stFg } };
+      row.getCell(7).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: stBg } };
+      row.getCell(7).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(8).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
 
-      [1,2,3,4,5,7].forEach(ci => {
+      [1,2,3,4,5,6,8].forEach(ci => {
         row.getCell(ci).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: band } };
       });
       row.eachCell(c => { c.border = brd(); });
@@ -208,9 +225,9 @@ window.DMPAY_EXPORT = (() => {
 
     // Rodapé totais
     ws.addRow([]);
-    const tRow = ws.addRow(['', '', `Total em aberto: ${fmt(totAberto)}`, '', `Total pago: ${fmt(totPago)}`, '', `${payables.length} lançamentos`]);
-    tRow.getCell(3).font = { name: 'Arial', size: 9, bold: true, color: { argb: AZUL } };
-    tRow.getCell(5).font = { name: 'Arial', size: 9, bold: true, color: { argb: VERDE } };
+    const tRow = ws.addRow(['', '', '', `Total em aberto: ${fmt(totAberto)}`, '', `Total pago: ${fmt(totPago)}`, `${payables.length} lançamentos`, '']);
+    tRow.getCell(4).font = { name: 'Arial', size: 9, bold: true, color: { argb: AZUL } };
+    tRow.getCell(6).font = { name: 'Arial', size: 9, bold: true, color: { argb: VERDE } };
     tRow.getCell(7).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
 
     ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 };
