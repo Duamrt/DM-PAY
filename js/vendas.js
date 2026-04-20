@@ -196,13 +196,21 @@
     const ultimoDia = mesAtual.sort().pop();
     if (ultimoDia) {
       const formas = porDiaForma[ultimoDia] || {};
-      const totalDia = porDia[ultimoDia];
-      const mapClasse = { dinheiro:'dinheiro', credito:'credito', debito:'debito', pix:'pix', a_prazo:'fiado' };
-      const labelsMap = { dinheiro:'Dinheiro', credito:'Crédito', debito:'Débito', pix:'PIX', a_prazo:'Fiado (a prazo)' };
+      const totalDia = porDia[ultimoDia]; // líquido (já inclui troco negativo)
+      // Dinheiro líquido = bruto recebido − troco devolvido (troco vem negativo no banco)
+      const troco = Number(formas.troco || 0);
+      const dinheiroLiquido = Number(formas.dinheiro || 0) + troco;
+      const valoresLiq = {
+        dinheiro: dinheiroLiquido,
+        credito: Number(formas.credito || 0),
+        debito: Number(formas.debito || 0),
+        pix: Number(formas.pix || 0),
+        a_prazo: Number(formas.a_prazo || 0)
+      };
       const rows = document.querySelectorAll('.pay-card .pay-row');
       ['dinheiro','credito','debito','pix','a_prazo'].forEach((k, i) => {
         if (!rows[i]) return;
-        const v = formas[k] || 0;
+        const v = valoresLiq[k];
         const pct = totalDia > 0 ? (v/totalDia * 100) : 0;
         const valMain = rows[i].querySelector('.pay-val-main');
         const valPct = rows[i].querySelector('.pay-val-pct');
@@ -210,6 +218,14 @@
         if (valMain) valMain.textContent = 'R$ ' + fmtBRLfull(v);
         if (valPct) valPct.textContent = pct.toFixed(1) + '%';
         if (barFill) barFill.style.width = Math.max(pct, 0) + '%';
+        // Hint de troco na linha do dinheiro
+        if (k === 'dinheiro' && troco < 0) {
+          const nameEl = rows[i].querySelector('.pay-name');
+          if (nameEl) nameEl.innerHTML = `Dinheiro <span style="font-size:10px;color:var(--text-soft);font-weight:500">· bruto R$ ${fmtBRLfull(formas.dinheiro||0)} − troco R$ ${fmtBRLfull(-troco)}</span>`;
+        } else if (k === 'dinheiro') {
+          const nameEl = rows[i].querySelector('.pay-name');
+          if (nameEl) nameEl.textContent = 'Dinheiro';
+        }
       });
       const totalBox = document.querySelector('.pay-card .pay-total');
       if (totalBox) {
