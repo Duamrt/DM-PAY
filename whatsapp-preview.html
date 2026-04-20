@@ -603,15 +603,8 @@
       p.addEventListener('click', () => p.classList.toggle('active'));
     });
 
-    // Toggle de content-toggle (cards de conteúdo)
-    document.querySelectorAll('.content-toggle').forEach(t => {
-      const cb = t.querySelector('input[type=checkbox]');
-      t.addEventListener('click', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        cb.checked = !cb.checked;
-        t.classList.toggle('on', cb.checked);
-      });
-    });
+    // Toggles de content-toggle gerenciados pelo whatsapp-config.js (renderToggles)
+    // — não registrar handler duplicado aqui
   </script>
   <script src="js/whatsapp-preview.js" defer></script>
   <script src="js/whatsapp-config.js" defer></script>
