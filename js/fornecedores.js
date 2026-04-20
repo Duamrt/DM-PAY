@@ -77,15 +77,18 @@
       try {
         const [supRes, invRes] = await Promise.all([
           sb.from('suppliers')
-            .select('id,cnpj,legal_name,trade_name,email,phone,address_city,address_state')
+            .select('id,cnpj,legal_name,trade_name,email,phone')
             .eq('company_id', CID)
             .order('legal_name'),
           sb.from('invoices')
-            .select('id,supplier_id,issue_date,total,nature')
+            .select('supplier_id,issue_date,total')
             .eq('company_id', CID)
-            .eq('nature', 'entrada')
             .order('issue_date', {ascending:false})
+            .limit(5000)
         ]);
+
+        if (supRes.error) throw new Error('suppliers: ' + supRes.error.message);
+        if (invRes.error) throw new Error('invoices: '  + invRes.error.message);
 
         const suppliers = supRes.data  || [];
         const invoices  = invRes.data  || [];
@@ -257,7 +260,7 @@
       const nm  = s.legal_name || s.trade_name || `Fornecedor ${s.cnpj}`;
       const color = avatarColor(nm);
       const ini   = initials(nm);
-      const city  = [s.address_city, s.address_state].filter(Boolean).join('/') || '—';
+      const city  = '—'; // address_city/state não está na tabela suppliers ainda
 
       const total6m = f.monthly.reduce((a,b)=>a+b,0);
 
