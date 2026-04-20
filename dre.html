@@ -269,21 +269,18 @@
     <main>
       <div class="hero">
         <div>
-          <h1>DRE gerencial <span class="preview-pill">Em construção</span></h1>
-          <p>Demonstrativo do Resultado. <b>Só a Receita Bruta tem dados reais</b> (vindos do iCommerce). Deduções fiscais, CMV e despesas exigem integração com XML de compras e lançamento de despesas — em construção.</p>
+          <h1>DRE gerencial</h1>
+          <p>Demonstrativo do Resultado do Exercício. Receita Bruta real do PDV. Deduções fiscais estimadas (ICMS/PIS/COFINS). CMV de NF-e importadas. Despesas por categorias cadastradas.</p>
         </div>
         <div class="hero-actions">
           <div class="mode-toggle">
             <button class="active" data-mode="competencia"><i data-lucide="scale"></i>Competência</button>
             <button data-mode="caixa"><i data-lucide="wallet"></i>Caixa</button>
           </div>
-          <select class="month-select">
-            <option>Abril / 2026</option>
-            <option>Março / 2026</option>
-            <option>Fevereiro / 2026</option>
-            <option>Janeiro / 2026</option>
+          <select class="month-select" id="dre-mes-sel">
+            <option>Carregando...</option>
           </select>
-          <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar PDF</button>
+          <button class="btn btn-ghost" data-action="exportar"><i data-lucide="download"></i> Exportar PDF</button>
           <button class="btn btn-ghost"><i data-lucide="send"></i> Enviar contador</button>
         </div>
       </div>
@@ -292,9 +289,9 @@
       <div class="disclaimer" style="background:var(--warn-soft);border:1px solid var(--warn);border-left-width:4px">
         <i data-lucide="alert-triangle"></i>
         <div>
-          <b>Módulo em construção.</b>
-          Apenas <b>Receita Bruta</b> é calculada com dados reais do PDV.
-          Todos os outros valores (ICMS, PIS, COFINS, CMV, despesas, folha, aluguel) aparecem como <b>—</b> até que você lance despesas no módulo ou importe XML de NF-e de compras.
+          <b>Dados reais onde disponível.</b>
+          Deduções fiscais (ICMS/PIS/COFINS) são <b>estimadas</b> — confirme alíquotas com seu contador.
+          CMV: <b>—</b> (importe NF-e de compras para calcular). <b>Despesas operacionais</b>: configure <a href="categorias.html" style="color:var(--warn)">Categorias</a> para aparecerem aqui.
         </div>
       </div>
 
@@ -304,209 +301,192 @@
 
         <div class="cascade">
           <div class="cascade-head">
-            <h2>Abril / 2026</h2>
+            <h2 id="dre-mes-titulo">—</h2>
             <div class="col-labels"><span>% RL</span><span>Δ mês</span></div>
           </div>
 
           <!-- RECEITA -->
-          <div class="cas-row" onclick="drill('receita-bruta','Receita Bruta de Vendas','800.017,00')">
+          <div class="cas-row" onclick="drill('receita-bruta','Receita Bruta de Vendas')">
             <div class="cas-label"><span class="op">+</span>Receita Bruta de Vendas</div>
-            <div class="cas-val plus">800.017,00</div>
-            <div class="cas-pct bright">—</div>
+            <div class="cas-val plus" id="v-rb">—</div>
+            <div class="cas-pct bright" id="p-rb">—</div>
           </div>
 
-          <div class="cas-row sub" onclick="drill('icms','ICMS s/ vendas','65.775,00')">
+          <div class="cas-row sub" onclick="drill('icms','ICMS s/ vendas')">
             <div class="cas-label minus"><span class="op">−</span>ICMS s/ vendas</div>
-            <div class="cas-val minus">65.775,00</div>
-            <div class="cas-pct">9,4%</div>
+            <div class="cas-val minus" id="v-icms">—</div>
+            <div class="cas-pct" id="p-icms">—</div>
           </div>
-          <div class="cas-row sub" onclick="drill('pis','PIS s/ vendas','13.023,00')">
+          <div class="cas-row sub" onclick="drill('pis','PIS s/ vendas')">
             <div class="cas-label minus"><span class="op">−</span>PIS s/ vendas</div>
-            <div class="cas-val minus">13.023,00</div>
-            <div class="cas-pct">1,9%</div>
+            <div class="cas-val minus" id="v-pis">—</div>
+            <div class="cas-pct" id="p-pis">—</div>
           </div>
-          <div class="cas-row sub" onclick="drill('cofins','COFINS s/ vendas','59.984,00')">
+          <div class="cas-row sub" onclick="drill('cofins','COFINS s/ vendas')">
             <div class="cas-label minus"><span class="op">−</span>COFINS s/ vendas</div>
-            <div class="cas-val minus">59.984,00</div>
-            <div class="cas-pct">8,6%</div>
+            <div class="cas-val minus" id="v-cofins">—</div>
+            <div class="cas-pct" id="p-cofins">—</div>
           </div>
-          <div class="cas-row sub" onclick="drill('dev','Devoluções de clientes','2.021,00')">
+          <div class="cas-row sub" onclick="drill('dev','Devoluções de clientes')">
             <div class="cas-label minus"><span class="op">−</span>Devoluções</div>
-            <div class="cas-val minus">2.021,00</div>
-            <div class="cas-pct">0,3%</div>
+            <div class="cas-val minus" id="v-dev">—</div>
+            <div class="cas-pct" id="p-dev">—</div>
           </div>
 
           <div class="cas-row total">
             <div class="cas-label total"><span class="op">=</span>Receita Líquida</div>
-            <div class="cas-val total">659.214,00</div>
-            <div class="cas-pct bright">100,0% <span class="cas-delta up">+2,3%</span></div>
+            <div class="cas-val total" id="v-rl">—</div>
+            <div class="cas-pct bright" id="p-rl">—</div>
           </div>
 
           <!-- CMV -->
-          <div class="cas-row" onclick="drill('cmv','CMV — Custo das Mercadorias Vendidas','464.746,00')">
-            <div class="cas-label minus"><span class="op">−</span>CMV (compras do mês)</div>
-            <div class="cas-val minus">464.746,00</div>
-            <div class="cas-pct">72,1%</div>
+          <div class="cas-row" onclick="drill('cmv','CMV — Custo das Mercadorias Vendidas')">
+            <div class="cas-label minus"><span class="op">−</span>CMV (NF-e de compras)</div>
+            <div class="cas-val minus" id="v-cmv">—</div>
+            <div class="cas-pct" id="p-cmv">—</div>
           </div>
 
           <div class="cas-row total">
             <div class="cas-label total"><span class="op">=</span>Lucro Bruto</div>
-            <div class="cas-val total">194.468,00</div>
-            <div class="cas-pct bright">29,5% <span class="cas-delta down cas-delta-positive-is-bad">+1 p.p.</span></div>
+            <div class="cas-val total" id="v-lb">—</div>
+            <div class="cas-pct bright" id="p-lb">—</div>
           </div>
 
           <!-- Despesas operacionais -->
-          <div class="cas-row" onclick="drill('op-vendas','Despesas com Vendas','18.950,00')">
+          <div class="cas-row" onclick="drill('op-vendas','Despesas com Vendas')">
             <div class="cas-label minus"><span class="op">−</span>Despesas com Vendas</div>
-            <div class="cas-val minus">18.950,00</div>
-            <div class="cas-pct">2,4%</div>
+            <div class="cas-val minus" id="v-dv">—</div>
+            <div class="cas-pct" id="p-dv">—</div>
           </div>
           <div class="cas-row sub">
-            <div class="cas-label"><span class="op">•</span>Folha operacional (12 func)</div>
-            <div class="cas-val">18.500,00</div>
-            <div class="cas-pct">2,3%</div>
+            <div class="cas-label"><span class="op">•</span>Folha operacional</div>
+            <div class="cas-val" id="v-folha">—</div>
+            <div class="cas-pct">—</div>
           </div>
           <div class="cas-row sub">
-            <div class="cas-label"><span class="op">•</span>Maquininhas (taxas Cielo)</div>
-            <div class="cas-val">450,00</div>
-            <div class="cas-pct">0,1%</div>
+            <div class="cas-label"><span class="op">•</span>Maquininhas (taxas)</div>
+            <div class="cas-val" id="v-maq">—</div>
+            <div class="cas-pct">—</div>
           </div>
 
-          <div class="cas-row" onclick="drill('op-adm','Despesas Administrativas','6.150,00')">
+          <div class="cas-row" onclick="drill('op-adm','Despesas Administrativas')">
             <div class="cas-label minus"><span class="op">−</span>Despesas Administrativas</div>
-            <div class="cas-val minus">6.150,00</div>
-            <div class="cas-pct">0,8%</div>
+            <div class="cas-val minus" id="v-dadm">—</div>
+            <div class="cas-pct" id="p-dadm">—</div>
           </div>
           <div class="cas-row sub">
             <div class="cas-label"><span class="op">•</span>Pró-labore sócios</div>
-            <div class="cas-val">5.000,00</div>
-            <div class="cas-pct">0,6%</div>
+            <div class="cas-val" id="v-prolabore">—</div>
+            <div class="cas-pct">—</div>
           </div>
           <div class="cas-row sub">
             <div class="cas-label"><span class="op">•</span>Contador + software</div>
-            <div class="cas-val">1.150,00</div>
-            <div class="cas-pct">0,2%</div>
+            <div class="cas-val" id="v-contador">—</div>
+            <div class="cas-pct">—</div>
           </div>
 
-          <div class="cas-row" onclick="drill('op-gerais','Despesas Gerais','9.350,00')">
+          <div class="cas-row" onclick="drill('op-gerais','Despesas Gerais')">
             <div class="cas-label minus"><span class="op">−</span>Despesas Gerais</div>
-            <div class="cas-val minus">9.350,00</div>
-            <div class="cas-pct">1,2%</div>
+            <div class="cas-val minus" id="v-dger">—</div>
+            <div class="cas-pct" id="p-dger">—</div>
           </div>
           <div class="cas-row sub">
             <div class="cas-label"><span class="op">•</span>Aluguel + Energia + Água</div>
-            <div class="cas-val">7.750,00</div>
-            <div class="cas-pct">1,0%</div>
+            <div class="cas-val" id="v-aluguel">—</div>
+            <div class="cas-pct">—</div>
           </div>
           <div class="cas-row sub">
             <div class="cas-label"><span class="op">•</span>Internet + Segurança + Limpeza</div>
-            <div class="cas-val">1.600,00</div>
-            <div class="cas-pct">0,2%</div>
+            <div class="cas-val" id="v-internet">—</div>
+            <div class="cas-pct">—</div>
           </div>
 
           <div class="cas-row total">
             <div class="cas-label total"><span class="op">=</span>Resultado Operacional (EBIT)</div>
-            <div class="cas-val total">160.018,00</div>
-            <div class="cas-pct bright">24,3%</div>
+            <div class="cas-val total" id="v-ebit">—</div>
+            <div class="cas-pct bright" id="p-ebit">—</div>
           </div>
 
           <!-- Receitas financeiras -->
-          <div class="cas-row" onclick="drill('rec-fin','Receitas Financeiras','2.250,00')">
+          <div class="cas-row" onclick="drill('rec-fin','Receitas Financeiras')">
             <div class="cas-label plus"><span class="op">+</span>Receitas Financeiras</div>
-            <div class="cas-val plus">2.250,00</div>
-            <div class="cas-pct">0,3%</div>
+            <div class="cas-val plus" id="v-rf">—</div>
+            <div class="cas-pct" id="p-rf">—</div>
           </div>
           <div class="cas-row sub">
             <div class="cas-label"><span class="op">•</span>Descontos obtidos à vista</div>
-            <div class="cas-val">1.800,00</div>
-            <div class="cas-pct">0,3%</div>
+            <div class="cas-val" id="v-descontos">—</div>
+            <div class="cas-pct">—</div>
           </div>
           <div class="cas-row sub">
-            <div class="cas-label"><span class="op">•</span>Rendimento aplicação (CDB Santander)</div>
-            <div class="cas-val">450,00</div>
-            <div class="cas-pct">0,1%</div>
+            <div class="cas-label"><span class="op">•</span>Rendimento aplicação</div>
+            <div class="cas-val" id="v-rendimento">—</div>
+            <div class="cas-pct">—</div>
           </div>
 
           <!-- Despesas financeiras -->
-          <div class="cas-row" onclick="drill('desp-fin','Despesas Financeiras','3.960,00')">
+          <div class="cas-row" onclick="drill('desp-fin','Despesas Financeiras')">
             <div class="cas-label minus"><span class="op">−</span>Despesas Financeiras</div>
-            <div class="cas-val minus">3.960,00</div>
-            <div class="cas-pct">0,6%</div>
+            <div class="cas-val minus" id="v-df">—</div>
+            <div class="cas-pct" id="p-df">—</div>
           </div>
           <div class="cas-row sub">
-            <div class="cas-label"><span class="op">•</span>Tarifas bancárias (BB + Santander)</div>
-            <div class="cas-val">2.980,00</div>
-            <div class="cas-pct">0,5%</div>
+            <div class="cas-label"><span class="op">•</span>Tarifas bancárias</div>
+            <div class="cas-val" id="v-tarifas">—</div>
+            <div class="cas-pct">—</div>
           </div>
           <div class="cas-row sub">
             <div class="cas-label"><span class="op">•</span>Juros de mora em boletos atrasados</div>
-            <div class="cas-val">420,00</div>
-            <div class="cas-pct">0,1%</div>
+            <div class="cas-val" id="v-juros">—</div>
+            <div class="cas-pct">—</div>
           </div>
           <div class="cas-row sub">
-            <div class="cas-label"><span class="op">•</span>Antecipação de recebíveis Cielo</div>
-            <div class="cas-val">560,00</div>
-            <div class="cas-pct">0,1%</div>
+            <div class="cas-label"><span class="op">•</span>Antecipação de recebíveis</div>
+            <div class="cas-val" id="v-antecip">—</div>
+            <div class="cas-pct">—</div>
           </div>
 
           <div class="cas-row total">
             <div class="cas-label total"><span class="op">±</span>Resultado Financeiro Líquido</div>
-            <div class="cas-val minus">−1.710,00</div>
-            <div class="cas-pct">−0,3%</div>
+            <div class="cas-val" id="v-resfin">—</div>
+            <div class="cas-pct">—</div>
           </div>
 
-          <!-- Outras Receitas e Despesas (não operacionais) -->
-          <div class="cas-row" onclick="drill('outras','Outras Receitas/Despesas','820,00')">
+          <!-- Outras -->
+          <div class="cas-row" onclick="drill('outras','Outras Receitas e Despesas')">
             <div class="cas-label plus"><span class="op">±</span>Outras Receitas e Despesas</div>
-            <div class="cas-val plus">820,00</div>
-            <div class="cas-pct">0,1%</div>
-          </div>
-          <div class="cas-row sub">
-            <div class="cas-label plus"><span class="op">+</span>Reembolso seguro (incidente 12/04)</div>
-            <div class="cas-val plus">820,00</div>
-            <div class="cas-pct">0,1%</div>
+            <div class="cas-val plus" id="v-outras">—</div>
+            <div class="cas-pct" id="p-outras">—</div>
           </div>
 
           <div class="cas-row total">
             <div class="cas-label total"><span class="op">=</span>Resultado antes dos Impostos (EBT)</div>
-            <div class="cas-val total">159.128,00</div>
-            <div class="cas-pct bright">24,1%</div>
+            <div class="cas-val total" id="v-ebt">—</div>
+            <div class="cas-pct bright" id="p-ebt">—</div>
           </div>
 
           <!-- Impostos sobre lucro -->
-          <div class="cas-row" onclick="drill('irpj-base','IRPJ base 15%','23.869,00')">
+          <div class="cas-row">
             <div class="cas-label minus"><span class="op">−</span>IRPJ (15%)</div>
-            <div class="cas-val minus">23.869,00</div>
-            <div class="cas-pct">3,6%</div>
+            <div class="cas-val minus" id="v-irpj">—</div>
+            <div class="cas-pct">—</div>
           </div>
-          <div class="cas-row" onclick="drill('irpj-ad','IRPJ adicional 10%','13.913,00')">
+          <div class="cas-row">
             <div class="cas-label minus"><span class="op">−</span>IRPJ adicional (10%)</div>
-            <div class="cas-val minus">13.913,00</div>
-            <div class="cas-pct">2,1%</div>
+            <div class="cas-val minus" id="v-irpjad">—</div>
+            <div class="cas-pct">—</div>
           </div>
-          <div class="cas-row" onclick="drill('csll','CSLL 9%','14.322,00')">
+          <div class="cas-row">
             <div class="cas-label minus"><span class="op">−</span>CSLL (9%)</div>
-            <div class="cas-val minus">14.322,00</div>
-            <div class="cas-pct">2,2%</div>
+            <div class="cas-val minus" id="v-csll">—</div>
+            <div class="cas-pct">—</div>
           </div>
 
           <!-- RESULTADO FINAL -->
           <div class="cas-row grand">
             <div class="cas-label grand"><span class="op">=</span>LUCRO LÍQUIDO DO PERÍODO</div>
-            <div class="cas-val grand">107.024,00</div>
-            <div class="cas-pct bright">16,2% <span class="cas-delta up">+R$ 7.642</span></div>
-          </div>
-
-          <!-- Não-operacionais (abaixo da linha) -->
-          <div class="cas-row sub" style="background:var(--bg-hover);padding-top:14px">
-            <div class="cas-label" style="color:var(--text-soft)"><span class="op">•</span>Distribuição de lucros (não é despesa)</div>
-            <div class="cas-val" style="color:var(--text-soft)">—</div>
-            <div class="cas-pct">saí PL</div>
-          </div>
-          <div class="cas-row sub" style="background:var(--bg-hover)">
-            <div class="cas-label" style="color:var(--text-soft)"><span class="op">•</span>Consumo próprio do sócio (neutralizado)</div>
-            <div class="cas-val" style="color:var(--text-soft)">800,00</div>
-            <div class="cas-pct">0,1%</div>
+            <div class="cas-val grand" id="v-ll">—</div>
+            <div class="cas-pct bright" id="p-ll">—</div>
           </div>
         </div>
 
@@ -520,21 +500,21 @@
                 <div class="margem-label">Margem Bruta</div>
                 <div class="margem-bench">Benchmark: 25-35%</div>
               </div>
-              <div class="margem-val warn" style="text-align:right">29,5%</div>
+              <div id="v-mb" class="margem-val" style="text-align:right">—</div>
             </div>
             <div class="margem-row">
               <div>
                 <div class="margem-label">Margem Operacional</div>
-                <div class="margem-bench">EBITDA / RL</div>
+                <div class="margem-bench">EBIT / RL</div>
               </div>
-              <div class="margem-val good" style="text-align:right">24,3%</div>
+              <div id="v-mop" class="margem-val" style="text-align:right">—</div>
             </div>
             <div class="margem-row">
               <div>
                 <div class="margem-label">Margem Líquida</div>
                 <div class="margem-bench">Benchmark: 3-8%</div>
               </div>
-              <div class="margem-val good" style="text-align:right">16,2%</div>
+              <div id="v-ml" class="margem-val" style="text-align:right">—</div>
             </div>
           </div>
 
@@ -542,16 +522,16 @@
           <div class="side-card">
             <h3><i data-lucide="lightbulb"></i> Observações</h3>
             <div class="alert-mini warn">
-              <i data-lucide="trending-down"></i>
-              <span><b>Margem bruta caiu 5 p.p.</b> vs março (33% → 28%). Principal: reajustes de fornecedores acima da inflação + renegociação em aberto.</span>
+              <i data-lucide="alert-triangle"></i>
+              <span><b>Deduções fiscais estimadas.</b> ICMS 8,5% · PIS 1,65% · COFINS 7,6% — confirme com seu contador as alíquotas reais.</span>
             </div>
             <div class="alert-mini ok">
               <i data-lucide="check-circle"></i>
-              <span><b>Reconciliação OK.</b> Saldo × Lucro × Extrato batem dentro da tolerância R$ 10.</span>
+              <span><b>Receita Bruta real</b> do PDV iCommerce, atualizada diariamente.</span>
             </div>
             <div class="alert-mini warn">
-              <i data-lucide="alert-triangle"></i>
-              <span><b>Margem líquida 16,2%</b> está acima do benchmark típico (3-8%). Revisar alíquotas tributárias no fechamento — pode estar subestimada.</span>
+              <i data-lucide="tag"></i>
+              <span><b>Despesas operacionais</b> dependem de categorias. <a href="categorias.html" style="color:var(--warn)">Configure categorias</a> para ver folha, aluguel etc.</span>
             </div>
           </div>
 
@@ -561,29 +541,29 @@
             <div class="margem-row">
               <div class="margem-label">Receita Bruta</div>
               <div style="text-align:right">
-                <div class="margem-val good">+2,3%</div>
-                <div class="margem-bench">+R$ 21.800</div>
+                <div id="delta-rb-p" class="margem-val">—</div>
+                <div id="delta-rb-a" class="margem-bench">—</div>
               </div>
             </div>
             <div class="margem-row">
               <div class="margem-label">Lucro Bruto</div>
               <div style="text-align:right">
-                <div class="margem-val bad">−12,4%</div>
-                <div class="margem-bench">−R$ 31.600</div>
+                <div class="margem-val">—</div>
+                <div class="margem-bench">após NF-e importadas</div>
               </div>
             </div>
             <div class="margem-row">
               <div class="margem-label">Despesas Oper.</div>
               <div style="text-align:right">
-                <div class="margem-val bad">+8,1%</div>
-                <div class="margem-bench">+R$ 2.580 (folha)</div>
+                <div class="margem-val">—</div>
+                <div class="margem-bench">após categorias</div>
               </div>
             </div>
             <div class="margem-row">
               <div class="margem-label">Lucro Líquido</div>
               <div style="text-align:right">
-                <div class="margem-val good">+7,0%</div>
-                <div class="margem-bench">+R$ 8.230</div>
+                <div class="margem-val">—</div>
+                <div class="margem-bench">estimado</div>
               </div>
             </div>
           </div>
@@ -596,14 +576,14 @@
         <div class="chart-header">
           <div>
             <h3 class="chart-title">Evolução — últimos 12 meses</h3>
-            <div class="chart-sub">Receita Líquida, Lucro Bruto e Lucro Líquido · base Competência</div>
+            <div class="chart-sub">Receita Bruta, Receita Líquida e Lucro Bruto (NF-e) · dados reais</div>
           </div>
         </div>
         <div class="chart-box"><canvas id="dreChart"></canvas></div>
         <div class="chart-legend">
-          <span><span class="legend-dot" style="background:var(--accent)"></span>Receita Líquida</span>
-          <span><span class="legend-dot" style="background:var(--warn)"></span>Lucro Bruto</span>
-          <span><span class="legend-dot" style="background:var(--success)"></span>Lucro Líquido</span>
+          <span><span class="legend-dot" style="background:var(--accent)"></span>Receita Bruta</span>
+          <span><span class="legend-dot" style="background:var(--warn)"></span>Receita Líquida</span>
+          <span><span class="legend-dot" style="background:var(--success)"></span>Lucro Bruto</span>
         </div>
       </div>
 
@@ -621,25 +601,13 @@
       <button class="close-btn" onclick="closeDrill()"><i data-lucide="x"></i></button>
     </div>
     <div class="drawer-body">
-      <div class="drill-big" id="drillValue">R$ 0,00</div>
-      <div class="drill-sub" id="drillDesc">Abril / 2026</div>
+      <div class="drill-big" id="drillValue">—</div>
+      <div class="drill-sub" id="drillDesc">—</div>
 
       <div class="drill-section">
         <div class="drill-title">Composição</div>
         <div class="drill-list" id="drillList">
           <!-- populado via JS -->
-        </div>
-      </div>
-
-      <div class="drill-section">
-        <div class="drill-title">Histórico 6 meses</div>
-        <div class="drill-list">
-          <div class="drill-item"><span class="drill-item-name">Novembro/25</span><span class="drill-item-val">R$ 82.500</span></div>
-          <div class="drill-item"><span class="drill-item-name">Dezembro/25</span><span class="drill-item-val">R$ 95.800</span></div>
-          <div class="drill-item"><span class="drill-item-name">Janeiro/26</span><span class="drill-item-val">R$ 78.200</span></div>
-          <div class="drill-item"><span class="drill-item-name">Fevereiro/26</span><span class="drill-item-val">R$ 85.400</span></div>
-          <div class="drill-item"><span class="drill-item-name">Março/26</span><span class="drill-item-val">R$ 92.300</span></div>
-          <div class="drill-item" style="background:var(--accent-soft)"><span class="drill-item-name" style="color:var(--accent);font-weight:600">Abril/26 (atual)</span><span class="drill-item-val" id="drillCurrent" style="color:var(--accent)">—</span></div>
         </div>
       </div>
     </div>
@@ -656,98 +624,16 @@
       const next = cur === 'light' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('dmpay-theme', next);
-      renderChart();
     }
 
-    document.querySelectorAll('.mode-toggle button').forEach(b => {
-      b.addEventListener('click', () => {
-        document.querySelectorAll('.mode-toggle button').forEach(x => x.classList.remove('active'));
-        b.classList.add('active');
-      });
-    });
-
-    // Drill-down simulado
-    const drillData = {
-      'receita-bruta': {
-        desc: 'Vendas brutas em abril antes de qualquer dedução',
-        items: [
-          ['Vendas no PDV (dinheiro)', 'R$ 192.000,00'],
-          ['Vendas cartão crédito', 'R$ 384.000,00'],
-          ['Vendas cartão débito', 'R$ 288.000,00'],
-          ['Vendas PIX', 'R$ 88.000,00'],
-          ['Vendas boleto/a prazo', 'R$ 8.000,00']
-        ]
-      },
-      'cmv': {
-        desc: 'Compras do período — detalhamento por fornecedor ainda não disponível',
-        items: [
-          ['—', '—']
-        ]
-      },
-      'op-vendas': {
-        desc: 'Custos variáveis ligados ao volume de vendas',
-        items: [
-          ['Folha operacional (12 func.)', 'R$ 18.500,00'],
-          ['Taxas maquininhas Cielo', 'R$ 450,00']
-        ]
-      },
-      'op-adm': {
-        desc: 'Estrutura administrativa',
-        items: [
-          ['Pró-labore', 'R$ 5.000,00'],
-          ['Contabilidade', 'R$ 800,00'],
-          ['ERP / Software', 'R$ 350,00']
-        ]
-      },
-      'op-gerais': {
-        desc: 'Despesas de estrutura e funcionamento',
-        items: [
-          ['Aluguel', 'R$ 4.500,00'],
-          ['Energia', 'R$ 2.800,00'],
-          ['Água', 'R$ 450,00'],
-          ['Internet', 'R$ 220,00'],
-          ['Segurança', 'R$ 180,00'],
-          ['Limpeza terceirizada', 'R$ 1.200,00']
-        ]
-      },
-      'fin': {
-        desc: 'Resultado das movimentações financeiras do mês',
-        items: [
-          ['Juros de mora pagos', 'R$ 280,00'],
-          ['Tarifas bancárias', 'R$ 570,00'],
-          ['Rendimento aplicação', 'R$ 120,00']
-        ]
-      },
-      'icms': {desc: 'ICMS débito (17% PE) líquido de créditos', items:[['Débito sobre vendas','R$ 163.200,00'],['Crédito sobre compras','R$ 88.200,00']]},
-      'pis': {desc: 'PIS não-cumulativo 1,65% · validar com contador', items:[['Débito sobre vendas','R$ 15.840,00'],['Crédito sobre compras','R$ 990,00']]},
-      'cofins': {desc: 'COFINS não-cumulativo 7,60% · validar com contador', items:[['Débito sobre vendas','R$ 72.960,00'],['Crédito sobre compras','R$ 4.560,00']]},
-      'irpj-base': {desc: '15% sobre EBT (Lucro antes dos impostos)', items:[['EBT × 15%','R$ 23.869,00']]},
-      'irpj-ad': {desc: 'Adicional 10% sobre EBT excedente a R$ 20k/mês', items:[['(EBT − 20.000) × 10%','R$ 13.913,00']]},
-      'csll': {desc: '9% sobre EBT', items:[['EBT × 9%','R$ 14.322,00']]},
-      'rec-fin': {desc: 'Receitas financeiras do mês', items:[['Descontos obtidos à vista','R$ 1.800,00'],['Rendimento aplicação','R$ 450,00']]},
-      'desp-fin': {desc: 'Despesas financeiras do mês', items:[['Tarifas bancárias BB + Santander','R$ 2.980,00'],['Juros de mora (2 boletos atrasados)','R$ 420,00'],['Antecipação Cielo (taxa)','R$ 560,00']]},
-      'outras': {desc: 'Receitas e despesas não operacionais', items:[['Reembolso seguro (incidente 12/04)','R$ 820,00']]},
-      'dev': {desc: 'Produtos devolvidos pelos clientes', items:[['Devoluções abril','R$ 2.021,00']]}
-    };
-
-    function drill(key, title, value){
-      const data = drillData[key] || {items:[]};
+    function drill(key, title) {
+      const valEl = document.getElementById('v-' + key.replace('receita-bruta','rb').replace('op-vendas','dv').replace('op-adm','dadm').replace('op-gerais','dger').replace('rec-fin','rf').replace('desp-fin','df'));
+      const val = valEl ? valEl.textContent : '—';
       document.getElementById('drillTitle').innerHTML = '<i data-lucide="bar-chart-3"></i> ' + title;
       document.getElementById('drillCode').textContent = 'Categoria DRE · ' + key;
-      document.getElementById('drillValue').textContent = 'R$ ' + value;
-      document.getElementById('drillValue').classList.toggle('minus', value.startsWith('−'));
-      document.getElementById('drillDesc').textContent = data.desc || 'Abril / 2026';
-      document.getElementById('drillCurrent').textContent = 'R$ ' + value;
-
-      const listEl = document.getElementById('drillList');
-      listEl.innerHTML = '';
-      (data.items || []).forEach(([n,v]) => {
-        const d = document.createElement('div');
-        d.className = 'drill-item';
-        d.innerHTML = `<span class="drill-item-name">${n}</span><span class="drill-item-val">${v}</span>`;
-        listEl.appendChild(d);
-      });
-
+      document.getElementById('drillValue').textContent = val !== '—' ? 'R$ ' + val : '—';
+      document.getElementById('drillDesc').textContent = document.getElementById('dre-mes-titulo')?.textContent || '—';
+      document.getElementById('drillList').innerHTML = '<div class="drill-item"><span class="drill-item-name">Detalhamento em construção</span><span class="drill-item-val">—</span></div>';
       document.getElementById('drawer').classList.add('open');
       document.getElementById('drawerBg').classList.add('open');
       lucide.createIcons();
@@ -756,84 +642,7 @@
       document.getElementById('drawer').classList.remove('open');
       document.getElementById('drawerBg').classList.remove('open');
     }
-
-    // Chart 12 meses
-    let dreChart;
-    function renderChart(){
-      if (dreChart) dreChart.destroy();
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const textColor = isDark ? '#9CA3AF' : '#6B7280';
-      const gridColor = isDark ? '#222832' : '#E5E7EB';
-      const accent = isDark ? '#3B82F6' : '#2563EB';
-      const warn = isDark ? '#FBBF24' : '#D97706';
-      const success = isDark ? '#10B981' : '#10B981';
-
-      const meses = ['mai/25','jun/25','jul/25','ago/25','set/25','out/25','nov/25','dez/25','jan/26','fev/26','mar/26','abr/26'];
-      const receita = [720, 735, 710, 755, 740, 780, 810, 920, 680, 745, 820, 799];
-      const lbruto  = [216, 220, 213, 226, 222, 234, 245, 290, 197, 223, 269, 223];
-      const lliq    = [62,  65,  58,  70,  66,  72,  82,  95,  55,  72,  92,  126];
-
-      dreChart = new Chart(document.getElementById('dreChart'), {
-        type:'line',
-        data:{
-          labels: meses,
-          datasets:[
-            {label:'Receita Líquida', data:receita, borderColor:accent, backgroundColor:'transparent', tension:0.35, borderWidth:2.5, pointRadius:3, pointHoverRadius:6, pointBackgroundColor:accent},
-            {label:'Lucro Bruto', data:lbruto, borderColor:warn, backgroundColor:'transparent', tension:0.35, borderWidth:2, pointRadius:2, pointHoverRadius:5, pointBackgroundColor:warn},
-            {label:'Lucro Líquido', data:lliq, borderColor:success, backgroundColor:'transparent', tension:0.35, borderWidth:2, pointRadius:2, pointHoverRadius:5, pointBackgroundColor:success}
-          ]
-        },
-        options:{
-          responsive:true,
-          maintainAspectRatio:false,
-          interaction:{mode:'index',intersect:false},
-          plugins:{
-            legend:{display:false},
-            tooltip:{
-              backgroundColor: isDark ? '#1A1F27' : '#111827',
-              titleColor:'#F3F4F6',
-              bodyColor:'#F3F4F6',
-              padding:10,
-              callbacks:{
-                label: ctx => ctx.dataset.label + ': R$ ' + ctx.parsed.y.toLocaleString('pt-BR') + 'k'
-              }
-            }
-          },
-          scales:{
-            x:{grid:{display:false}, ticks:{color:textColor, font:{family:'Geist Mono', size:10}}},
-            y:{grid:{color:gridColor}, ticks:{color:textColor, font:{family:'Geist Mono', size:10}, callback: v => 'R$ '+v+'k'}}
-          }
-        }
-      });
-    }
-    renderChart();
-
-    // ============== LIMPEZA: zera valores fake e calcula Receita Bruta REAL ==============
-    (async function dreReal() {
-      // Zera todos os valores do DRE (aguardando integração)
-      document.querySelectorAll('.cas-val').forEach(el => { el.textContent = '—'; el.style.opacity = '0.5'; });
-      document.querySelectorAll('.cas-pct').forEach(el => { el.textContent = '—'; el.style.opacity = '0.5'; });
-      document.querySelectorAll('.margem-bench').forEach(el => { el.textContent = '—'; });
-
-      // Espera supabase + DMPAY_COMPANY
-      let tries = 0;
-      while ((!window.sb || !window.DMPAY_COMPANY) && tries++ < 50) await new Promise(r=>setTimeout(r,100));
-      if (!window.sb || !window.DMPAY_COMPANY) return;
-
-      const hoje = new Date();
-      const inicioMes = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-01`;
-      const { data: sales } = await sb.from('daily_sales')
-        .select('amount')
-        .eq('company_id', window.DMPAY_COMPANY.id)
-        .gte('sale_date', inicioMes)
-        .limit(3000);
-      const receita = (sales||[]).reduce((s,v)=>s+Number(v.amount), 0);
-      const fmt = v => Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-
-      // Preenche só a Receita Bruta (primeira linha com classe cas-val plus)
-      const receitaEl = document.querySelector('.cas-row .cas-val.plus');
-      if (receitaEl) { receitaEl.textContent = fmt(receita); receitaEl.style.opacity = '1'; }
-    })();
   </script>
+  <script src="js/dre.js"></script>
 </body>
 </html>
