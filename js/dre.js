@@ -310,32 +310,34 @@
 
   // ── month select ──────────────────────────────────────────────────────────
   async function buildMonthSelect() {
-    const { data } = await sb.from('daily_sales').select('sale_date')
-      .eq('company_id', CID).order('sale_date',{ascending:false}).limit(500);
+    const { data: minRow } = await sb.from('daily_sales').select('sale_date')
+      .eq('company_id', CID).order('sale_date', {ascending: true}).limit(1).single();
 
-    const set_ = new Set();
-    (data||[]).forEach(r => {
-      const d = new Date(r.sale_date+'T12:00:00');
-      set_.add(`${d.getFullYear()}-${d.getMonth()+1}`);
-    });
     const now = new Date();
-    set_.add(`${now.getFullYear()}-${now.getMonth()+1}`);
+    const oldest = minRow ? new Date(minRow.sale_date + 'T12:00:00') : now;
+    const meses = [];
+    let cur = new Date(oldest.getFullYear(), oldest.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 1);
+    while (cur <= end) {
+      meses.push(`${cur.getFullYear()}-${cur.getMonth()+1}`);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    meses.reverse();
 
-    const meses = Array.from(set_).sort((a,b)=>b.localeCompare(a));
     const sel = document.getElementById('dre-mes-sel');
     if (!sel) return;
     sel.innerHTML = '';
-    meses.forEach((m,i) => {
-      const [a,ms] = m.split('-').map(Number);
+    meses.forEach((m, i) => {
+      const [a, ms] = m.split('-').map(Number);
       const opt = document.createElement('option');
       opt.value = m;
       opt.textContent = `${MESES_LONGO[ms-1]} / ${a}`;
-      if (i===0) { opt.selected=true; ANO=a; MES=ms; }
+      if (i === 0) { opt.selected = true; ANO = a; MES = ms; }
       sel.appendChild(opt);
     });
     sel.addEventListener('change', () => {
-      const [a,m] = sel.value.split('-').map(Number);
-      ANO=a; MES=m; dreLoad();
+      const [a, m] = sel.value.split('-').map(Number);
+      ANO = a; MES = m; dreLoad();
     });
   }
 
