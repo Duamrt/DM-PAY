@@ -401,6 +401,100 @@ def job_receivables(cfg, cn, company_id, days_pgto_window, dry_run, max_history_
     return sent
 
 
+def job_invoices(cfg, cn, company_id, days, dry_run):
+    """
+    Sincroniza NF-e de entrada (NOTAS_FISCAIS.NFE_TIPO='E') -> invoices.
+    CNPJ do emitente extraido direto da NFE_CHAVE (pos 7-20, spec SEFAZ).
+    Cria supplier placeholder automaticamente pra CNPJs novos.
+    Idempotente: nfe_key e UNIQUE no banco, duplicatas sao ignoradas.
+    """
+    cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+
+    sql = """
+        SELECT
+            nf.NFE_CODIGO, nf.NFE_CHAVE, nf.NFE_NUMERO, nf.NFE_SERIE,
+            CAST(nf.NFE_DATA AS DATE) AS issue_date,
+            nf.NFE_VALOR_TOTAL_NOTA, nf.NFE_VALOR_TOTAL_PRODUTO,
+            nf.NFE_VALOR_FRETE, nf.NFE_DESCONTO
+        FROM NOTAS_FISCAIS nf WITH (NOLOCK)
+        WHERE nf.NFE_TIPO = 'E'
+          AND nf.NFE_DATA >= ?
+          AND (nf.NFE_STATUS IS NULL OR nf.NFE_STATUS NOT IN ('C', 'X'))
+        ORDER BY nf.NFE_DATA
+    """
+    rows = cn.cursor().execute(sql, cutoff).fetchall()
+    LOG.info("invoices: %d NF-e encontradas desde %s", len(rows), cutoff)
+    if not rows:
+        return 0
+
+    # Extrai CNPJs das chaves (pos 7-20 em 1-based = [6:20] Python)
+    unique_cnpjs = set()
+    for r in rows:
+        chave = str(r.NFE_CHAVE or "").strip()
+        if len(chave) >= 20:
+            unique_cnpjs.add(chave[6:20])
+
+    # Carrega supplier_map existente
+    supplier_map = {}
+    sups = sb_request(cfg, "GET", "suppliers",
+                      params={"company_id": f"eq.{company_id}", "select": "id,cnpj", "limit": "2000"})
+    for s in (sups or []):
+        cnpj_clean = "".join(c for c in str(s.get("cnpj") or "") if c.isdigit())
+        if cnpj_clean:
+            supplier_map[cnpj_clean] = s["id"]
+
+    # Cria placeholders para CNPJs novos
+    missing = unique_cnpjs - set(supplier_map.keys())
+    if missing and not dry_run:
+        new_sups = [{"company_id": company_id, "cnpj": c, "legal_name": f"Fornecedor {c}"} for c in sorted(missing)]
+        try:
+            created = sb_request(cfg, "POST", "suppliers",
+                                 params={"on_conflict": "company_id,cnpj"},
+                                 json_body=new_sups,
+                                 prefer="resolution=ignore-duplicates,return=representation")
+            for s in (created or []):
+                cnpj_clean = "".join(c for c in str(s.get("cnpj") or "") if c.isdigit())
+                if cnpj_clean:
+                    supplier_map[cnpj_clean] = s["id"]
+            LOG.info("invoices: %d suppliers placeholder criados", len(missing))
+        except Exception as e:
+            LOG.warning("invoices: falha ao criar placeholders: %s", e)
+    elif missing:
+        LOG.info("[DRY] %d CNPJs sem supplier (criariam placeholders)", len(missing))
+
+    # Monta payload
+    payload = []
+    for r in rows:
+        chave = str(r.NFE_CHAVE or "").strip()
+        if len(chave) < 44:
+            continue
+        total = float(r.NFE_VALOR_TOTAL_NOTA or 0)
+        issue_dt = to_iso_date(r.issue_date)
+        if not issue_dt or total <= 0:
+            continue
+        cnpj = chave[6:20]
+        payload.append({
+            "company_id":     company_id,
+            "nfe_key":        chave,
+            "nf_number":      str(r.NFE_NUMERO or "").strip() or None,
+            "series":         str(r.NFE_SERIE  or "").strip() or None,
+            "issue_date":     issue_dt,
+            "nature":         "entrada",
+            "total":          round(total, 2),
+            "total_products": round(float(r.NFE_VALOR_TOTAL_PRODUTO or 0), 2),
+            "total_freight":  round(float(r.NFE_VALOR_FRETE or 0), 2),
+            "total_discount": round(float(r.NFE_DESCONTO or 0), 2),
+            "status":         "imported",
+            "xml_raw":        {},
+            "supplier_id":    supplier_map.get(cnpj),
+        })
+
+    sent = sb_upsert(cfg, "invoices", payload,
+                     on_conflict="company_id,nfe_key", dry_run=dry_run)
+    LOG.info("invoices: %d NF-e gravadas", sent)
+    return sent
+
+
 # ---------------- main ----------------
 
 def main():
@@ -409,7 +503,8 @@ def main():
     p.add_argument("--dry-run", action="store_true", help="só lê e mostra, não envia nada")
     p.add_argument("--days-sales", type=int, default=7, help="janela em dias pra recalcular daily_sales/withdrawals")
     p.add_argument("--days-receivables", type=int, default=14, help="janela pra capturar pagamentos recentes")
-    p.add_argument("--only", choices=["sales", "withdrawals", "customers", "receivables"], default=None)
+    p.add_argument("--days-invoices", type=int, default=60, help="janela em dias pra buscar NF-e novas")
+    p.add_argument("--only", choices=["sales", "withdrawals", "customers", "receivables", "invoices"], default=None)
     args = p.parse_args()
 
     base = Path(__file__).parent
@@ -431,6 +526,8 @@ def main():
             jobs.append(("withdrawals", lambda: job_cash_withdrawals(cfg, cn, company_id, args.days_sales, args.dry_run)))
         if args.only in (None, "receivables"):
             jobs.append(("receivables", lambda: job_receivables(cfg, cn, company_id, args.days_receivables, args.dry_run)))
+        if args.only in (None, "invoices"):
+            jobs.append(("invoices", lambda: job_invoices(cfg, cn, company_id, args.days_invoices, args.dry_run)))
 
         for name, fn in jobs:
             try:
