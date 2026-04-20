@@ -288,10 +288,6 @@
             <i data-lucide="building-2"></i> Empresa
             <i class="tab-check" data-lucide="check-circle"></i>
           </div>
-          <div class="tab" onclick="selTab('tributario', this)">
-            <i data-lucide="landmark"></i> Tributário
-            <span class="tab-badge">3</span>
-          </div>
           <div class="tab" onclick="selTab('socios', this)">
             <i data-lucide="user-circle"></i> Sócios
             <span class="tab-badge">2</span>
@@ -401,111 +397,6 @@
             </div>
           </div>
 
-          <!-- TRIBUTÁRIO -->
-          <div class="panel" id="panel-tributario">
-            <div class="panel-head">
-              <div>
-                <h2><i data-lucide="landmark"></i> Regime tributário e alíquotas</h2>
-                <p>Define como os impostos entram no DRE. <b>Valores precisam ser confirmados com o contador na segunda</b> — estes são os padrões do Lucro Real.</p>
-              </div>
-              <span class="status">3 pendentes</span>
-            </div>
-            <div class="panel-body">
-              <div class="section-title">Regime tributário</div>
-              <div class="opt-grid cols-3">
-                <div class="opt disabled" onclick="selOpt(this)">
-                  <span class="opt-radio"></span>
-                  <div class="opt-content">
-                    <div class="opt-name">Simples Nacional</div>
-                    <div class="opt-desc">Faturamento acima de R$ 4,8M/ano. <b>Não se aplica.</b></div>
-                  </div>
-                </div>
-                <div class="opt disabled" onclick="selOpt(this)">
-                  <span class="opt-radio"></span>
-                  <div class="opt-content">
-                    <div class="opt-name">Lucro Presumido</div>
-                    <div class="opt-desc">Faturamento anual até R$ 78M. Confirmado pelo contador: não é o caso.</div>
-                  </div>
-                </div>
-                <div class="opt selected" onclick="selOpt(this)">
-                  <span class="opt-radio"></span>
-                  <div class="opt-content">
-                    <div class="opt-name">Lucro Real <span class="opt-tag">Ativo</span></div>
-                    <div class="opt-desc">PIS/COFINS não-cumulativos, IRPJ e CSLL apurados sobre lucro real.</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="section-title">Alíquotas federais</div>
-              <div class="form-row form-row-3">
-                <div class="field pending">
-                  <label>PIS (não-cumulativo) <span class="badge-pend">Validar</span></label>
-                  <div class="input-suffix"><input type="text" class="mono" value="1,65"><span class="suffix">%</span></div>
-                  <div class="field-hint">Padrão Lucro Real</div>
-                </div>
-                <div class="field pending">
-                  <label>COFINS (não-cumulativo) <span class="badge-pend">Validar</span></label>
-                  <div class="input-suffix"><input type="text" class="mono" value="7,60"><span class="suffix">%</span></div>
-                  <div class="field-hint">Padrão Lucro Real</div>
-                </div>
-                <div class="field">
-                  <label>CSLL</label>
-                  <div class="input-suffix"><input type="text" class="mono" value="9,00"><span class="suffix">%</span></div>
-                  <div class="field-hint">Sobre lucro antes do IR</div>
-                </div>
-              </div>
-              <div class="form-row form-row-2">
-                <div class="field">
-                  <label>IRPJ base</label>
-                  <div class="input-suffix"><input type="text" class="mono" value="15,00"><span class="suffix">%</span></div>
-                  <div class="field-hint">Sobre lucro real</div>
-                </div>
-                <div class="field">
-                  <label>IRPJ adicional</label>
-                  <div class="input-suffix"><input type="text" class="mono" value="10,00"><span class="suffix">%</span></div>
-                  <div class="field-hint">Sobre lucro excedente a R$ 20k/mês</div>
-                </div>
-              </div>
-
-              <div class="section-title">Alíquotas estaduais (PE)</div>
-              <div class="form-row form-row-2">
-                <div class="field pending">
-                  <label>ICMS predominante <span class="badge-pend">Validar</span></label>
-                  <div class="input-suffix"><input type="text" class="mono" value="17,00"><span class="suffix">%</span></div>
-                  <div class="field-hint">Confirmar se há diferimento ou benefício</div>
-                </div>
-                <div class="field">
-                  <label>Substituição tributária</label>
-                  <select>
-                    <option>Sim — alguns itens (laticínios, carnes)</option>
-                    <option>Não</option>
-                    <option>A verificar com contador</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="kv-list" style="margin-top:18px">
-                <div class="kv">
-                  <div>
-                    <div class="kv-key">Carga tributária estimada</div>
-                    <div class="kv-key-hint">Simulada com alíquotas atuais sobre faturamento médio R$ 960k</div>
-                  </div>
-                  <div class="kv-val">~R$ 89.280,00/mês</div>
-                </div>
-                <div class="kv">
-                  <div>
-                    <div class="kv-key">% sobre faturamento bruto</div>
-                    <div class="kv-key-hint">Soma de PIS + COFINS + ICMS + IRPJ/CSLL</div>
-                  </div>
-                  <div class="kv-val">~9,3%</div>
-                </div>
-              </div>
-            </div>
-            <div class="panel-foot">
-              <button class="btn btn-ghost">Cancelar</button>
-              <button class="btn btn-primary" onclick="showSaved()"><i data-lucide="check"></i> Salvar</button>
-            </div>
-          </div>
 
           <!-- SÓCIOS -->
           <div class="panel" id="panel-socios">
