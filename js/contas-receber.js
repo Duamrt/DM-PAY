@@ -72,8 +72,17 @@
       .select('id, name, cpf_cnpj, phone')
       .eq('company_id', window.DMPAY_COMPANY.id)
       .order('name')
-      .limit(500);
-    CUSTOMERS_CACHE = data || [];
+      .limit(5000);
+    // Remove nomes "lixo" vindos do ERP (só asteriscos, vazios, curtos demais).
+    // O registro continua no banco — só não aparece no autocomplete.
+    const LIMPO = /^\*+$|^[\-_\.]+$/; // só asteriscos/hifen/underline/pontos
+    CUSTOMERS_CACHE = (data || []).filter(c => {
+      const nm = (c.name || '').trim();
+      if (!nm) return false;
+      if (nm.length < 3) return false;
+      if (LIMPO.test(nm)) return false;
+      return true;
+    });
     return CUSTOMERS_CACHE;
   }
 
