@@ -28,7 +28,59 @@
   // Cache pra navegação de data
   let _COMPANY_ID = null;
   let _porDia = {};
+  let _porDiaForma = {};
   let _diasOrdenados = []; // ISO, ordem crescente, só dias com venda
+
+  function renderFormasPagamento(dataIso) {
+    if (!dataIso) return;
+    const formas = _porDiaForma[dataIso] || {};
+    const totalDia = _porDia[dataIso] || 0;
+    const troco = Number(formas.troco || 0);
+    const valoresBrutos = {
+      dinheiro: Number(formas.dinheiro || 0),
+      credito: Number(formas.credito || 0),
+      debito: Number(formas.debito || 0),
+      pix: Number(formas.pix || 0),
+      a_prazo: Number(formas.a_prazo || 0)
+    };
+    const rows = document.querySelectorAll('.pay-card .pay-row');
+    ['dinheiro','credito','debito','pix','a_prazo'].forEach((k, i) => {
+      if (!rows[i]) return;
+      const v = valoresBrutos[k];
+      const pct = totalDia > 0 ? (v/totalDia * 100) : 0;
+      const valMain = rows[i].querySelector('.pay-val-main');
+      const valPct = rows[i].querySelector('.pay-val-pct');
+      const barFill = rows[i].querySelector('.pay-bar-fill');
+      if (valMain) valMain.textContent = 'R$ ' + fmtBRLfull(v);
+      if (valPct) valPct.textContent = pct.toFixed(1) + '%';
+      if (barFill) barFill.style.width = Math.max(pct, 0) + '%';
+      if (k === 'dinheiro') {
+        const nameEl = rows[i].querySelector('.pay-name');
+        if (nameEl) nameEl.textContent = 'Dinheiro';
+      }
+    });
+    const trocoRow = document.getElementById('pay-row-troco');
+    if (trocoRow) {
+      if (troco < 0) {
+        trocoRow.style.display = '';
+        const pct = totalDia > 0 ? (troco/totalDia * 100) : 0;
+        const valMain = trocoRow.querySelector('.pay-val-main');
+        const valPct = trocoRow.querySelector('.pay-val-pct');
+        const barFill = trocoRow.querySelector('.pay-bar-fill');
+        if (valMain) valMain.textContent = '− R$ ' + fmtBRLfull(-troco);
+        if (valPct) valPct.textContent = pct.toFixed(1) + '%';
+        if (barFill) barFill.style.width = Math.abs(pct) + '%';
+      } else {
+        trocoRow.style.display = 'none';
+      }
+    }
+    const totalBox = document.querySelector('.pay-card .pay-total');
+    if (totalBox) {
+      const [y,m,d] = dataIso.split('-');
+      totalBox.querySelector('span:first-child').textContent = `Total · ${d}/${m}`;
+      totalBox.querySelector('.pay-total-val').textContent = 'R$ ' + fmtBRLfull(totalDia);
+    }
+  }
 
   function abrirDrawer(titulo, sub, itens, totalStr) {
     const bg = document.getElementById('drawer-bg');
@@ -88,6 +140,7 @@
 
   async function selectarData(iso) {
     if (!iso || !_COMPANY_ID) return;
+    renderFormasPagamento(iso);
     await carregarFechamentoDia(_COMPANY_ID, iso, _porDia[iso] || 0);
     // destaca cell do heatmap
     document.querySelectorAll('.hm-cell.selected').forEach(c => c.classList.remove('selected'));
@@ -154,6 +207,7 @@
       porDiaForma[d][s.payment_method] = (porDiaForma[d][s.payment_method] || 0) + Number(s.amount);
     });
     _porDia = porDia;
+    _porDiaForma = porDiaForma;
     _diasOrdenados = Object.keys(porDia).sort();
 
     // === KPIs ===
@@ -195,57 +249,7 @@
     // === Formas de pagamento — último dia com venda ===
     const ultimoDia = mesAtual.sort().pop();
     if (ultimoDia) {
-      const formas = porDiaForma[ultimoDia] || {};
-      const totalDia = porDia[ultimoDia]; // líquido (já inclui troco negativo)
-      const troco = Number(formas.troco || 0); // vem negativo do banco
-      // As 5 formas mostradas em valores BRUTOS
-      const valoresBrutos = {
-        dinheiro: Number(formas.dinheiro || 0),
-        credito: Number(formas.credito || 0),
-        debito: Number(formas.debito || 0),
-        pix: Number(formas.pix || 0),
-        a_prazo: Number(formas.a_prazo || 0)
-      };
-      const rows = document.querySelectorAll('.pay-card .pay-row');
-      ['dinheiro','credito','debito','pix','a_prazo'].forEach((k, i) => {
-        if (!rows[i]) return;
-        const v = valoresBrutos[k];
-        const pct = totalDia > 0 ? (v/totalDia * 100) : 0;
-        const valMain = rows[i].querySelector('.pay-val-main');
-        const valPct = rows[i].querySelector('.pay-val-pct');
-        const barFill = rows[i].querySelector('.pay-bar-fill');
-        if (valMain) valMain.textContent = 'R$ ' + fmtBRLfull(v);
-        if (valPct) valPct.textContent = pct.toFixed(1) + '%';
-        if (barFill) barFill.style.width = Math.max(pct, 0) + '%';
-        // Reset do nome do Dinheiro (remover legacy hint se existir)
-        if (k === 'dinheiro') {
-          const nameEl = rows[i].querySelector('.pay-name');
-          if (nameEl) nameEl.textContent = 'Dinheiro';
-        }
-      });
-      // Linha do troco: só aparece se houver troco no dia
-      const trocoRow = document.getElementById('pay-row-troco');
-      if (trocoRow) {
-        if (troco < 0) {
-          trocoRow.style.display = '';
-          const pct = totalDia > 0 ? (troco/totalDia * 100) : 0;
-          const valMain = trocoRow.querySelector('.pay-val-main');
-          const valPct = trocoRow.querySelector('.pay-val-pct');
-          const barFill = trocoRow.querySelector('.pay-bar-fill');
-          if (valMain) valMain.textContent = '− R$ ' + fmtBRLfull(-troco);
-          if (valPct) valPct.textContent = pct.toFixed(1) + '%';
-          if (barFill) barFill.style.width = Math.abs(pct) + '%';
-        } else {
-          trocoRow.style.display = 'none';
-        }
-      }
-      const totalBox = document.querySelector('.pay-card .pay-total');
-      if (totalBox) {
-        const [y,m,d] = ultimoDia.split('-');
-        totalBox.querySelector('span:first-child').textContent = `Total · ${d}/${m}`;
-        totalBox.querySelector('.pay-total-val').textContent = 'R$ ' + fmtBRLfull(totalDia);
-      }
-      // Atualiza título do card pra refletir o dia exibido
+      renderFormasPagamento(ultimoDia);
       const payTitle = document.querySelector('.pay-card h3');
       if (payTitle) {
         const firstText = payTitle.childNodes[0];
@@ -409,15 +413,19 @@
     if (btnPrev) btnPrev.disabled = idx <= 0;
     if (btnNext) btnNext.disabled = idx < 0 || idx >= _diasOrdenados.length - 1;
 
-    const inicio = dataIso + 'T00:00:00';
-    const fim = dataIso + 'T23:59:59.999';
+    // Dados vêm do iCommerce como CRD_DATA_PGTO em 00:00:00 e o Supabase grava
+    // como timestamptz UTC. Pra filtrar o "dia lógico do iCommerce" a gente usa
+    // range [dia 00:00Z, próximo dia 00:00Z) — pega exatamente as quitações desse dia.
+    const proxDia = (() => { const d = new Date(dataIso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+1); return d.toISOString().slice(0,10); })();
+    const inicio = dataIso + 'T00:00:00Z';
+    const fim    = proxDia + 'T00:00:00Z';
 
     // 1) Recebimentos de fiado: parcelas com received_at no dia
     const { data: recs, error: errR } = await sb.from('receivables')
       .select('id, amount, received_at, description, customer_id, customers(name)')
       .eq('company_id', companyId)
       .gte('received_at', inicio)
-      .lte('received_at', fim)
+      .lt('received_at', fim)
       .not('received_at', 'is', null)
       .limit(5000);
     if (errR) { console.error('fechamento fiado', errR); }
