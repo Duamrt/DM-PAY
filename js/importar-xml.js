@@ -194,7 +194,15 @@
         status: PARSED.parcelas.length > 0 ? 'linked' : 'awaiting_boleto'
       }).select().single();
       if (invRes.error) {
-        if (invRes.error.code === '23505') throw new Error('Essa NF-e já foi importada antes (chave duplicada)');
+        if (invRes.error.code === '23505') {
+          if (window.DMPAY_UI) {
+            await window.DMPAY_UI.alert({ title: 'NF-e já importada', desc: 'Esta NF-e já está no Histórico NF-e. Consulte lá para ver parcelas e status.' });
+          } else {
+            alert('Esta NF-e já está no Histórico NF-e.');
+          }
+          window.location.href = 'historico-nfe.html';
+          return;
+        }
         throw invRes.error;
       }
       const invoice_id = invRes.data.id;

@@ -3,6 +3,7 @@
   let INVOICES = [];
   let FILTRO = 'all';
   let MES = '';
+  let BUSCA = '';
 
   const STATUS_LABEL = {
     imported:        'Importada',
@@ -91,6 +92,16 @@
     if (!tbody) return;
 
     let list = INVOICES;
+    if (BUSCA) {
+      const q = BUSCA.toLowerCase();
+      list = list.filter(i => {
+        const forn = (i.suppliers?.legal_name || i.suppliers?.trade_name || '').toLowerCase();
+        const cnpj = (i.suppliers?.cnpj || '').replace(/\D/g, '');
+        const nf   = (i.nf_number || '').toLowerCase();
+        const key  = (i.nfe_key  || '').toLowerCase();
+        return forn.includes(q) || cnpj.includes(q.replace(/\D/g,'')) || nf.includes(q) || key.includes(q);
+      });
+    }
     if (FILTRO !== 'all') list = list.filter(i => i.status === FILTRO);
     if (MES) list = list.filter(i => i.issue_date?.startsWith(MES));
 
@@ -288,7 +299,12 @@
     renderParcelas(inv);
   }
 
-  window.DMPAY_HISTNF = { load, filterStatus, filterMes, openDetail, closeDrawer, editParcela };
+  function filterBusca(val) {
+    BUSCA = (val || '').trim();
+    render();
+  }
+
+  window.DMPAY_HISTNF = { load, filterStatus, filterMes, filterBusca, openDetail, closeDrawer, editParcela };
   window.filterStatus = filterStatus;
   window.closeDrawer = closeDrawer;
 
