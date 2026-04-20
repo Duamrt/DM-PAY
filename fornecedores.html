@@ -230,6 +230,7 @@
   <script src="js/theme.js"></script>
   <script src="js/ui-modal.js"></script>
   <script src="js/ui-esc.js"></script>
+  <script src="js/export-excel.js"></script>
 </head>
 <body>
   <aside class="sidebar">
@@ -286,7 +287,7 @@
           <p>Quem entrega o quê, por quanto e com que frequência. <b>Rastreia variação de preço por produto</b> — identifica reajuste abusivo antes da margem derreter.</p>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar histórico</button>
+          <button class="btn btn-ghost" id="btnExportarForn" onclick="exportarFornecedores()"><i data-lucide="download"></i> Exportar histórico</button>
           <button class="btn btn-primary" onclick="openDrawer('novo')"><i data-lucide="plus"></i> Novo fornecedor</button>
         </div>
       </div>
@@ -387,6 +388,26 @@
   </aside>
 
   <script>
+    async function exportarFornecedores() {
+      const btn = document.getElementById('btnExportarForn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Gerando…'; }
+      try {
+        const COMPANY_ID = window.DMPAY_COMPANY?.id;
+        if (!COMPANY_ID) { alert('Empresa não carregada'); return; }
+        const { data, error } = await window.sb
+          .from('suppliers')
+          .select('legal_name, trade_name, cnpj, email, phone, address_street, address_city, address_state')
+          .eq('company_id', COMPANY_ID)
+          .order('legal_name');
+        if (error) throw error;
+        await DMPAY_EXPORT.fornecedores(data || []);
+      } catch(e) {
+        alert('Erro ao exportar: ' + e.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="download"></i> Exportar histórico'; lucide.createIcons(); }
+      }
+    }
+
     // Forn data — vazio até sincronização de NF-e de compras
     const FORNS = {};
 

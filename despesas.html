@@ -256,6 +256,7 @@
   <script src="js/theme.js"></script>
   <script src="js/ui-modal.js"></script>
   <script src="js/ui-esc.js"></script>
+  <script src="js/export-excel.js"></script>
 </head>
 <body>
 
@@ -313,7 +314,7 @@
           <p>Contas que todo mês vencem sem falta — aluguel, folha, energia, contador. Cadastra uma vez e o sistema replica automaticamente em <b>Contas a Pagar</b> todo mês.</p>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar</button>
+          <button class="btn btn-ghost" onclick="DMPAY_EXPORT.despesas(window._DESP_EXPENSES||[])"><i data-lucide="download"></i> Exportar</button>
           <button class="btn btn-primary" onclick="openModal()"><i data-lucide="plus"></i> Nova despesa fixa</button>
         </div>
       </div>

@@ -26,6 +26,7 @@
     if (expsR.error) console.warn('exps', expsR.error);
     CATEGORIES = catsR.data || [];
     EXPENSES = expsR.data || [];
+    window._DESP_EXPENSES = EXPENSES;
   }
 
   function render() {

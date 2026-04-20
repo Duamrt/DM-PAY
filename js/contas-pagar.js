@@ -78,6 +78,7 @@
       return [];
     }
     PAYABLES = [...(abertasR.data || []), ...(pagasR.data || [])];
+    window._CP_PAYABLES = PAYABLES;
     // Carrega categorias à parte e injeta nos payables
     try {
       const cats = await sb.from('expense_categories')
