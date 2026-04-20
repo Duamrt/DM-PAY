@@ -315,8 +315,10 @@
 
     const now = new Date();
     const oldest = minRow ? new Date(minRow.sale_date + 'T12:00:00') : now;
+    const inicio2026 = new Date(2026, 0, 1);
     const meses = [];
-    let cur = new Date(oldest.getFullYear(), oldest.getMonth(), 1);
+    let cur = new Date(Math.max(oldest.getTime(), inicio2026.getTime()));
+    cur = new Date(cur.getFullYear(), cur.getMonth(), 1);
     const end = new Date(now.getFullYear(), now.getMonth(), 1);
     while (cur <= end) {
       meses.push(`${cur.getFullYear()}-${cur.getMonth()+1}`);
