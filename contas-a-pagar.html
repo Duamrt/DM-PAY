@@ -337,10 +337,10 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
           <div class="sub">carregando…</div>
         </div>
         <div class="hero-actions">
-          <button class="btn btn-ghost"><i data-lucide="sliders-horizontal" class="icon"></i>Filtros avançados</button>
-          <button class="btn btn-secondary"><i data-lucide="download" class="icon"></i>Exportar</button>
-          <button class="btn btn-secondary"><i data-lucide="upload" class="icon"></i>Importar XML</button>
-          <button class="btn btn-primary"><i data-lucide="plus" class="icon"></i>Novo boleto</button>
+          <button class="btn btn-ghost" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="sliders-horizontal" class="icon"></i>Filtros avançados</button>
+          <button class="btn btn-secondary" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="download" class="icon"></i>Exportar</button>
+          <button class="btn btn-secondary" onclick="window.location.href='importar-xml.html'"><i data-lucide="upload" class="icon"></i>Importar XML</button>
+          <button class="btn btn-primary" onclick="window.DMPAY_CP && DMPAY_CP.openCreate()"><i data-lucide="plus" class="icon"></i>Nova conta</button>
         </div>
       </section>
 
@@ -383,7 +383,7 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
               <i data-lucide="search" class="icon"></i>
               <input class="input" placeholder="Buscar fornecedor ou NF">
             </div>
-            <button class="btn btn-secondary btn-sm"><i data-lucide="filter" class="icon"></i>Filtros</button>
+            <button class="btn btn-secondary btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="filter" class="icon"></i>Filtros</button>
           </div>
         </div>
 
@@ -408,16 +408,16 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
           </table>
         </div>
 
-        <!-- PAGINATION -->
-        <div class="pagination">
+        <!-- PAGINATION — hoje lista carrega tudo de uma vez; números fake escondidos -->
+        <div class="pagination" style="display:none">
           <div class="pag-info">carregando…</div>
           <div class="pag-controls">
             <button class="pag-btn" disabled><i data-lucide="chevron-left" class="icon"></i></button>
             <button class="pag-btn active">1</button>
-            <button class="pag-btn">2</button>
-            <button class="pag-btn">3</button>
-            <button class="pag-btn">4</button>
-            <button class="pag-btn"><i data-lucide="chevron-right" class="icon"></i></button>
+            <button class="pag-btn" disabled>2</button>
+            <button class="pag-btn" disabled>3</button>
+            <button class="pag-btn" disabled>4</button>
+            <button class="pag-btn" disabled><i data-lucide="chevron-right" class="icon"></i></button>
           </div>
         </div>
       </section>
@@ -426,16 +426,16 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
   </div>
 </div>
 
-<!-- SELECTION BAR FLUTUANTE -->
-<div class="sel-bar" id="selBar">
+<!-- SELECTION BAR FLUTUANTE (ações em massa — em construção) -->
+<div class="sel-bar" id="selBar" style="display:none">
   <span class="count"><strong id="selCount">0</strong> selecionados</span>
   <div class="actions">
-    <button class="btn btn-primary btn-sm"><i data-lucide="check-circle-2" class="icon"></i>Marcar como pago</button>
-    <button class="btn btn-secondary btn-sm"><i data-lucide="download" class="icon"></i>Exportar</button>
-    <button class="btn btn-secondary btn-sm"><i data-lucide="tag" class="icon"></i>Mudar categoria</button>
-    <button class="btn btn-ghost btn-sm"><i data-lucide="trash-2" class="icon"></i>Excluir</button>
+    <button class="btn btn-primary btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="check-circle-2" class="icon"></i>Marcar como pago</button>
+    <button class="btn btn-secondary btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="download" class="icon"></i>Exportar</button>
+    <button class="btn btn-secondary btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="tag" class="icon"></i>Mudar categoria</button>
+    <button class="btn btn-ghost btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="trash-2" class="icon"></i>Excluir</button>
   </div>
-  <button class="close-x" onclick="clearSel()" aria-label="Fechar"><i data-lucide="x" style="width:15px;height:15px"></i></button>
+  <button class="close-x" onclick="document.getElementById('selBar').style.display='none'" aria-label="Fechar"><i data-lucide="x" style="width:15px;height:15px"></i></button>
 </div>
 
 <!-- DRAWER -->
