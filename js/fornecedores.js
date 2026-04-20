@@ -4,18 +4,51 @@
 
 (function () {
 
+  // ── Estado do módulo (escopo do IIFE, não do run — assim listeners ficam vivos)
+  let allForns = [];
+  let filtro   = 'todos';  // 'todos' | 'recorrentes' | 'sem-compra'
+  let tipo     = 'todos';  // 'todos' | 'com-nfe' | 'sem-nfe'
+  let busca    = '';
+  let _render  = null;     // referência para renderTable (set em run())
+
+  // ── Listeners criados 1 vez no DOMContentLoaded (independente do auth)
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // Busca
+    document.querySelector('.search input')?.addEventListener('input', e => {
+      busca = e.target.value.trim();
+      if (_render) _render();
+    });
+
+    // Chips
+    document.querySelectorAll('.status-chip').forEach((chip, i) => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        filtro = i === 0 ? 'todos' : i === 1 ? 'recorrentes' : 'sem-compra';
+        if (_render) _render();
+      });
+    });
+
+    // Dropdown de tipo
+    document.querySelector('.filter-select')?.addEventListener('change', e => {
+      tipo = e.target.value;
+      if (_render) _render();
+    });
+
+    init(0);
+  });
+
   // ── Aguarda DMPAY_COMPANY ficar disponível (auth-guard pode ser async)
   function init(tries) {
     const sb  = window.sb;
     const CID = window.DMPAY_COMPANY?.id;
     if (!sb || !CID) {
       if (tries > 40) return; // timeout 4s
-      return setTimeout(() => init((tries||0)+1), 100);
+      return setTimeout(() => init((tries || 0) + 1), 100);
     }
     run(sb, CID);
   }
-
-  document.addEventListener('DOMContentLoaded', () => init(0));
 
   // ── Helpers visuais
   const PALETTE = ['#2563EB','#7C3AED','#DB2777','#DC2626','#D97706','#059669','#0891B2','#9333EA'];
@@ -67,9 +100,6 @@
 
   // ── Lógica principal
   function run(sb, CID) {
-    let allForns = []; // array de objetos enriquecidos
-    let filtro   = 'todos';
-    let busca    = '';
 
     // ── Carrega suppliers + invoices
     async function load() {
@@ -90,11 +120,11 @@
         if (supRes.error) throw new Error('suppliers: ' + supRes.error.message);
         if (invRes.error) throw new Error('invoices: '  + invRes.error.message);
 
-        const suppliers = supRes.data  || [];
-        const invoices  = invRes.data  || [];
+        const suppliers = supRes.data || [];
+        const invoices  = invRes.data || [];
 
         // Meses (últimos 6)
-        const now   = new Date();
+        const now = new Date();
         const months6 = [];
         for (let i = 5; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -120,17 +150,20 @@
         // Enriquece cada supplier
         allForns = suppliers.map(s => {
           const invs      = invMap[s.id] || [];
-          const total_all = invs.reduce((a,b)=>a+(b.total||0),0);
-          const total_30d = invs.filter(i => i.issue_date >= d30Str).reduce((a,b)=>a+(b.total||0),0);
-          const ultima    = invs.length ? invs[0].issue_date : null; // ordenado desc
+          const total_all = invs.reduce((a,b) => a + (b.total||0), 0);
+          const total_30d = invs.filter(i => i.issue_date >= d30Str).reduce((a,b) => a + (b.total||0), 0);
+          const ultima    = invs.length ? invs[0].issue_date : null;
 
           const monthly = months6.map(({y,m}) => {
             const prefix = `${y}-${String(m).padStart(2,'0')}`;
-            return invs.filter(i => i.issue_date?.startsWith(prefix)).reduce((a,b)=>a+(b.total||0),0);
+            return invs.filter(i => i.issue_date?.startsWith(prefix)).reduce((a,b) => a + (b.total||0), 0);
           });
 
           return { supplier:s, invoices:invs, total_all, total_30d, ultima, monthly, months6 };
         });
+
+        // Expõe renderTable para os listeners globais
+        _render = renderTable;
 
         renderKPIs();
         renderTable();
@@ -150,17 +183,17 @@
 
     // ── KPIs
     function renderKPIs() {
-      const ativos = allForns.filter(f=>f.invoices.length>0).length;
+      const ativos = allForns.filter(f => f.invoices.length > 0).length;
 
       const now = new Date();
       const mesStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
       const comprasMes = allForns.reduce((a,f) =>
-        a + f.invoices.filter(i=>i.issue_date?.startsWith(mesStr)).reduce((s,i)=>s+(i.total||0),0), 0);
+        a + f.invoices.filter(i => i.issue_date?.startsWith(mesStr)).reduce((s,i) => s + (i.total||0), 0), 0);
 
-      const ranked   = [...allForns].sort((a,b)=>b.total_30d-a.total_30d);
-      const totalGer = ranked.reduce((a,b)=>a+b.total_30d,0);
-      const top3sum  = ranked.slice(0,3).reduce((a,b)=>a+b.total_30d,0);
-      const conc     = totalGer > 0 ? Math.round(top3sum/totalGer*100) : 0;
+      const ranked   = [...allForns].sort((a,b) => b.total_30d - a.total_30d);
+      const totalGer = ranked.reduce((a,b) => a + b.total_30d, 0);
+      const top3sum  = ranked.slice(0,3).reduce((a,b) => a + b.total_30d, 0);
+      const conc     = totalGer > 0 ? Math.round(top3sum / totalGer * 100) : 0;
 
       const kpis = document.querySelectorAll('.kpi');
       if (kpis[0]) {
@@ -186,6 +219,7 @@
       const tbody = document.getElementById('fornTable');
       let rows = [...allForns];
 
+      // Busca por nome ou CNPJ
       if (busca) {
         const q = busca.toLowerCase();
         rows = rows.filter(f => {
@@ -194,11 +228,22 @@
           return nm.includes(q) || cn.includes(q.replace(/\D/g,''));
         });
       }
-      if (filtro === 'recorrentes') {
-        rows = rows.filter(f => f.monthly.filter(v=>v>0).length >= 2);
+
+      // Filtro dropdown: com ou sem NF-e
+      if (tipo === 'com-nfe') {
+        rows = rows.filter(f => f.invoices.length > 0);
+      } else if (tipo === 'sem-nfe') {
+        rows = rows.filter(f => f.invoices.length === 0);
       }
 
-      rows.sort((a,b)=>b.total_30d-a.total_30d);
+      // Chip de filtro
+      if (filtro === 'recorrentes') {
+        rows = rows.filter(f => f.monthly.filter(v => v > 0).length >= 2);
+      } else if (filtro === 'sem-compra') {
+        rows = rows.filter(f => f.total_30d === 0);
+      }
+
+      rows.sort((a,b) => b.total_30d - a.total_30d);
 
       if (rows.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="padding:48px;text-align:center;color:var(--text-muted)">
@@ -214,13 +259,12 @@
         const color = avatarColor(nm);
         const ini   = initials(nm);
 
-        // Placeholder = criado automaticamente pelo agente (nome é "Fornecedor CNPJ")
         const isPlaceholder = /^Fornecedor \d{14}$/.test(nm);
         const nameHtml = isPlaceholder
           ? `<span style="color:var(--text-muted);font-style:italic">${nm}</span>`
           : `<span>${nm}</span>`;
 
-        const isRec = f.monthly.filter(v=>v>0).length >= 2;
+        const isRec = f.monthly.filter(v => v > 0).length >= 2;
         const badgeRec = isRec
           ? `<span style="font-size:10px;background:var(--success-soft);color:var(--success);padding:2px 7px;border-radius:999px;font-weight:600;margin-left:6px;white-space:nowrap">recorrente</span>`
           : '';
@@ -260,11 +304,10 @@
       const nm  = s.legal_name || s.trade_name || `Fornecedor ${s.cnpj}`;
       const color = avatarColor(nm);
       const ini   = initials(nm);
-      const city  = '—'; // address_city/state não está na tabela suppliers ainda
+      const city  = '—';
 
-      const total6m = f.monthly.reduce((a,b)=>a+b,0);
+      const total6m = f.monthly.reduce((a,b) => a + b, 0);
 
-      // Polyline para mini-chart
       const vals = f.monthly;
       const maxV = Math.max(...vals, 1);
       const chartPts = vals.map((v,i) => {
@@ -273,14 +316,12 @@
         return `${x.toFixed(0)},${y.toFixed(0)}`;
       }).join(' ');
 
-      // Últimas 5 NF-e
       const recentes = f.invoices.slice(0,5);
       const histHtml = recentes.length
         ? recentes.map(inv => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border);font-size:12.5px">
             <div>
               <div style="font-weight:500">${fmtDate(inv.issue_date)}</div>
-              <div style="font-size:11px;color:var(--text-soft);font-family:'Geist Mono',monospace">${(inv.id||'').slice(0,8)}…</div>
             </div>
             <div style="font-family:'Geist Mono',monospace;font-weight:600">${fmtBRL(inv.total)}</div>
           </div>`).join('')
@@ -364,24 +405,8 @@
     // ── Badge sidebar
     function updateBadge() {
       const badge = document.querySelector('.nav-item.active .nav-badge');
-      if (badge) badge.textContent = allForns.filter(f=>f.invoices.length>0).length;
+      if (badge) badge.textContent = allForns.filter(f => f.invoices.length > 0).length;
     }
-
-    // ── Busca
-    document.querySelector('.search input')?.addEventListener('input', e => {
-      busca = e.target.value.trim();
-      renderTable();
-    });
-
-    // ── Chips filtro
-    document.querySelectorAll('.status-chip').forEach((chip, i) => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.status-chip').forEach(c=>c.classList.remove('active'));
-        chip.classList.add('active');
-        filtro = i === 0 ? 'todos' : i === 1 ? 'recorrentes' : 'todos';
-        renderTable();
-      });
-    });
 
     load();
   }
