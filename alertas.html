@@ -271,23 +271,23 @@
       <div class="kpi-grid">
         <div class="kpi danger">
           <div class="kpi-label"><i data-lucide="alert-octagon"></i> Críticos</div>
-          <div class="kpi-value">2</div>
-          <div class="kpi-sub">Exigem ação imediata</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi warn">
           <div class="kpi-label"><i data-lucide="alert-triangle"></i> Avisos</div>
-          <div class="kpi-value">3</div>
-          <div class="kpi-sub">Atenção essa semana</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi info">
           <div class="kpi-label"><i data-lucide="info"></i> Informações</div>
-          <div class="kpi-value">3</div>
-          <div class="kpi-sub">Eventos do sistema</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi success">
           <div class="kpi-label"><i data-lucide="check-circle"></i> Resolvidos hoje</div>
-          <div class="kpi-value">6</div>
-          <div class="kpi-sub">4 pagos · 2 confirmados</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
       </div>
 
@@ -295,200 +295,19 @@
         <div>
           <!-- Filtros -->
           <div class="tabs-filter">
-            <span class="tab-filter active" onclick="filterSev('all',this)">Todos <span class="count">· 9</span></span>
-            <span class="tab-filter" onclick="filterSev('crit',this)"><span class="dot-sev crit"></span>Críticos <span class="count">· 2</span></span>
-            <span class="tab-filter" onclick="filterSev('warn',this)"><span class="dot-sev warn"></span>Avisos <span class="count">· 3</span></span>
-            <span class="tab-filter" onclick="filterSev('info',this)"><span class="dot-sev info"></span>Info <span class="count">· 3</span></span>
-            <span class="tab-filter" onclick="filterSev('ok',this)"><span class="dot-sev ok"></span>Resolvidos <span class="count">· 1</span></span>
+            <span class="tab-filter active" onclick="filterSev('all',this)">Todos</span>
+            <span class="tab-filter" onclick="filterSev('crit',this)"><span class="dot-sev crit"></span>Críticos</span>
+            <span class="tab-filter" onclick="filterSev('warn',this)"><span class="dot-sev warn"></span>Avisos</span>
+            <span class="tab-filter" onclick="filterSev('info',this)"><span class="dot-sev info"></span>Info</span>
+            <span class="tab-filter" onclick="filterSev('ok',this)"><span class="dot-sev ok"></span>Resolvidos</span>
           </div>
 
           <!-- Lista -->
-          <div class="alerts-list">
-
-            <!-- CRÍTICO 1 -->
-            <div class="alert-card sev-crit unread" data-sev="crit">
-              <div class="alert-ico sev-crit"><i data-lucide="calendar-x"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-crit">Crítico</span>
-                  <span class="alert-source"><i data-lucide="receipt"></i>Contas a pagar</span>
-                  <span class="alert-when">há 15 min</span>
-                </div>
-                <h3 class="alert-title">3 boletos vencem hoje — R$ 10.202,50 acumulado do fim de semana</h3>
-                <p class="alert-desc">Segunda-feira é o maior dia do mês. IMPACTO (R$ 4.282,50), CAFÉ 3 CORAÇÕES (R$ 2.400) e NESTLÉ (R$ 3.520) compensam hoje. <b>Se não pagar hoje, perde desconto e entra na próxima compensação terça.</b></p>
-                <div class="alert-meta">
-                  <span><i data-lucide="calendar"></i>Vencimento: 20/04/2026</span>
-                  <span><i data-lucide="users"></i>3 fornecedores</span>
-                </div>
-                <div class="alert-actions">
-                  <button class="alert-btn primary"><i data-lucide="credit-card"></i> Pagar agora</button>
-                  <button class="alert-btn"><i data-lucide="calendar"></i> Ver no calendário</button>
-                </div>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
+          <div class="alerts-list" id="alerts-list">
+            <div style="padding:48px 16px;text-align:center;color:var(--text-muted)">
+              <div style="font-size:28px;margin-bottom:8px">—</div>
+              <div style="font-size:14px">Em construção</div>
             </div>
-
-            <!-- CRÍTICO 2 -->
-            <div class="alert-card sev-crit unread" data-sev="crit">
-              <div class="alert-ico sev-crit"><i data-lucide="trending-down"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-crit">Crítico</span>
-                  <span class="alert-source"><i data-lucide="trending-up"></i>Fluxo de caixa</span>
-                  <span class="alert-when">há 2 horas</span>
-                </div>
-                <h3 class="alert-title">Saldo projetado negativo em 18 dias — 06/05 fecha em −R$ 2.340</h3>
-                <p class="alert-desc">A combinação folha + aluguel + pró-labore + 4 boletos de fornecedor (IMPACTO/JBS/NESTLÉ/BIMBO) vai consumir o caixa. <b>Antecipar NESTLÉ pra dia 10 resolve e deixa o saldo positivo em R$ 1.180.</b></p>
-                <div class="alert-meta">
-                  <span><i data-lucide="calendar"></i>Data crítica: 06/05/2026</span>
-                  <span><i data-lucide="dollar-sign"></i>Déficit: R$ 2.340</span>
-                </div>
-                <div class="alert-actions">
-                  <button class="alert-btn primary"><i data-lucide="trending-up"></i> Abrir fluxo de caixa</button>
-                  <button class="alert-btn"><i data-lucide="phone"></i> Simular renegociação</button>
-                </div>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
-            </div>
-
-            <!-- AVISO 1 -->
-            <div class="alert-card sev-warn unread" data-sev="warn">
-              <div class="alert-ico sev-warn"><i data-lucide="percent"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-warn">Aviso</span>
-                  <span class="alert-source"><i data-lucide="bar-chart-3"></i>DRE</span>
-                  <span class="alert-when">há 5 horas</span>
-                </div>
-                <h3 class="alert-title">Margem bruta caiu de 28% pra 23% em abril</h3>
-                <p class="alert-desc">Abaixo do benchmark do setor (25-35%) pela 1ª vez em 4 meses. Principal causa: aumento de ~8% no preço médio de 3 fornecedores (IMPACTO, JBS, DCL CARDEAL). <b>Renegociar ou repassar no PDV.</b></p>
-                <div class="alert-meta">
-                  <span><i data-lucide="arrow-down"></i>Variação: −5 p.p.</span>
-                  <span><i data-lucide="calendar"></i>Mês: abril/2026</span>
-                </div>
-                <div class="alert-actions">
-                  <button class="alert-btn primary"><i data-lucide="bar-chart-3"></i> Abrir DRE</button>
-                  <button class="alert-btn"><i data-lucide="building-2"></i> Ver fornecedores</button>
-                </div>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
-            </div>
-
-            <!-- AVISO 2 -->
-            <div class="alert-card sev-warn" data-sev="warn">
-              <div class="alert-ico sev-warn"><i data-lucide="arrow-up-right"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-warn">Aviso</span>
-                  <span class="alert-source"><i data-lucide="building-2"></i>Fornecedores</span>
-                  <span class="alert-when">ontem</span>
-                </div>
-                <h3 class="alert-title">IMPACTO subiu preço médio em 8% nos últimos 3 meses</h3>
-                <p class="alert-desc">Aumento gradual — fevereiro +2%, março +3%, abril +3%. Já representa R$ 1.850 a mais por mês no custo de compras. <b>Pode ser tabela nova ou fim de promoção.</b> Vale ligar pra confirmar e renegociar.</p>
-                <div class="alert-meta">
-                  <span><i data-lucide="trending-up"></i>+8% em 90 dias</span>
-                  <span><i data-lucide="dollar-sign"></i>Impacto: R$ 1.850/mês</span>
-                </div>
-                <div class="alert-actions">
-                  <button class="alert-btn primary"><i data-lucide="eye"></i> Ver histórico IMPACTO</button>
-                  <button class="alert-btn"><i data-lucide="phone"></i> Contato fornecedor</button>
-                </div>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
-            </div>
-
-            <!-- AVISO 3 -->
-            <div class="alert-card sev-warn" data-sev="warn">
-              <div class="alert-ico sev-warn"><i data-lucide="users"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-warn">Aviso</span>
-                  <span class="alert-source"><i data-lucide="plus-square"></i>Despesas</span>
-                  <span class="alert-when">ontem</span>
-                </div>
-                <h3 class="alert-title">Folha de pagamento cresceu 12% vs média dos últimos 6 meses</h3>
-                <p class="alert-desc">Saiu de R$ 16.500 pra R$ 18.500 em abril. Houve contratação? Hora extra? <b>Confirme se é estrutural ou pontual</b> — se for estrutural, revisa a margem bruta esperada.</p>
-                <div class="alert-meta">
-                  <span><i data-lucide="trending-up"></i>+12% · +R$ 2.000</span>
-                  <span><i data-lucide="users"></i>12 funcionários</span>
-                </div>
-                <div class="alert-actions">
-                  <button class="alert-btn primary"><i data-lucide="plus-square"></i> Ver detalhe</button>
-                  <button class="alert-btn"><i data-lucide="check"></i> É estrutural</button>
-                </div>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
-            </div>
-
-            <!-- INFO 1 -->
-            <div class="alert-card sev-info" data-sev="info">
-              <div class="alert-ico sev-info"><i data-lucide="file-check"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-info">Info</span>
-                  <span class="alert-source"><i data-lucide="upload"></i>NF-e</span>
-                  <span class="alert-when">há 3 horas</span>
-                </div>
-                <h3 class="alert-title">NF-e #000012345 de IMPACTO importada automaticamente</h3>
-                <p class="alert-desc">Total R$ 8.565,00 em 2 parcelas. Boletos agendados no Calendário pra 30/04 e 30/05. Nota arquivada em Histórico NF-e.</p>
-                <div class="alert-actions">
-                  <button class="alert-btn"><i data-lucide="file-text"></i> Ver NF-e</button>
-                </div>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
-            </div>
-
-            <!-- INFO 2 -->
-            <div class="alert-card sev-info" data-sev="info">
-              <div class="alert-ico sev-info"><i data-lucide="check-circle-2"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-info">Info</span>
-                  <span class="alert-source"><i data-lucide="credit-card"></i>Pagamentos</span>
-                  <span class="alert-when">ontem 17:42</span>
-                </div>
-                <h3 class="alert-title">3 boletos pagos ontem confirmados pelo banco</h3>
-                <p class="alert-desc">ATACADÃO (R$ 5.800), PARATY (R$ 2.100), DCL CARDEAL (R$ 3.200). <b>Total R$ 11.100 liquidado.</b> Fluxo de caixa e DRE atualizados automaticamente.</p>
-                <div class="alert-actions">
-                  <button class="alert-btn"><i data-lucide="receipt"></i> Ver comprovantes</button>
-                </div>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
-            </div>
-
-            <!-- INFO 3 -->
-            <div class="alert-card sev-info" data-sev="info">
-              <div class="alert-ico sev-info"><i data-lucide="message-circle"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-info">Info</span>
-                  <span class="alert-source"><i data-lucide="bell"></i>WhatsApp</span>
-                  <span class="alert-when">hoje 06:15</span>
-                </div>
-                <h3 class="alert-title">Briefing matinal enviado pro Reginaldo e Mikael</h3>
-                <p class="alert-desc">Mensagem entregue e lida por ambos. Ninguém respondeu comandos.</p>
-                <div class="alert-actions">
-                  <button class="alert-btn"><i data-lucide="smartphone"></i> Ver briefing</button>
-                </div>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
-            </div>
-
-            <!-- OK / RESOLVIDO -->
-            <div class="alert-card sev-ok" data-sev="ok">
-              <div class="alert-ico sev-ok"><i data-lucide="shield-check"></i></div>
-              <div class="alert-main">
-                <div class="alert-head-row">
-                  <span class="alert-sev-pill sev-ok">Resolvido</span>
-                  <span class="alert-source"><i data-lucide="check-circle"></i>Reconciliação</span>
-                  <span class="alert-when">hoje 08:00</span>
-                </div>
-                <h3 class="alert-title">Reconciliação bancária de ontem fechou sem divergência</h3>
-                <p class="alert-desc">Saldo Santander + BB bateu com movimentações registradas no DM Pay (tolerância R$ 10). Lucro do dia × caixa × extrato = <b>conformes</b>.</p>
-              </div>
-              <button class="alert-dismiss"><i data-lucide="x"></i></button>
-            </div>
-
           </div>
         </div>
 
@@ -533,7 +352,7 @@
                   <span class="rule-name">Margem fora do benchmark</span>
                   <label class="toggle"><input type="checkbox" checked><span class="toggle-track"><span class="toggle-dot"></span></span></label>
                 </div>
-                <div class="rule-desc">Margem bruta &lt; 25% ou &gt; 35% (mercadinho)</div>
+                <div class="rule-desc">Margem bruta &lt; 25% ou &gt; 35%</div>
                 <div class="rule-channels">
                   <span class="rule-chip on"><i data-lucide="bell"></i>In-app</span>
                   <span class="rule-chip"><i data-lucide="message-circle"></i>WhatsApp</span>

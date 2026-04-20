@@ -268,7 +268,7 @@
       <div class="hero">
         <div>
           <h1>Histórico NF-e</h1>
-          <p>Todas as notas fiscais eletrônicas do Mercadinho — importadas automaticamente do e-mail, pela SEFAZ ou lançadas manualmente. <b>Busca uma NF específica, acompanha parcelas e reenvia pro contador com 1 clique.</b></p>
+          <p>Todas as notas fiscais eletrônicas da empresa — importadas automaticamente do e-mail, pela SEFAZ ou lançadas manualmente. <b>Busca uma NF específica, acompanha parcelas e reenvia pro contador com 1 clique.</b></p>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar XMLs</button>
@@ -280,23 +280,23 @@
       <div class="kpi-grid">
         <div class="kpi">
           <div class="kpi-label"><i data-lucide="file-text"></i> NFs este mês</div>
-          <div class="kpi-value">12</div>
-          <div class="kpi-sub">Abril · <span class="up">+3 vs março</span></div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi">
           <div class="kpi-label"><i data-lucide="dollar-sign"></i> Valor total importado</div>
-          <div class="kpi-value">R$ 58.105,00</div>
-          <div class="kpi-sub">Soma das 12 notas · 24 parcelas</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi success">
           <div class="kpi-label"><i data-lucide="zap"></i> Importação automática</div>
-          <div class="kpi-value">83%</div>
-          <div class="kpi-sub">10 de 12 vieram do e-mail</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi">
           <div class="kpi-label"><i data-lucide="clock"></i> Com parcela aberta</div>
-          <div class="kpi-value">4</div>
-          <div class="kpi-sub">R$ 21.340 pendentes</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
       </div>
 
@@ -316,18 +316,12 @@
         </select>
         <select class="filter-select">
           <option>Todos fornecedores</option>
-          <option>IMPACTO</option>
-          <option>NESTLÉ</option>
-          <option>CAFÉ 3 CORAÇÕES</option>
-          <option>JBS</option>
-          <option>BIMBO</option>
-          <option>ATACADÃO</option>
         </select>
         <div class="status-chips">
-          <span class="status-chip active" onclick="filterStatus('all',this)">Todas · 12</span>
-          <span class="status-chip" onclick="filterStatus('aberto',this)"><span class="status-dot" style="background:var(--accent)"></span>Aberta · 2</span>
-          <span class="status-chip" onclick="filterStatus('parcial',this)"><span class="status-dot" style="background:var(--warn)"></span>Parcial · 2</span>
-          <span class="status-chip" onclick="filterStatus('pago',this)"><span class="status-dot" style="background:var(--success)"></span>Pago · 8</span>
+          <span class="status-chip active" onclick="filterStatus('all',this)">Todas</span>
+          <span class="status-chip" onclick="filterStatus('aberto',this)"><span class="status-dot" style="background:var(--accent)"></span>Aberta</span>
+          <span class="status-chip" onclick="filterStatus('parcial',this)"><span class="status-dot" style="background:var(--warn)"></span>Parcial</span>
+          <span class="status-chip" onclick="filterStatus('pago',this)"><span class="status-dot" style="background:var(--success)"></span>Pago</span>
         </div>
       </div>
 
@@ -347,338 +341,14 @@
             </tr>
           </thead>
           <tbody id="nfTable">
-
-            <tr data-status="aberto" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.012.345</div>
-                <div class="nf-chave chave-col">3524 0412 ... 8901</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar">IM</div>
-                  <div>
-                    <div class="forn-name">IMPACTO Distribuidora</div>
-                    <div class="forn-cnpj">12.345.678/0001-90</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div class="date-main">15/04/2026</div>
-                <div class="date-hint">há 3 dias</div>
-              </td>
-              <td class="ctr"><span class="parc-badge">2×</span></td>
-              <td class="num">R$ 8.565,00</td>
-              <td class="ctr"><span class="status-badge aberto"><span class="status-badge-dot"></span>Aberta</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td>
-                <div class="row-actions">
-                  <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                  <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                  <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-                </div>
-              </td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.067.890</div>
-                <div class="nf-chave chave-col">3524 0412 ... 4567</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#e3f2fd;color:#0d47a1">NE</div>
-                  <div>
-                    <div class="forn-name">NESTLÉ Brasil</div>
-                    <div class="forn-cnpj">60.409.075/0152-74</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <div class="date-main">12/04/2026</div>
-                <div class="date-hint">há 6 dias</div>
-              </td>
-              <td class="ctr"><span class="parc-badge">1×</span></td>
-              <td class="num">R$ 3.520,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.023.456</div>
-                <div class="nf-chave chave-col">3524 0412 ... 2345</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#ffe0b2;color:#6d4c00">C3</div>
-                  <div>
-                    <div class="forn-name">CAFÉ TRÊS CORAÇÕES</div>
-                    <div class="forn-cnpj">07.566.225/0001-00</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">10/04/2026</div><div class="date-hint">há 8 dias</div></td>
-              <td class="ctr"><span class="parc-badge">1×</span></td>
-              <td class="num">R$ 2.400,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="parcial" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.034.567</div>
-                <div class="nf-chave chave-col">3524 0412 ... 9012</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#ffebee;color:#c62828">JB</div>
-                  <div>
-                    <div class="forn-name">JBS Foods</div>
-                    <div class="forn-cnpj">02.916.265/0065-07</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">08/04/2026</div><div class="date-hint">há 10 dias</div></td>
-              <td class="ctr"><span class="parc-badge">3×</span></td>
-              <td class="num">R$ 5.200,00</td>
-              <td class="ctr"><span class="status-badge parcial"><span class="status-badge-dot"></span>Parcial · 1/3</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.045.678</div>
-                <div class="nf-chave chave-col">3524 0412 ... 3456</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#fff3e0;color:#e65100">BI</div>
-                  <div>
-                    <div class="forn-name">BIMBO do Brasil</div>
-                    <div class="forn-cnpj">67.755.041/0001-04</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">05/04/2026</div><div class="date-hint">há 13 dias</div></td>
-              <td class="ctr"><span class="parc-badge">1×</span></td>
-              <td class="num">R$ 1.850,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="parcial" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.056.789</div>
-                <div class="nf-chave chave-col">3524 0412 ... 7890</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#e8f5e9;color:#1b5e20">AT</div>
-                  <div>
-                    <div class="forn-name">ATACADÃO Distribuição</div>
-                    <div class="forn-cnpj">75.315.333/0001-09</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">04/04/2026</div><div class="date-hint">há 14 dias</div></td>
-              <td class="ctr"><span class="parc-badge">4×</span></td>
-              <td class="num">R$ 12.400,00</td>
-              <td class="ctr"><span class="status-badge parcial"><span class="status-badge-dot"></span>Parcial · 2/4</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.011.223</div>
-                <div class="nf-chave chave-col">3524 0412 ... 1122</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#f3e5f5;color:#4a148c">DC</div>
-                  <div>
-                    <div class="forn-name">DCL CARDEAL</div>
-                    <div class="forn-cnpj">12.456.789/0001-23</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">02/04/2026</div><div class="date-hint">há 16 dias</div></td>
-              <td class="ctr"><span class="parc-badge">2×</span></td>
-              <td class="num">R$ 3.200,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag"><i data-lucide="upload"></i>Manual</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.022.334</div>
-                <div class="nf-chave chave-col">3524 0412 ... 2233</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#e1f5fe;color:#01579b">PA</div>
-                  <div>
-                    <div class="forn-name">PARATY Distribuidora</div>
-                    <div class="forn-cnpj">23.456.789/0001-34</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">01/04/2026</div><div class="date-hint">há 17 dias</div></td>
-              <td class="ctr"><span class="parc-badge">1×</span></td>
-              <td class="num">R$ 2.100,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.033.445</div>
-                <div class="nf-chave chave-col">3524 0312 ... 3344</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#e3f2fd;color:#0d47a1">NE</div>
-                  <div>
-                    <div class="forn-name">NESTLÉ Brasil</div>
-                    <div class="forn-cnpj">60.409.075/0152-74</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">28/03/2026</div><div class="date-hint">há 21 dias</div></td>
-              <td class="ctr"><span class="parc-badge">1×</span></td>
-              <td class="num">R$ 4.100,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.044.556</div>
-                <div class="nf-chave chave-col">3524 0312 ... 4455</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar">IM</div>
-                  <div>
-                    <div class="forn-name">IMPACTO Distribuidora</div>
-                    <div class="forn-cnpj">12.345.678/0001-90</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">25/03/2026</div><div class="date-hint">há 24 dias</div></td>
-              <td class="ctr"><span class="parc-badge">2×</span></td>
-              <td class="num">R$ 6.890,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.055.667</div>
-                <div class="nf-chave chave-col">3524 0312 ... 5566</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#ffebee;color:#c62828">JB</div>
-                  <div>
-                    <div class="forn-name">JBS Foods</div>
-                    <div class="forn-cnpj">02.916.265/0065-07</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">22/03/2026</div><div class="date-hint">há 27 dias</div></td>
-              <td class="ctr"><span class="parc-badge">3×</span></td>
-              <td class="num">R$ 5.800,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag"><i data-lucide="upload"></i>Manual</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
-            <tr data-status="pago" onclick="openDrawer(this)">
-              <td>
-                <div class="nf-num">000.066.778</div>
-                <div class="nf-chave chave-col">3524 0312 ... 6677</div>
-              </td>
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#fff3e0;color:#e65100">BI</div>
-                  <div>
-                    <div class="forn-name">BIMBO do Brasil</div>
-                    <div class="forn-cnpj">67.755.041/0001-04</div>
-                  </div>
-                </div>
-              </td>
-              <td><div class="date-main">18/03/2026</div><div class="date-hint">há 31 dias</div></td>
-              <td class="ctr"><span class="parc-badge">1×</span></td>
-              <td class="num">R$ 1.980,00</td>
-              <td class="ctr"><span class="status-badge pago"><span class="status-badge-dot"></span>Pago</span></td>
-              <td class="ctr source-col"><span class="source-tag auto"><i data-lucide="zap"></i>E-mail</span></td>
-              <td><div class="row-actions">
-                <button class="icon-btn" title="Ver DANFE"><i data-lucide="file-text"></i></button>
-                <button class="icon-btn" title="Baixar XML"><i data-lucide="download"></i></button>
-                <button class="icon-btn" title="Mais"><i data-lucide="more-horizontal"></i></button>
-              </div></td>
-            </tr>
-
+            <tr><td colspan="8" style="padding:48px 16px;text-align:center;color:var(--text-muted)">
+              <div style="font-size:28px;margin-bottom:8px">—</div>
+              <div style="font-size:14px">Nenhuma NF-e importada ainda</div>
+            </td></tr>
           </tbody>
         </table>
         <div class="nfs-footer">
-          <span>12 notas fiscais · Total: <b>R$ 58.105,00</b></span>
-          <div class="pagination">
-            <button><i data-lucide="chevron-left"></i></button>
-            <button class="active">1</button>
-            <button>2</button>
-            <button>3</button>
-            <button><i data-lucide="chevron-right"></i></button>
-          </div>
+          <span>—</span>
         </div>
       </div>
     </main>
@@ -689,92 +359,17 @@
   <aside class="drawer" id="drawer">
     <div class="drawer-head">
       <div>
-        <h2><i data-lucide="file-text"></i> NF-e 000.012.345</h2>
-        <div class="drawer-head-sub">IMPACTO Distribuidora · emitida 15/04/2026</div>
+        <h2><i data-lucide="file-text"></i> Detalhe da NF-e</h2>
+        <div class="drawer-head-sub">—</div>
       </div>
       <button class="close-btn" onclick="closeDrawer()"><i data-lucide="x"></i></button>
     </div>
 
     <div class="drawer-body">
-
-      <div class="detail-section">
-        <div class="detail-title"><i data-lucide="dollar-sign"></i> Valor</div>
-        <div class="detail-val big">R$ 8.565,00</div>
-        <div class="detail-val" style="color:var(--text-muted);font-size:12px;margin-top:3px">2 parcelas de R$ 4.282,50</div>
+      <div style="padding:48px 16px;text-align:center;color:var(--text-muted)">
+        <div style="font-size:28px;margin-bottom:8px">—</div>
+        <div style="font-size:14px">Em construção</div>
       </div>
-
-      <div class="detail-section">
-        <div class="detail-title"><i data-lucide="building-2"></i> Fornecedor</div>
-        <div class="detail-grid-2">
-          <div class="detail-item"><div class="detail-label">Razão social</div><div class="detail-val">IMPACTO Distribuidora Ltda</div></div>
-          <div class="detail-item"><div class="detail-label">CNPJ</div><div class="detail-val mono">12.345.678/0001-90</div></div>
-          <div class="detail-item"><div class="detail-label">Inscrição estadual</div><div class="detail-val mono">0987654-32</div></div>
-          <div class="detail-item"><div class="detail-label">UF</div><div class="detail-val">PE</div></div>
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <div class="detail-title"><i data-lucide="hash"></i> Dados da nota</div>
-        <div class="detail-grid-2">
-          <div class="detail-item"><div class="detail-label">Número</div><div class="detail-val mono">000.012.345</div></div>
-          <div class="detail-item"><div class="detail-label">Série</div><div class="detail-val mono">1</div></div>
-          <div class="detail-item"><div class="detail-label">Emissão</div><div class="detail-val mono">15/04/2026 14:32</div></div>
-          <div class="detail-item"><div class="detail-label">Modalidade</div><div class="detail-val">NF-e (modelo 55)</div></div>
-        </div>
-        <div class="detail-item" style="margin-top:12px">
-          <div class="detail-label">Chave de acesso</div>
-          <div class="detail-val mono" style="font-size:11.5px;word-break:break-all">3524 0412 3456 7800 0190 5500 1000 0123 4511 0223 4567 8901</div>
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <div class="detail-title"><i data-lucide="calendar-check"></i> Parcelas agendadas</div>
-        <div class="parc-list">
-          <div class="parc-item">
-            <span class="parc-num">1/2</span>
-            <div>
-              <div class="parc-date">30/04/2026</div>
-              <div class="parc-date-hint">em 12 dias</div>
-            </div>
-            <div class="parc-val">R$ 4.282,50</div>
-            <span class="parc-status aberto">Aberto</span>
-          </div>
-          <div class="parc-item">
-            <span class="parc-num">2/2</span>
-            <div>
-              <div class="parc-date">30/05/2026</div>
-              <div class="parc-date-hint">em 42 dias</div>
-            </div>
-            <div class="parc-val">R$ 4.282,50</div>
-            <span class="parc-status aberto">Aberto</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <div class="detail-title"><i data-lucide="receipt"></i> Impostos (NF-e)</div>
-        <div class="detail-grid-2">
-          <div class="detail-item"><div class="detail-label">ICMS</div><div class="detail-val mono">R$ 1.455,05</div></div>
-          <div class="detail-item"><div class="detail-label">PIS</div><div class="detail-val mono">R$ 141,32</div></div>
-          <div class="detail-item"><div class="detail-label">COFINS</div><div class="detail-val mono">R$ 650,94</div></div>
-          <div class="detail-item"><div class="detail-label">IPI</div><div class="detail-val mono">R$ 0,00</div></div>
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <div class="detail-title"><i data-lucide="link"></i> Origem e processamento</div>
-        <div class="detail-grid-2">
-          <div class="detail-item"><div class="detail-label">Como entrou</div><div class="detail-val">📧 E-mail automático</div></div>
-          <div class="detail-item"><div class="detail-label">Importada em</div><div class="detail-val mono">15/04 17:42</div></div>
-          <div class="detail-item"><div class="detail-label">Validada SEFAZ</div><div class="detail-val" style="color:var(--success)">✓ Autorizada</div></div>
-          <div class="detail-item"><div class="detail-label">Arquivo XML</div><div class="detail-val mono" style="font-size:11px">NFe_12345.xml</div></div>
-        </div>
-        <div class="recon-bar">
-          <i data-lucide="check-circle"></i>
-          <span><b>Nota e boletos conciliados.</b> Parcelas já aparecem no Calendário e no Fluxo de Caixa.</span>
-        </div>
-      </div>
-
     </div>
 
     <div class="drawer-foot">
@@ -826,14 +421,7 @@
       b.addEventListener('click', e => e.stopPropagation());
     });
 
-    // Módulo em construção — tabela e KPIs vazios até integração de e-mail/SEFAZ
-    (function emConstrucao(){
-      document.querySelectorAll('.kpi-value').forEach(el => { el.textContent = '—'; });
-      const sub = document.querySelector('.hero p');
-      if (sub) sub.innerHTML = `<b>Módulo em construção.</b> NFs de compras aparecem aqui quando a integração com e-mail ou SEFAZ estiver ligada.`;
-      const tbody = document.getElementById('nfTable');
-      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="padding:40px;text-align:center;color:var(--text-muted)">Nenhuma NFe sincronizada ainda.</td></tr>`;
-    })();
+    // Dados reais virão do Supabase quando integração de e-mail/SEFAZ estiver ligada.
   </script>
 </body>
 </html>

@@ -290,34 +290,24 @@
       <div class="kpi-grid">
         <div class="kpi">
           <div class="kpi-label"><i data-lucide="users"></i> Total membros</div>
-          <div class="kpi-value">4</div>
-          <div class="kpi-sub">3 ativos · 1 pendente</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi success">
           <div class="kpi-label"><i data-lucide="user-check"></i> Ativos agora</div>
-          <div class="kpi-value">2</div>
-          <div class="kpi-sub">você + Reginaldo</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi warn">
           <div class="kpi-label"><i data-lucide="mail"></i> Convites pendentes</div>
-          <div class="kpi-value">1</div>
-          <div class="kpi-sub">contador há 2 dias</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi">
           <div class="kpi-label"><i data-lucide="clock"></i> Último acesso</div>
-          <div class="kpi-value">agora</div>
-          <div class="kpi-sub">Mikael · esta sessão</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
-      </div>
-
-      <!-- Alert -->
-      <div class="alert">
-        <div class="alert-icon"><i data-lucide="mail"></i></div>
-        <div class="alert-content">
-          <div class="alert-title">Convite pendente há 2 dias</div>
-          <div class="alert-text"><b>Sr. João (contador)</b> ainda não aceitou o convite enviado em 15/04. Se o e-mail tiver caído no spam, reenviar com 1 clique ou mudar endereço.</div>
-        </div>
-        <button class="alert-action" onclick="openEdit('contador')">Reenviar</button>
       </div>
 
       <div class="layout">
@@ -326,76 +316,12 @@
           <div class="mbr-table-wrap">
             <div class="mbr-head">
               <h2><i data-lucide="users"></i> Membros</h2>
-              <span class="count">4 no total</span>
+              <span class="count">—</span>
             </div>
 
-            <!-- Reginaldo -->
-            <div class="mbr-row" onclick="openEdit('reginaldo')">
-              <div class="mbr-avatar" style="background:#7C3AED">RL<span class="online-dot"></span></div>
-              <div class="mbr-info">
-                <div class="name">Reginaldo Liberato</div>
-                <div class="email">reginaldo@mercadinhoeliberato.com.br</div>
-              </div>
-              <div class="role-badge role-dono"><i data-lucide="crown"></i> Dono</div>
-              <div class="mbr-access">
-                <div class="time">há 2h</div>
-                <div>via WhatsApp</div>
-              </div>
-              <div class="mbr-actions">
-                <button onclick="event.stopPropagation();openEdit('reginaldo')"><i data-lucide="pencil"></i></button>
-              </div>
-            </div>
-
-            <!-- Mikael (você) -->
-            <div class="mbr-row" onclick="openEdit('mikael')">
-              <div class="mbr-avatar" style="background:#2563EB">MS<span class="online-dot"></span></div>
-              <div class="mbr-info">
-                <div class="name">Mikael Silva <span class="you">Você</span></div>
-                <div class="email">mikael@mercadinhoeliberato.com.br</div>
-              </div>
-              <div class="role-badge role-admin"><i data-lucide="shield"></i> Admin</div>
-              <div class="mbr-access">
-                <div class="time">agora</div>
-                <div>Chrome · Windows</div>
-              </div>
-              <div class="mbr-actions">
-                <button onclick="event.stopPropagation();openEdit('mikael')"><i data-lucide="pencil"></i></button>
-              </div>
-            </div>
-
-            <!-- Contador (pendente) -->
-            <div class="mbr-row" onclick="openEdit('contador')">
-              <div class="mbr-avatar" style="background:#D97706;opacity:.7">JC</div>
-              <div class="mbr-info">
-                <div class="name">Sr. João (contador)</div>
-                <div class="email">joao@contabilidade-liberato.com.br</div>
-              </div>
-              <div class="role-badge role-financeiro"><i data-lucide="calculator"></i> Financeiro</div>
-              <div class="mbr-access pending">
-                <div class="time">Convite pendente</div>
-                <div>enviado há 2 dias</div>
-              </div>
-              <div class="mbr-actions">
-                <button onclick="event.stopPropagation();"><i data-lucide="send"></i></button>
-                <button onclick="event.stopPropagation();"><i data-lucide="x"></i></button>
-              </div>
-            </div>
-
-            <!-- Duam (suporte) -->
-            <div class="mbr-row" onclick="openEdit('duam')">
-              <div class="mbr-avatar" style="background:#4B5563">DR</div>
-              <div class="mbr-info">
-                <div class="name">Duam Rodrigues</div>
-                <div class="email">suporte@dmstack.com.br</div>
-              </div>
-              <div class="role-badge role-viewer"><i data-lucide="eye"></i> Visualizador</div>
-              <div class="mbr-access">
-                <div class="time">há 1 dia</div>
-                <div>suporte técnico</div>
-              </div>
-              <div class="mbr-actions">
-                <button onclick="event.stopPropagation();openEdit('duam')"><i data-lucide="pencil"></i></button>
-              </div>
+            <div id="members-list" style="padding:48px 16px;text-align:center;color:var(--text-muted)">
+              <div style="font-size:28px;margin-bottom:8px">—</div>
+              <div style="font-size:14px">Em construção</div>
             </div>
           </div>
 
@@ -404,7 +330,7 @@
             <div class="insight-icon"><i data-lucide="lightbulb"></i></div>
             <div>
               <h3>Por que separar papéis?</h3>
-              <p>O DM Pay guarda <b>DRE, fluxo de caixa e extrato</b> — informação que nem todo mundo do mercadinho precisa ver. Funcionário de entrega só lança despesa (papel <b>Financeiro</b>). Contador só lê o DRE (papel <b>Visualizador</b>). Reginaldo tem tudo (papel <b>Dono</b>). <b>Quem vê o lucro líquido vira decisão estratégica, não acidente.</b></p>
+              <p>O DM Pay guarda <b>DRE, fluxo de caixa e extrato</b> — informação que nem todo mundo da empresa precisa ver. Funcionário pode só lançar despesa (papel <b>Financeiro</b>). Contador pode só ler o DRE (papel <b>Visualizador</b>). O dono tem tudo. <b>Quem vê o lucro líquido vira decisão estratégica, não acidente.</b></p>
             </div>
           </div>
         </div>
@@ -418,28 +344,28 @@
           <div class="role-item">
             <div class="role-item-head">
               <span class="role-badge role-dono"><i data-lucide="crown"></i> Dono</span>
-              <span class="count">1</span>
+              <span class="count">—</span>
             </div>
             <p><b>Tudo</b> — configuração, cobrança, remover conta. Único que pode transferir a titularidade.</p>
           </div>
           <div class="role-item">
             <div class="role-item-head">
               <span class="role-badge role-admin"><i data-lucide="shield"></i> Admin</span>
-              <span class="count">1</span>
+              <span class="count">—</span>
             </div>
             <p>Tudo do dia a dia: <b>lança, edita, aprova, convida</b>. Sem cobrança nem remover conta.</p>
           </div>
           <div class="role-item">
             <div class="role-item-head">
               <span class="role-badge role-financeiro"><i data-lucide="calculator"></i> Financeiro</span>
-              <span class="count">1</span>
+              <span class="count">—</span>
             </div>
             <p><b>Lança despesa, vê DRE, recebe WhatsApp.</b> Sem acesso à equipe e configurações.</p>
           </div>
           <div class="role-item">
             <div class="role-item-head">
               <span class="role-badge role-viewer"><i data-lucide="eye"></i> Visualizador</span>
-              <span class="count">1</span>
+              <span class="count">—</span>
             </div>
             <p>Só leitura. Vê DRE, fluxo, contas a pagar — <b>não edita nada</b>. Ideal pra contador ou sócio silencioso.</p>
           </div>
@@ -465,40 +391,7 @@
   </aside>
 
   <script>
-    const MEMBERS = {
-      reginaldo: {
-        name: 'Reginaldo Liberato', email: 'reginaldo@mercadinhoeliberato.com.br',
-        initials: 'RL', color: '#7C3AED', role: 'dono', online: true,
-        lastAccess: 'há 2h · WhatsApp',
-        sessions: [
-          { device: 'iPhone 13 · Safari', meta: 'Jupi-PE · agora', current: false },
-          { device: 'WhatsApp · DM Pay Bot', meta: 'notificações ativas', current: false }
-        ]
-      },
-      mikael: {
-        name: 'Mikael Silva', email: 'mikael@mercadinhoeliberato.com.br',
-        initials: 'MS', color: '#2563EB', role: 'admin', online: true, you: true,
-        lastAccess: 'agora · esta sessão',
-        sessions: [
-          { device: 'Chrome · Windows 11', meta: 'Jupi-PE · agora', current: true },
-          { device: 'iPhone 12 · Safari', meta: 'Jupi-PE · há 3 dias', current: false }
-        ]
-      },
-      contador: {
-        name: 'Sr. João (contador)', email: 'joao@contabilidade-liberato.com.br',
-        initials: 'JC', color: '#D97706', role: 'financeiro', pending: true,
-        lastAccess: 'Convite pendente · enviado há 2 dias',
-        sessions: []
-      },
-      duam: {
-        name: 'Duam Rodrigues', email: 'suporte@dmstack.com.br',
-        initials: 'DR', color: '#4B5563', role: 'viewer',
-        lastAccess: 'há 1 dia · suporte técnico',
-        sessions: [
-          { device: 'Chrome · Windows 11', meta: 'Jupi-PE · há 1 dia', current: false }
-        ]
-      }
-    };
+    const MEMBERS = {};
 
     const ROLES = [
       { id:'dono', icon:'crown', label:'Dono', desc:'Tudo + cobrança + remover conta. Só 1 dono por empresa.', badgeClass:'role-dono' },
@@ -653,7 +546,7 @@
 
         <div class="field">
           <div class="field-label"><i data-lucide="message-square"></i> Mensagem (opcional)</div>
-          <input placeholder="Ex: Bem-vindo ao DM Pay do Mercadinho!">
+          <input placeholder="Ex: Bem-vindo ao DM Pay!">
         </div>
 
         <div style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">

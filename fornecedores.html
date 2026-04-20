@@ -283,7 +283,7 @@
       <div class="hero">
         <div>
           <h1>Fornecedores</h1>
-          <p>Quem entrega o quê, por quanto e com que frequência. <b>Rastreia variação de preço por produto</b> — identifica reajuste abusivo antes da margem derreter. 8 fornecedores ativos, R$95.280 comprados em abril.</p>
+          <p>Quem entrega o quê, por quanto e com que frequência. <b>Rastreia variação de preço por produto</b> — identifica reajuste abusivo antes da margem derreter.</p>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar histórico</button>
@@ -295,34 +295,24 @@
       <div class="kpi-grid">
         <div class="kpi">
           <div class="kpi-label"><i data-lucide="building-2"></i> Ativos</div>
-          <div class="kpi-value">8</div>
-          <div class="kpi-sub">3 recorrentes · 5 pontuais</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label"><i data-lucide="shopping-bag"></i> Compras abril</div>
-          <div class="kpi-value">R$ 95.280</div>
-          <div class="kpi-sub"><span class="up">▲ 6,2%</span> vs março</div>
+          <div class="kpi-label"><i data-lucide="shopping-bag"></i> Compras do mês</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi warn">
           <div class="kpi-label"><i data-lucide="trending-up"></i> Variação média</div>
-          <div class="kpi-value">+2,1%</div>
-          <div class="kpi-sub">1 com variação <b style="color:var(--danger)">&gt;5%</b></div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
         <div class="kpi">
           <div class="kpi-label"><i data-lucide="pie-chart"></i> Concentração top 3</div>
-          <div class="kpi-value">60,3%</div>
-          <div class="kpi-sub">JBS + IMPACTO + NESTLÉ</div>
+          <div class="kpi-value">—</div>
+          <div class="kpi-sub">Em construção</div>
         </div>
-      </div>
-
-      <!-- Alert IMPACTO -->
-      <div class="alert">
-        <div class="alert-icon"><i data-lucide="alert-triangle"></i></div>
-        <div class="alert-content">
-          <div class="alert-title">IMPACTO Distribuidora subiu preços 8% nos últimos 90 dias</div>
-          <div class="alert-text">5 produtos com reajuste acima da inflação (açúcar +15%, arroz +10%, feijão +7,7%, óleo +8,5%, farinha +9,5%). No volume de <b>R$18.450/mês</b> isso é <b style="color:var(--danger)">+R$1.476/mês</b> a mais na sua conta. Vale cotar alternativas antes da próxima NF.</div>
-        </div>
-        <button class="alert-action" onclick="openDrawer('impacto')">Ver detalhe</button>
       </div>
 
       <!-- Toolbar -->
@@ -360,174 +350,10 @@
             </tr>
           </thead>
           <tbody id="fornTable">
-            <tr class="highlight" onclick="openDrawer('impacto')">
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#DC2626">IM</div>
-                  <div>
-                    <div class="forn-name">IMPACTO DISTRIBUIDORA</div>
-                    <div class="forn-cnpj">12.345.678/0001-90 · Jupi-PE</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="cat-chip cat-mercearia">Mercearia</span></td>
-              <td>
-                <div>R$ 8.565,00</div>
-                <div class="tiny-date">14/04 · há 3 dias</div>
-              </td>
-              <td class="num">R$ 18.450,00</td>
-              <td class="ctr"><span class="var-pill up"><i data-lucide="arrow-up"></i> 8,0%</span></td>
-              <td class="ctr">
-                <svg class="spark up" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="M0,18 L16,16 L32,15 L48,10 L64,6 L80,3"/></svg>
-              </td>
-            </tr>
-            <tr onclick="openDrawer('jbs')">
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#DC2626">JB</div>
-                  <div>
-                    <div class="forn-name">JBS FRIBOI</div>
-                    <div class="forn-cnpj">02.916.265/0001-60 · São Paulo-SP</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="cat-chip cat-carnes">Carnes</span></td>
-              <td>
-                <div>R$ 12.400,00</div>
-                <div class="tiny-date">12/04 · há 5 dias</div>
-              </td>
-              <td class="num">R$ 24.800,00</td>
-              <td class="ctr"><span class="var-pill stable"><i data-lucide="minus"></i> 1,8%</span></td>
-              <td class="ctr">
-                <svg class="spark stable" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="M0,14 L16,13 L32,14 L48,12 L64,13 L80,12"/></svg>
-              </td>
-            </tr>
-            <tr onclick="openDrawer('nestle')">
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#D97706">NE</div>
-                  <div>
-                    <div class="forn-name">NESTLÉ BRASIL</div>
-                    <div class="forn-cnpj">60.409.075/0001-52 · São Paulo-SP</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="cat-chip cat-laticinios">Laticínios</span></td>
-              <td>
-                <div>R$ 6.780,00</div>
-                <div class="tiny-date">10/04 · há 7 dias</div>
-              </td>
-              <td class="num">R$ 14.200,00</td>
-              <td class="ctr"><span class="var-pill stable"><i data-lucide="minus"></i> 0,5%</span></td>
-              <td class="ctr">
-                <svg class="spark stable" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="M0,12 L16,13 L32,11 L48,12 L64,12 L80,11"/></svg>
-              </td>
-            </tr>
-            <tr onclick="openDrawer('cafe3coracoes')">
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#7C3AED">CT</div>
-                  <div>
-                    <div class="forn-name">CAFÉ TRÊS CORAÇÕES</div>
-                    <div class="forn-cnpj">25.835.135/0001-10 · Santa Luzia-MG</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="cat-chip cat-bebidas">Bebidas</span></td>
-              <td>
-                <div>R$ 4.120,00</div>
-                <div class="tiny-date">09/04 · há 8 dias</div>
-              </td>
-              <td class="num">R$ 8.240,00</td>
-              <td class="ctr"><span class="var-pill down"><i data-lucide="arrow-down"></i> 1,2%</span></td>
-              <td class="ctr">
-                <svg class="spark down" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="M0,10 L16,11 L32,13 L48,14 L64,15 L80,16"/></svg>
-              </td>
-            </tr>
-            <tr onclick="openDrawer('bimbo')">
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#EA580C">BB</div>
-                  <div>
-                    <div class="forn-name">BIMBO DO BRASIL</div>
-                    <div class="forn-cnpj">60.730.645/0001-09 · Osasco-SP</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="cat-chip cat-paes">Pães/Bolos</span></td>
-              <td>
-                <div>R$ 2.840,00</div>
-                <div class="tiny-date">08/04 · há 9 dias</div>
-              </td>
-              <td class="num">R$ 6.180,00</td>
-              <td class="ctr"><span class="var-pill up-warn"><i data-lucide="arrow-up"></i> 3,1%</span></td>
-              <td class="ctr">
-                <svg class="spark up-warn" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="M0,16 L16,15 L32,14 L48,13 L64,12 L80,11"/></svg>
-              </td>
-            </tr>
-            <tr onclick="openDrawer('atacadao')">
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#4B5563">AT</div>
-                  <div>
-                    <div class="forn-name">ATACADÃO</div>
-                    <div class="forn-cnpj">75.315.333/0001-09 · São Paulo-SP</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="cat-chip cat-diversos">Diversos</span></td>
-              <td>
-                <div>R$ 9.850,00</div>
-                <div class="tiny-date">06/04 · há 11 dias</div>
-              </td>
-              <td class="num">R$ 9.850,00</td>
-              <td class="ctr"><span class="var-pill down"><i data-lucide="arrow-down"></i> 0,3%</span></td>
-              <td class="ctr">
-                <svg class="spark down" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="M0,12 L16,12 L32,13 L48,13 L64,13 L80,14"/></svg>
-              </td>
-            </tr>
-            <tr onclick="openDrawer('dcl')">
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#0891B2">DC</div>
-                  <div>
-                    <div class="forn-name">DCL CARDEAL</div>
-                    <div class="forn-cnpj">11.222.333/0001-44 · Recife-PE</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="cat-chip cat-limpeza">Limpeza</span></td>
-              <td>
-                <div>R$ 3.280,00</div>
-                <div class="tiny-date">04/04 · há 13 dias</div>
-              </td>
-              <td class="num">R$ 3.280,00</td>
-              <td class="ctr"><span class="var-pill stable"><i data-lucide="minus"></i> 0,8%</span></td>
-              <td class="ctr">
-                <svg class="spark stable" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="M0,13 L16,12 L32,13 L48,13 L64,12 L80,12"/></svg>
-              </td>
-            </tr>
-            <tr onclick="openDrawer('paraty')">
-              <td>
-                <div class="forn-cell">
-                  <div class="forn-avatar" style="background:#7C3AED">PA</div>
-                  <div>
-                    <div class="forn-name">PARATY DISTRIBUIDORA</div>
-                    <div class="forn-cnpj">09.876.543/0001-21 · Recife-PE</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="cat-chip cat-bebidas">Bebidas</span></td>
-              <td>
-                <div>R$ 5.140,00</div>
-                <div class="tiny-date">02/04 · há 15 dias</div>
-              </td>
-              <td class="num">R$ 10.280,00</td>
-              <td class="ctr"><span class="var-pill stable"><i data-lucide="minus"></i> 1,4%</span></td>
-              <td class="ctr">
-                <svg class="spark stable" viewBox="0 0 80 24" preserveAspectRatio="none"><path d="M0,13 L16,12 L32,13 L48,12 L64,13 L80,12"/></svg>
-              </td>
-            </tr>
+            <tr><td colspan="6" style="padding:48px 16px;text-align:center;color:var(--text-muted)">
+              <div style="font-size:28px;margin-bottom:8px">—</div>
+              <div style="font-size:14px">Em construção</div>
+            </td></tr>
           </tbody>
         </table>
       </div>
@@ -561,78 +387,8 @@
   </aside>
 
   <script>
-    // Forn data
-    const FORNS = {
-      impacto: {
-        name: 'IMPACTO DISTRIBUIDORA', cnpj: '12.345.678/0001-90', city: 'Jupi-PE', color: '#DC2626', initials: 'IM',
-        stats: [
-          { label: 'Compras 30d', value: 'R$ 18.450', sub: '3 NFs' },
-          { label: 'Ticket médio', value: 'R$ 6.150', sub: 'por NF' },
-          { label: 'Variação 90d', value: '+8,0%', danger: true, sub: 'acima da média' }
-        ],
-        products: [
-          { name: 'Açúcar refinado 5kg', p1: 'R$ 18,50', p2: 'R$ 19,80', p3: 'R$ 21,40', var: '+15,7%', sev: 'up' },
-          { name: 'Arroz agulhinha 5kg', p1: 'R$ 28,00', p2: 'R$ 29,20', p3: 'R$ 30,80', var: '+10,0%', sev: 'up' },
-          { name: 'Farinha trigo 1kg', p1: 'R$ 4,20', p2: 'R$ 4,40', p3: 'R$ 4,60', var: '+9,5%', sev: 'up-warn' },
-          { name: 'Óleo soja 900ml', p1: 'R$ 5,90', p2: 'R$ 6,20', p3: 'R$ 6,40', var: '+8,5%', sev: 'up-warn' },
-          { name: 'Feijão carioca 1kg', p1: 'R$ 7,80', p2: 'R$ 8,10', p3: 'R$ 8,40', var: '+7,7%', sev: 'up-warn' }
-        ],
-        chartPath: 'M0,60 L40,55 L80,50 L120,40 L160,30 L200,20',
-        months: ['Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr'],
-        values: ['R$ 14.200', 'R$ 14.800', 'R$ 15.600', 'R$ 16.300', 'R$ 17.400', 'R$ 18.450'],
-        conditions: [
-          { k: 'Prazo pagamento', v: '28 dias' },
-          { k: 'Parcelamento', v: '2x (15/30)' },
-          { k: 'Desconto à vista', v: 'Sem acordo' },
-          { k: 'Forma preferida', v: 'Boleto' }
-        ]
-      },
-      nestle: {
-        name: 'NESTLÉ BRASIL', cnpj: '60.409.075/0001-52', city: 'São Paulo-SP', color: '#D97706', initials: 'NE',
-        stats: [
-          { label: 'Compras 30d', value: 'R$ 14.200', sub: '2 NFs' },
-          { label: 'Ticket médio', value: 'R$ 7.100', sub: 'por NF' },
-          { label: 'Variação 90d', value: '+0,5%', sub: 'estável' }
-        ],
-        products: [
-          { name: 'Leite em pó NINHO 400g', p1: 'R$ 18,90', p2: 'R$ 19,00', p3: 'R$ 19,10', var: '+1,1%', sev: 'stable' },
-          { name: 'Achocolatado NESCAU 400g', p1: 'R$ 14,50', p2: 'R$ 14,50', p3: 'R$ 14,60', var: '+0,7%', sev: 'stable' },
-          { name: 'Leite Condensado MOÇA 395g', p1: 'R$ 8,20', p2: 'R$ 8,20', p3: 'R$ 8,30', var: '+1,2%', sev: 'stable' }
-        ],
-        chartPath: 'M0,40 L40,42 L80,38 L120,40 L160,38 L200,36',
-        months: ['Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr'],
-        values: ['R$ 12.800', 'R$ 13.100', 'R$ 13.400', 'R$ 13.900', 'R$ 14.100', 'R$ 14.200'],
-        conditions: [
-          { k: 'Prazo pagamento', v: '30 dias' },
-          { k: 'Parcelamento', v: '1x' },
-          { k: 'Desconto à vista', v: '2%' },
-          { k: 'Forma preferida', v: 'Boleto' }
-        ]
-      },
-      jbs: {
-        name: 'JBS FRIBOI', cnpj: '02.916.265/0001-60', city: 'São Paulo-SP', color: '#DC2626', initials: 'JB',
-        stats: [
-          { label: 'Compras 30d', value: 'R$ 24.800', sub: '2 NFs' },
-          { label: 'Ticket médio', value: 'R$ 12.400', sub: 'por NF' },
-          { label: 'Variação 90d', value: '+1,8%', sub: 'dentro da média' }
-        ],
-        products: [
-          { name: 'Alcatra bovina kg', p1: 'R$ 38,90', p2: 'R$ 39,20', p3: 'R$ 39,60', var: '+1,8%', sev: 'stable' },
-          { name: 'Coxão mole kg', p1: 'R$ 35,50', p2: 'R$ 35,80', p3: 'R$ 36,10', var: '+1,7%', sev: 'stable' },
-          { name: 'Peito bovino kg', p1: 'R$ 28,00', p2: 'R$ 28,30', p3: 'R$ 28,50', var: '+1,8%', sev: 'stable' },
-          { name: 'Linguiça toscana kg', p1: 'R$ 24,50', p2: 'R$ 24,80', p3: 'R$ 24,90', var: '+1,6%', sev: 'stable' }
-        ],
-        chartPath: 'M0,30 L40,32 L80,35 L120,30 L160,32 L200,30',
-        months: ['Nov', 'Dez', 'Jan', 'Fev', 'Mar', 'Abr'],
-        values: ['R$ 22.400', 'R$ 23.100', 'R$ 23.800', 'R$ 24.100', 'R$ 24.500', 'R$ 24.800'],
-        conditions: [
-          { k: 'Prazo pagamento', v: '21 dias' },
-          { k: 'Parcelamento', v: '1x' },
-          { k: 'Desconto à vista', v: '1,5%' },
-          { k: 'Forma preferida', v: 'PIX' }
-        ]
-      }
-    };
+    // Forn data — vazio até sincronização de NF-e de compras
+    const FORNS = {};
 
     function renderDrawer(key) {
       if (key === 'novo') {
@@ -641,7 +397,7 @@
           <div class="dr-section">
             <div class="dr-section-title"><i data-lucide="building-2"></i> Dados básicos</div>
             <div style="display:flex;flex-direction:column;gap:10px">
-              <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Nome</label><input class="filter-select" style="width:100%;padding:9px 12px" placeholder="Ex: IMPACTO DISTRIBUIDORA"></div>
+              <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Nome</label><input class="filter-select" style="width:100%;padding:9px 12px" placeholder="Ex: Nome do fornecedor"></div>
               <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">CNPJ</label><input class="filter-select" style="width:100%;padding:9px 12px;font-family:'Geist Mono',monospace" placeholder="00.000.000/0001-00"></div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Categoria</label><select class="filter-select" style="width:100%;padding:9px 12px"><option>Mercearia</option><option>Laticínios</option><option>Bebidas</option><option>Carnes</option><option>Limpeza</option><option>Diversos</option></select></div>
@@ -689,7 +445,7 @@
       const condsHtml = f.conditions.map(c => `
         <div class="cond-item"><span class="k">${c.k}</span><span class="v">${c.v}</span></div>`).join('');
 
-      const chartColor = key === 'impacto' ? 'var(--danger)' : (key === 'cafe3coracoes' ? 'var(--success)' : 'var(--accent)');
+      const chartColor = 'var(--accent)';
       const lastIdx = f.values.length - 1;
 
       document.getElementById('dr-body').innerHTML = `
@@ -731,16 +487,6 @@
           <div class="cond-grid">${condsHtml}</div>
         </div>
 
-        ${key === 'impacto' ? `
-        <div class="dr-section">
-          <div style="background:var(--warn-soft);border:1px solid var(--warn);border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
-            <i data-lucide="alert-circle" style="color:var(--warn);width:18px;height:18px;flex-shrink:0;margin-top:1px"></i>
-            <div style="font-size:12.5px;line-height:1.55">
-              <b>Ação sugerida:</b> no próximo pedido, cote açúcar e arroz com PARATY e ATACADÃO. Se conseguir R$20/kg no açúcar (vs R$21,40 atual), economia de <b style="color:var(--success)">R$140 a cada 100 unidades</b> — em 30 dias o ROI cobre 1 mês de DM Pay.
-            </div>
-          </div>
-        </div>
-        ` : ''}
       `;
       lucide.createIcons();
     }
@@ -766,19 +512,7 @@
 
     lucide.createIcons();
 
-    // Módulo em construção — tabela e KPIs vazios até sincronização de NFe de compras
-    (function emConstrucao(){
-      document.querySelectorAll('.kpi-value').forEach(el => { el.textContent = '—'; });
-      document.querySelectorAll('.kpi-sub').forEach(el => { el.textContent = 'aguardando integração'; });
-      const sub = document.querySelector('.hero p');
-      if (sub) sub.innerHTML = `<b>Módulo em construção.</b> Fornecedores serão listados aqui quando o módulo de compras (NFe XML) estiver integrado.`;
-      const tbody = document.getElementById('fornTable');
-      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted)">Nenhum fornecedor sincronizado ainda.</td></tr>`;
-      const alertTitle = document.querySelector('.alert-title');
-      const alertText = document.querySelector('.alert-text');
-      if (alertTitle) alertTitle.textContent = 'Módulo em construção';
-      if (alertText) alertText.textContent = 'Quando o DM Pay ler os XMLs das NFs de compra, variações de preço e alertas aparecem aqui.';
-    })();
+    // Dados reais virão do Supabase quando o módulo de compras (NF-e XML) for integrado.
   </script>
 </body>
 </html>

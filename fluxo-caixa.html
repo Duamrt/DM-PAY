@@ -290,7 +290,7 @@
       <div class="alert">
         <i data-lucide="alert-triangle"></i>
         <div class="alert-text">
-          <b>06/05 o saldo fica −R$ 8.340,00.</b> É o dia seguinte à folha de pagamento + vencimento de 4 boletos de fornecedor (IMPACTO, JBS, NESTLÉ, BIMBO). Considere antecipar depósitos do fim de semana ou renegociar um dos boletos pra dia 10.
+          <b>Projeção indisponível.</b> Quando houver dados suficientes, o fluxo aqui aponta dias críticos e sugere ações.
         </div>
         <button class="alert-close"><i data-lucide="x"></i></button>
       </div>
@@ -421,14 +421,8 @@
       <div class="insight">
         <div class="insight-ico"><i data-lucide="lightbulb"></i></div>
         <div style="flex:1">
-          <h3>3 jeitos de evitar o buraco de 06/05</h3>
-          <p><b>1.</b> Antecipar o boleto NESTLÉ (R$ 3.520) pra dia 10 — fornecedor costuma aceitar adiamento de 3 dias úteis. Saldo vira <b>+R$ 1.180</b>.<br>
-          <b>2.</b> Distribuir depósitos do fim de semana: segurar uns R$ 5k do sábado pra depositar terça.<br>
-          <b>3.</b> Antecipar recebíveis da Cielo (vendas de cartão em ~30 dias) — custa ~3% mas resolve na hora.</p>
-          <div class="insight-actions">
-            <button class="insight-action"><i data-lucide="calendar"></i> Ver dia 06/05</button>
-            <button class="insight-action"><i data-lucide="phone"></i> Simular renegociação</button>
-          </div>
+          <h3>Como o fluxo de caixa ajuda</h3>
+          <p>Quando houver dados, o DM Pay detecta dias em que o saldo fica negativo e sugere ações: antecipar boletos, redistribuir depósitos e antecipar recebíveis.</p>
         </div>
       </div>
 
@@ -453,21 +447,14 @@
     const hoje = new Date(2026, 3, 18); // mês 3 = abril (0-indexed)
     const dias = [];
     let saldo = 24890;
-    const fornecedores = ['IMPACTO','NESTLÉ','CAFÉ 3 CORAÇÕES','JBS','BIMBO','ATACADÃO','DCL CARDEAL','PARATY'];
+    const fornecedores = [];
 
     function fmtMoney(v){
       return 'R$ ' + (v<0?'−':'') + Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     }
 
-    // Mapa de saídas especiais por dia do mês (despesas fixas + boletos)
-    const saidasDiaMes = {
-      20:[{nome:'IMPACTO+CAFÉ+NESTLÉ',val:10202.50}],
-      5:[{nome:'Folha+Aluguel+Prolabore+Limpeza',val:29200.00}],
-      10:[{nome:'Energia+Contador',val:3600.00}],
-      15:[{nome:'Água+iCommerce+Cielo',val:1250.00}],
-      25:[{nome:'Boletos IMPACTO+BIMBO',val:5800.00}],
-      28:[{nome:'Rescisão parcial',val:3200.00}]
-    };
+    // Mapa de saídas especiais por dia do mês — vazio até integração com Supabase
+    const saidasDiaMes = {};
 
     // Gerar próximos 30 dias
     for (let i = 0; i < 30; i++) {

@@ -279,14 +279,6 @@
         </div>
       </div>
 
-      <div class="pendencias">
-        <div class="pendencias-ico"><i data-lucide="calendar-clock"></i></div>
-        <div class="pendencias-content">
-          <h3>7 campos aguardando validação na segunda (20/04)</h3>
-          <p>Dados que dependem de conversa com <b>Mikael, Reginaldo e contador</b> no Mercadinho: alíquotas reais, retiradas do sócio, valor do estoque inicial, export iCommerce. Enquanto isso, o esqueleto tá pronto com valores padrão do Lucro Real.</p>
-        </div>
-        <div class="pendencias-count">7 pendentes</div>
-      </div>
 
       <div class="settings-layout">
         <!-- Tabs verticais -->
@@ -333,7 +325,7 @@
             <div class="panel-head">
               <div>
                 <h2><i data-lucide="building-2"></i> Dados da empresa</h2>
-                <p>Informações do Mercadinho Liberato que aparecem em recibos, relatórios e exportações.</p>
+                <p>Informações da empresa que aparecem em recibos, relatórios e exportações.</p>
               </div>
               <span class="status ok">Completo</span>
             </div>
@@ -434,7 +426,7 @@
                   <span class="opt-radio"></span>
                   <div class="opt-content">
                     <div class="opt-name">Lucro Real <span class="opt-tag">Ativo</span></div>
-                    <div class="opt-desc">Informado pelo Reginaldo. PIS/COFINS não-cumulativos, IRPJ e CSLL apurados sobre lucro real.</div>
+                    <div class="opt-desc">PIS/COFINS não-cumulativos, IRPJ e CSLL apurados sobre lucro real.</div>
                   </div>
                 </div>
               </div>
@@ -521,40 +513,9 @@
             </div>
             <div class="panel-body">
 
-              <div class="socio-card">
-                <div class="socio-head">
-                  <div class="socio-avatar" style="background:#8b5cf6">R</div>
-                  <div class="socio-info">
-                    <div class="socio-name">Reginaldo Silva</div>
-                    <div class="socio-role">Sócio-administrador · 100% de participação</div>
-                  </div>
-                  <div class="socio-actions">
-                    <button class="icon-btn"><i data-lucide="pencil"></i></button>
-                    <button class="icon-btn"><i data-lucide="trash-2"></i></button>
-                  </div>
-                </div>
-                <div class="socio-body">
-                  <div class="field pending">
-                    <label>Pró-labore mensal <span class="badge-pend">Validar</span></label>
-                    <div class="input-prefix"><span class="prefix">R$</span><input type="text" value="5.000,00"></div>
-                    <div class="field-hint">Entra no DRE como <b>Despesa Administrativa</b></div>
-                  </div>
-                  <div class="field pending">
-                    <label>Distribuição de lucros <span class="badge-pend">Validar</span></label>
-                    <div class="input-prefix"><span class="prefix">R$</span><input type="text" value="variável"></div>
-                    <div class="field-hint"><b>Não entra no DRE</b> · sai do patrimônio líquido</div>
-                  </div>
-                  <div class="field">
-                    <label>Consumo próprio estimado</label>
-                    <div class="input-prefix"><span class="prefix">R$</span><input type="text" value="800,00"></div>
-                    <div class="field-hint">Mercadoria retirada pra uso doméstico · categoria separada no DRE</div>
-                  </div>
-                </div>
-
-                <div style="margin-top:14px;padding:10px 12px;background:var(--accent-soft);border-radius:7px;display:flex;gap:8px;align-items:center;font-size:12px">
-                  <i data-lucide="link" style="width:14px;height:14px;color:var(--accent)"></i>
-                  <span>Conta vinculada no iCommerce: <b style="font-family:'Geist Mono',monospace">cliente#042 — REGINALDO (uso interno)</b></span>
-                </div>
+              <div style="padding:48px 16px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:10px">
+                <div style="font-size:28px;margin-bottom:8px">—</div>
+                <div style="font-size:14px">Nenhum sócio cadastrado</div>
               </div>
 
               <button class="btn-add-socio"><i data-lucide="plus"></i> Adicionar sócio</button>
@@ -582,21 +543,21 @@
                   <span class="opt-radio"></span>
                   <div class="opt-content">
                     <div class="opt-name">Compras = CMV <span class="opt-tag">Padrão</span></div>
-                    <div class="opt-desc">Aproximação simples. Assume que o estoque é estável (vendeu = comprou). Bom pra giro alto como mercadinho. <b>Pode distorcer o DRE em meses de reposição pesada.</b></div>
+                    <div class="opt-desc">Aproximação simples. Assume que o estoque é estável (vendeu = comprou). Bom pra giro alto. <b>Pode distorcer o DRE em meses de reposição pesada.</b></div>
                   </div>
                 </div>
                 <div class="opt" onclick="selOpt(this)">
                   <span class="opt-radio"></span>
                   <div class="opt-content">
                     <div class="opt-name">Inventário manual mensal <span class="opt-tag warn">Trabalhoso</span></div>
-                    <div class="opt-desc">Mikael informa o valor do estoque no 1º e último dia do mês. <b>Mais preciso</b>, mas exige contagem física ou export do iCommerce.</div>
+                    <div class="opt-desc">O responsável informa o valor do estoque no 1º e último dia do mês. <b>Mais preciso</b>, mas exige contagem física ou export do ERP.</div>
                   </div>
                 </div>
                 <div class="opt" onclick="selOpt(this)">
                   <span class="opt-radio"></span>
                   <div class="opt-content">
-                    <div class="opt-name">Integração iCommerce automática <span class="opt-tag soon">Aguardando segunda</span></div>
-                    <div class="opt-desc">Se o servidor do iCommerce for local e a TI autorizar, o DM Pay lê o valor do estoque direto do banco do ERP. <b>Precisão máxima, zero trabalho.</b></div>
+                    <div class="opt-name">Integração ERP automática <span class="opt-tag soon">Em construção</span></div>
+                    <div class="opt-desc">Se o servidor do ERP for local e a TI autorizar, o DM Pay lê o valor do estoque direto do banco do ERP. <b>Precisão máxima, zero trabalho.</b></div>
                   </div>
                 </div>
               </div>
@@ -606,7 +567,7 @@
                 <div class="field pending">
                   <label>Valor do estoque em 30/04/2026 <span class="badge-pend">Pendente</span></label>
                   <div class="input-prefix"><span class="prefix">R$</span><input type="text" placeholder="A preencher segunda"></div>
-                  <div class="field-hint">Mikael exporta esse valor no último dia de abril pra iniciar a operação em maio</div>
+                  <div class="field-hint">Exportar esse valor no último dia do mês anterior para iniciar a operação</div>
                 </div>
                 <div class="field">
                   <label>Data de início da operação</label>
@@ -620,7 +581,7 @@
                 <div class="field pending">
                   <label>Margem bruta média esperada <span class="badge-pend">Validar</span></label>
                   <div class="input-suffix"><input type="text" class="mono" value="28,00"><span class="suffix">%</span></div>
-                  <div class="field-hint">Usado pra alertar quando o resultado real foge muito do esperado (benchmark mercadinho: 25-35%)</div>
+                  <div class="field-hint">Usado pra alertar quando o resultado real foge muito do esperado</div>
                 </div>
                 <div class="field">
                   <label>Tolerância de alerta</label>
@@ -640,7 +601,7 @@
             <div class="panel-head">
               <div>
                 <h2><i data-lucide="bar-chart-3"></i> DRE gerencial</h2>
-                <p>Define como o Demonstrativo do Resultado é apresentado. <b>Não substitui</b> o DRE contábil oficial do contador — é uma visão de gestão pro Reginaldo enxergar o negócio.</p>
+                <p>Define como o Demonstrativo do Resultado é apresentado. <b>Não substitui</b> o DRE contábil oficial do contador — é uma visão de gestão pro dono enxergar o negócio.</p>
               </div>
               <span class="status ok">Completo</span>
             </div>
@@ -659,7 +620,7 @@
                   <span class="opt-radio"></span>
                   <div class="opt-content">
                     <div class="opt-name">Caixa</div>
-                    <div class="opt-desc">Receita quando o dinheiro entra. Despesa quando o boleto é pago. Mostra quanto <b>sobrou</b> no mês — intuitivo pro Reginaldo.</div>
+                    <div class="opt-desc">Receita quando o dinheiro entra. Despesa quando o boleto é pago. Mostra quanto <b>sobrou</b> no mês — intuitivo pro dono.</div>
                   </div>
                 </div>
               </div>
@@ -718,7 +679,7 @@
             <div class="panel-head">
               <div>
                 <h2><i data-lucide="credit-card"></i> Contas bancárias</h2>
-                <p>Bancos que o Mercadinho usa pra receber e pagar. Alimenta o Fluxo de Caixa e a reconciliação do DRE.</p>
+                <p>Bancos que a empresa usa pra receber e pagar. Alimenta o Fluxo de Caixa e a reconciliação do DRE.</p>
               </div>
               <span class="status" id="bancos-status">—</span>
             </div>

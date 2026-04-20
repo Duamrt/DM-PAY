@@ -325,14 +325,6 @@
         </div>
       </div>
 
-      <!-- Alert banner — dor principal do Mercadinho -->
-      <div class="alert">
-        <i data-lucide="alert-triangle"></i>
-        <div class="alert-text">
-          <b>Semana que vem tem acúmulo.</b> 3 boletos com vencimento entre sábado 18 e domingo 19 serão cobrados na <b>segunda-feira 20/04</b> — totalizando <b>R$ 10.202,00</b>. Prepare caixa: IMPACTO (R$ 4.282), CAFÉ TRÊS CORAÇÕES (R$ 2.400), NESTLÉ (R$ 3.520).
-        </div>
-        <button class="alert-close" title="Dispensar"><i data-lucide="x" style="width:14px;height:14px"></i></button>
-      </div>
 
       <!-- Calendar -->
       <div class="calendar">
@@ -346,106 +338,12 @@
           <div class="weekend">Sáb</div>
         </div>
         <div class="cal-grid">
-          <!-- Semana 1 (mar 29 - abr 4) -->
-          <div class="cal-day empty weekend"><span class="cal-day-num">29</span></div>
-          <div class="cal-day empty"><span class="cal-day-num">30</span></div>
-          <div class="cal-day empty"><span class="cal-day-num">31</span></div>
-          <div class="cal-day"><span class="cal-day-num">1</span></div>
-          <div class="cal-day"><span class="cal-day-num">2</span></div>
-          <div class="cal-day">
-            <span class="cal-day-num">3</span>
-            <span class="cal-day-total">R$ 4.500</span>
-            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">1 pago</span></div>
+          <div class="cal-day empty" style="grid-column:1/-1;padding:48px;text-align:center;color:var(--text-muted)">
+            <div style="font-size:28px;margin-bottom:8px">—</div>
+            <div style="font-size:14px">Nenhum vencimento agendado</div>
           </div>
-          <div class="cal-day weekend"><span class="cal-day-num">4</span></div>
-
-          <!-- Semana 2 (abr 5-11) -->
-          <div class="cal-day weekend"><span class="cal-day-num">5</span></div>
-          <div class="cal-day">
-            <span class="cal-day-num">6</span>
-            <span class="cal-day-total">R$ 380</span>
-            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">1 pago</span></div>
-          </div>
-          <div class="cal-day">
-            <span class="cal-day-num">7</span>
-            <span class="cal-day-total">R$ 1.890</span>
-            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">1 pago</span></div>
-          </div>
-          <div class="cal-day"><span class="cal-day-num">8</span></div>
-          <div class="cal-day"><span class="cal-day-num">9</span></div>
-          <div class="cal-day">
-            <span class="cal-day-num">10</span>
-            <span class="cal-day-total">R$ 12.800</span>
-            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">Folha</span></div>
-          </div>
-          <div class="cal-day weekend"><span class="cal-day-num">11</span></div>
-
-          <!-- Semana 3 (abr 12-18) -->
-          <div class="cal-day weekend"><span class="cal-day-num">12</span></div>
-          <div class="cal-day"><span class="cal-day-num">13</span></div>
-          <div class="cal-day">
-            <span class="cal-day-num">14</span>
-            <span class="cal-day-total">R$ 420</span>
-            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">1 pago</span></div>
-          </div>
-          <div class="cal-day"><span class="cal-day-num">15</span></div>
-          <div class="cal-day"><span class="cal-day-num">16</span></div>
-          <div class="cal-day">
-            <span class="cal-day-num">17</span>
-            <span class="cal-day-total">R$ 2.929</span>
-            <div class="cal-day-chips"><span class="cal-dot paid"></span><span class="cal-day-count">2 pagos</span></div>
-          </div>
-          <div class="cal-day today weekend">
-            <span class="cal-day-num">18</span>
-            <span class="cal-day-total" style="font-size:11px;color:var(--accent);font-weight:500">Hoje</span>
-          </div>
-
-          <!-- Semana 4 (abr 19-25) — a dor do mês -->
-          <div class="cal-day weekend"><span class="cal-day-num">19</span></div>
-          <div class="cal-day critical selected" onclick="this.classList.toggle('selected')">
-            <span class="cal-day-num">20</span>
-            <span class="cal-day-total">R$ 10.202</span>
-            <div class="cal-day-chips">
-              <span class="cal-dot open"></span><span class="cal-dot open"></span><span class="cal-dot open"></span>
-              <span class="cal-day-count">3 abertos</span>
-            </div>
-          </div>
-          <div class="cal-day"><span class="cal-day-num">21</span></div>
-          <div class="cal-day heavy">
-            <span class="cal-day-num">22</span>
-            <span class="cal-day-total">R$ 5.890</span>
-            <div class="cal-day-chips"><span class="cal-dot open"></span><span class="cal-day-count">1 aberto</span></div>
-          </div>
-          <div class="cal-day"><span class="cal-day-num">23</span></div>
-          <div class="cal-day">
-            <span class="cal-day-num">24</span>
-            <span class="cal-day-total">R$ 1.980</span>
-            <div class="cal-day-chips"><span class="cal-dot open"></span><span class="cal-day-count">1 aberto</span></div>
-          </div>
-          <div class="cal-day weekend"><span class="cal-day-num">25</span></div>
-
-          <!-- Semana 5 (abr 26-30) -->
-          <div class="cal-day weekend"><span class="cal-day-num">26</span></div>
-          <div class="cal-day heavy">
-            <span class="cal-day-num">27</span>
-            <span class="cal-day-total">R$ 5.390</span>
-            <div class="cal-day-chips">
-              <span class="cal-dot open"></span><span class="cal-dot open"></span>
-              <span class="cal-day-count">2 abertos</span>
-            </div>
-          </div>
-          <div class="cal-day"><span class="cal-day-num">28</span></div>
-          <div class="cal-day"><span class="cal-day-num">29</span></div>
-          <div class="cal-day">
-            <span class="cal-day-num">30</span>
-            <span class="cal-day-total">R$ 4.283</span>
-            <div class="cal-day-chips"><span class="cal-dot open"></span><span class="cal-day-count">1 aberto</span></div>
-          </div>
-          <div class="cal-day empty"><span class="cal-day-num">1</span></div>
-          <div class="cal-day empty weekend"><span class="cal-day-num">2</span></div>
         </div>
       </div>
-
       <!-- Legenda -->
       <div class="legend">
         <div class="legend-item"><span class="legend-dot paid"></span> Pago</div>
@@ -462,92 +360,16 @@
   <aside class="drawer" id="drawer">
     <div class="drawer-head">
       <div>
-        <h2>Segunda, 20 de abril</h2>
-        <p>Fim de semana acumulado · 3 boletos · <b style="color:var(--danger)">R$ 10.202,00</b></p>
+        <h2>Detalhe do dia</h2>
+        <p>—</p>
       </div>
       <button class="drawer-close" onclick="document.getElementById('drawer').classList.remove('open')" title="Fechar"><i data-lucide="x"></i></button>
     </div>
 
     <div class="drawer-body">
-      <div class="drawer-total">
-        <div>
-          <div class="drawer-total-label">Total do dia</div>
-          <div class="drawer-total-value" style="color:var(--danger)">R$ 10.202,00</div>
-        </div>
-        <span class="chip danger"><i data-lucide="alert-triangle"></i> Dia crítico</span>
-      </div>
-
-      <!-- Boleto 1 -->
-      <div class="boleto-item">
-        <div class="boleto-head">
-          <div>
-            <div class="boleto-supplier">IMPACTO DISTRIBUIDORA</div>
-            <div class="boleto-nf">NF 042317 · Parcela 1/3 · Laticínios</div>
-          </div>
-          <div class="boleto-amount">R$ 4.282,50</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <span class="chip warn"><i data-lucide="clock"></i> Venceu sábado 18/04</span>
-          <span class="chip info"><i data-lucide="calendar"></i> Cobrado hoje 20/04</span>
-        </div>
-        <div class="boleto-footer">
-          <div class="boleto-line">34191.79001 01043.510047 91020.150008 6 89860000428250</div>
-          <div class="boleto-actions">
-            <button class="btn-mini" title="Copiar linha"><i data-lucide="copy"></i></button>
-            <button class="btn-mini primary"><i data-lucide="check"></i> Pagar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Boleto 2 -->
-      <div class="boleto-item">
-        <div class="boleto-head">
-          <div>
-            <div class="boleto-supplier">CAFÉ TRÊS CORAÇÕES S/A</div>
-            <div class="boleto-nf">NF 038211 · Parcela 1/2 · Bebidas</div>
-          </div>
-          <div class="boleto-amount">R$ 2.400,00</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <span class="chip warn"><i data-lucide="clock"></i> Venceu domingo 19/04</span>
-          <span class="chip info"><i data-lucide="calendar"></i> Cobrado hoje 20/04</span>
-        </div>
-        <div class="boleto-footer">
-          <div class="boleto-line">23792.48001 09812.450011 48310.210017 7 89730000240000</div>
-          <div class="boleto-actions">
-            <button class="btn-mini" title="Copiar linha"><i data-lucide="copy"></i></button>
-            <button class="btn-mini primary"><i data-lucide="check"></i> Pagar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Boleto 3 -->
-      <div class="boleto-item">
-        <div class="boleto-head">
-          <div>
-            <div class="boleto-supplier">NESTLÉ BRASIL LTDA</div>
-            <div class="boleto-nf">NF 512033 · Parcela 1/1 · Laticínios</div>
-          </div>
-          <div class="boleto-amount">R$ 3.520,00</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <span class="chip info"><i data-lucide="calendar"></i> Vence hoje 20/04</span>
-          <span class="chip success"><i data-lucide="shield-check"></i> No prazo</span>
-        </div>
-        <div class="boleto-footer">
-          <div class="boleto-line">00190.00009 03123.810014 51112.330018 3 89840000352000</div>
-          <div class="boleto-actions">
-            <button class="btn-mini" title="Copiar linha"><i data-lucide="copy"></i></button>
-            <button class="btn-mini primary"><i data-lucide="check"></i> Pagar</button>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:20px;padding:14px 16px;background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
-        <i data-lucide="info" style="width:16px;height:16px;color:var(--accent);flex-shrink:0;margin-top:2px"></i>
-        <div style="font-size:12.5px;color:var(--text-muted);line-height:1.5">
-          <b style="color:var(--text);font-weight:600">Dica:</b> você pode <b>antecipar</b> os boletos do fim de semana para sexta-feira se tiver caixa. Isso distribui melhor o fluxo e reduz o impacto da segunda.
-        </div>
+      <div style="padding:48px 16px;text-align:center;color:var(--text-muted)">
+        <div style="font-size:28px;margin-bottom:8px">—</div>
+        <div style="font-size:14px">Em construção</div>
       </div>
     </div>
   </aside>
@@ -557,8 +379,8 @@
     <div class="modal">
       <div class="modal-head">
         <div>
-          <h2 id="paySupplier">IMPACTO DISTRIBUIDORA</h2>
-          <p id="payNfInfo">NF 042317 · Parcela 1/3</p>
+          <h2 id="paySupplier">—</h2>
+          <p id="payNfInfo">—</p>
         </div>
         <div>
           <div class="price-label">Valor</div>

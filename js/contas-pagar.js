@@ -300,6 +300,10 @@
       alert('Linha digitável inválida (precisa ter 44, 47 ou 48 dígitos)'); return;
     }
     const btn = document.getElementById('cp-save'); btn.disabled = true;
+    if (method === 'boleto' && !line) {
+      alert('Boleto exige linha digitável. Cole o código de 44/47/48 dígitos, ou mude a forma de pagamento.');
+      btn.disabled = false; return;
+    }
     try {
       const payload = {
         company_id: window.DMPAY_COMPANY.id,
@@ -318,7 +322,14 @@
       await loadPayables();
       render();
     } catch (e) {
-      alert('Erro: ' + e.message);
+      const code = e.code || e.details;
+      let msg = e.message;
+      if (code === '23514' || (msg && msg.includes('check constraint'))) {
+        msg = 'Dado inválido — verifique os campos preenchidos.';
+      } else if (code === '23505') {
+        msg = 'Registro duplicado.';
+      }
+      alert('Erro: ' + msg);
       btn.disabled = false;
     }
   }
