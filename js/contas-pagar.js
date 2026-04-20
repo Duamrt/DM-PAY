@@ -270,7 +270,7 @@
               </select>
             </div>
             <div class="dmp-field" id="cp-line-wrap">
-              <label>Linha digitável (opcional)</label>
+              <label>Linha digitável *</label>
               <input id="cp-line" class="mono" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000">
               <div class="dmp-hint">44, 47 ou 48 dígitos. Boletos válidos só.</div>
             </div>
@@ -283,6 +283,14 @@
       </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
     lucide.createIcons();
+    const methodSel = document.getElementById('cp-method');
+    const lineWrap  = document.getElementById('cp-line-wrap');
+    const toggleLine = () => {
+      const isBoleto = methodSel.value === 'boleto';
+      lineWrap.style.display = isBoleto ? '' : 'none';
+      if (!isBoleto) document.getElementById('cp-line').value = '';
+    };
+    methodSel.addEventListener('change', toggleLine);
     setTimeout(() => document.getElementById('cp-desc').focus(), 50);
   }
   function closeCreate() { document.querySelectorAll('.dmp-modal-back').forEach(e => e.remove()); }
@@ -326,7 +334,9 @@
       const code = e.code || e.details;
       let msg = e.message;
       if (code === '23514' || (msg && msg.includes('check constraint'))) {
-        msg = 'Dado inválido — verifique os campos preenchidos.';
+        msg = (msg && msg.includes('boleto'))
+          ? 'Linha digitável do boleto inválida ou ausente.'
+          : 'Dado inválido — verifique os campos preenchidos.';
       } else if (code === '23505') {
         msg = 'Registro duplicado.';
       }
