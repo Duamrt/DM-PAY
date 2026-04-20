@@ -211,7 +211,8 @@
     _diasOrdenados = Object.keys(porDia).sort();
 
     // === KPIs ===
-    const mesAtual = Object.keys(porDia).filter(d => d >= inicioMes);
+    const fimMes = `${ANO}-${String(MES_NUM).padStart(2,'0')}-${String(diasNoMes(ANO, MES)).padStart(2,'0')}`;
+    const mesAtual = Object.keys(porDia).filter(d => d >= inicioMes && d <= fimMes);
     const totalMes = mesAtual.reduce((s,d) => s + porDia[d], 0);
     const diasComVenda = mesAtual.length;
 
