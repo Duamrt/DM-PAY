@@ -307,13 +307,8 @@
           <i data-lucide="search"></i>
           <input type="text" placeholder="Buscar por fornecedor, número da NF, CNPJ ou chave…">
         </div>
-        <select class="filter-select">
-          <option>Abril / 2026</option>
-          <option>Março / 2026</option>
-          <option>Fevereiro / 2026</option>
-          <option>Último trimestre</option>
-          <option>Ano de 2026</option>
-          <option>Todos</option>
+        <select id="nfMesSel" class="filter-select" onchange="window.DMPAY_HISTNF.filterMes(this.value)">
+          <option value="">Todos os meses</option>
         </select>
         <select class="filter-select">
           <option>Todos fornecedores</option>
@@ -331,8 +326,8 @@
         <table class="nfs-table">
           <thead>
             <tr>
-              <th>Nº NF-e</th>
               <th>Fornecedor</th>
+              <th>Nº NF-e</th>
               <th>Emissão</th>
               <th class="ctr">Parcelas</th>
               <th class="num">Valor total</th>
