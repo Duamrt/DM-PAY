@@ -317,19 +317,21 @@
       if (cust_id === '__new') {
         const nm = document.getElementById('cr-newcust-name').value.trim();
         if (!nm) { alert('Nome do cliente obrigatório'); btn.disabled=false; return; }
-        const ins = await sb.from('customers').insert({
+        const custPayload = {
           company_id: COMPANY_ID,
           name: nm,
           cpf_cnpj: document.getElementById('cr-newcust-doc').value.trim() || null,
           phone: document.getElementById('cr-newcust-phone').value.trim() || null
-        }).select().single();
+        };
+        const ins = await sb.from('customers').insert(custPayload).select().single();
         if (ins.error) throw ins.error;
         cust_id = ins.data.id;
+        if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.create('customer', cust_id, custPayload);
         CUSTOMERS_CACHE = null; // força recarregar
       }
       if (cust_id === '') cust_id = null;
 
-      const { error } = await sb.from('receivables').insert({
+      const recvPayload = {
         company_id: COMPANY_ID,
         customer_id: cust_id,
         description: desc || null,
@@ -338,8 +340,10 @@
         payment_method: method,
         origin: origin,
         status: 'open'
-      });
+      };
+      const { data, error } = await sb.from('receivables').insert(recvPayload).select('id').single();
       if (error) throw error;
+      if (window.DMPAY_AUDIT && data?.id) window.DMPAY_AUDIT.create('receivable', data.id, recvPayload);
       closeCreate();
       await load(); render();
     } catch (e) {
@@ -390,19 +394,30 @@
   function closeDrawer(){ closeCreate(); }
 
   async function markReceived(id) {
-    const { error } = await sb.from('receivables').update({ status:'received', received_at: new Date().toISOString() }).eq('id', id);
+    const before = RECVS.find(x => x.id === id) || null;
+    const received_at = new Date().toISOString();
+    const { error } = await sb.from('receivables').update({ status:'received', received_at }).eq('id', id);
     if (error) { alert(error.message); return; }
+    if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.receive('receivable', id,
+      before ? { status: before.status, received_at: before.received_at } : null,
+      { status: 'received', received_at });
     closeDrawer(); await load(); render();
   }
   async function markOpen(id) {
+    const before = RECVS.find(x => x.id === id) || null;
     const { error } = await sb.from('receivables').update({ status:'open', received_at: null }).eq('id', id);
     if (error) { alert(error.message); return; }
+    if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.estorno('receivable', id,
+      before ? { status: before.status, received_at: before.received_at } : null,
+      { status: 'open', received_at: null });
     closeDrawer(); await load(); render();
   }
   async function remove(id) {
     if (!confirm('Excluir essa conta a receber?')) return;
+    const before = RECVS.find(x => x.id === id) || null;
     const { error } = await sb.from('receivables').delete().eq('id', id);
     if (error) { alert(error.message); return; }
+    if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.delete('receivable', id, before);
     closeDrawer(); await load(); render();
   }
 

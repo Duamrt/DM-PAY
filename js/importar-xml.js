@@ -211,8 +211,16 @@
         payment_method: 'boleto',
         status: 'open'
       }));
-      const payRes = await sb.from('payables').insert(payables);
+      const payRes = await sb.from('payables').insert(payables).select('id');
       if (payRes.error) throw payRes.error;
+      if (window.DMPAY_AUDIT) {
+        window.DMPAY_AUDIT.import('invoice', invoice_id, {
+          nfe_key: PARSED.nfeKey,
+          supplier_id,
+          total: PARSED.total_value,
+          parcelas: parcelas.length
+        });
+      }
 
       btn.innerHTML = '<i data-lucide="check-circle-2"></i> Salvo!';
       lucide.createIcons();

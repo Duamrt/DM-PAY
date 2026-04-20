@@ -211,8 +211,13 @@
   }
 
   async function marcarPago(id) {
-    const { error } = await sb.from('payables').update({ status:'paid', paid_at: new Date().toISOString() }).eq('id', id);
+    const before = (typeof PAYABLES !== 'undefined') ? PAYABLES.find(x => x.id === id) : null;
+    const paid_at = new Date().toISOString();
+    const { error } = await sb.from('payables').update({ status:'paid', paid_at }).eq('id', id);
     if (error) { alert(error.message); return; }
+    if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.pay('payable', id,
+      before ? { status: before.status, paid_at: before.paid_at } : null,
+      { status: 'paid', paid_at });
     document.getElementById('drawer')?.classList.remove('open');
     await load(); render();
   }
@@ -238,10 +243,13 @@
         if (digits.length !== 44 && digits.length !== 47) {
           throw new Error(`Código inválido: ${digits.length} dígitos. Precisa ter 44 ou 47.`);
         }
-        const { error } = await sb.from('payables').update({
-          boleto_line: v.trim(), payment_method: 'boleto'
-        }).eq('id', id);
+        const before = (typeof PAYABLES !== 'undefined') ? PAYABLES.find(x => x.id === id) : null;
+        const after = { boleto_line: v.trim(), payment_method: 'boleto' };
+        const { error } = await sb.from('payables').update(after).eq('id', id);
         if (error) throw new Error(error.message);
+        if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.update('payable', id,
+          before ? { boleto_line: before.boleto_line, payment_method: before.payment_method } : null,
+          after);
       }
     });
     if (!r) return;

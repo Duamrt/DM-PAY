@@ -301,7 +301,7 @@
     }
     const btn = document.getElementById('cp-save'); btn.disabled = true;
     try {
-      const { error } = await sb.from('payables').insert({
+      const payload = {
         company_id: window.DMPAY_COMPANY.id,
         supplier_id: sup_id,
         description: desc,
@@ -310,8 +310,10 @@
         payment_method: method,
         boleto_line: method === 'boleto' && line ? line : null,
         status: 'open'
-      });
+      };
+      const { data, error } = await sb.from('payables').insert(payload).select('id').single();
       if (error) throw error;
+      if (window.DMPAY_AUDIT && data?.id) window.DMPAY_AUDIT.create('payable', data.id, payload);
       closeCreate();
       await loadPayables();
       render();
@@ -371,21 +373,32 @@
   }
 
   async function markPaid(id) {
-    const { error } = await sb.from('payables').update({ status:'paid', paid_at: new Date().toISOString() }).eq('id', id);
+    const before = PAYABLES.find(x => x.id === id) || null;
+    const paid_at = new Date().toISOString();
+    const { error } = await sb.from('payables').update({ status:'paid', paid_at }).eq('id', id);
     if (error) { alert('Erro: '+error.message); return; }
+    if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.pay('payable', id,
+      before ? { status: before.status, paid_at: before.paid_at } : null,
+      { status: 'paid', paid_at });
     closeDrawer();
     await loadPayables(); render();
   }
   async function markOpen(id) {
+    const before = PAYABLES.find(x => x.id === id) || null;
     const { error } = await sb.from('payables').update({ status:'open', paid_at: null }).eq('id', id);
     if (error) { alert('Erro: '+error.message); return; }
+    if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.estorno('payable', id,
+      before ? { status: before.status, paid_at: before.paid_at } : null,
+      { status: 'open', paid_at: null });
     closeDrawer();
     await loadPayables(); render();
   }
   async function removePayable(id) {
     if (!confirm('Excluir essa conta?')) return;
+    const before = PAYABLES.find(x => x.id === id) || null;
     const { error } = await sb.from('payables').delete().eq('id', id);
     if (error) { alert('Erro: '+error.message); return; }
+    if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.delete('payable', id, before);
     closeDrawer();
     await loadPayables(); render();
   }
