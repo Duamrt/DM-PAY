@@ -327,8 +327,9 @@ def job_receivables(cfg, cn, company_id, days_pgto_window, dry_run, max_history_
     cutoff_pgto = datetime.now() - timedelta(days=days_pgto_window)
     cutoff_hist = datetime.now() - timedelta(days=max_history_months * 30)
 
-    # LEFT JOIN: parcelas recentes podem não ter header em CONTAS_RECEBER (FK quebrada
-    # no iCommerce do Mercadinho — INNER JOIN retornava 0 mesmo com 17k+ parcelas)
+    # FK real do iCommerce (validada 2026-04-20): CR.CON_VENDAS = CRD.CRD_CODIGO.
+    # CRD_CODIGO referencia a venda/cupom fiscal; o header CR liga venda → cliente via CON_VENDAS.
+    # Cobre 100% das parcelas recentes (24m). LEFT JOIN por segurança pra parcelas pré-migração.
     sql = """
         SELECT
             CRD.CRD_ID, CRD.CRD_CODIGO, CRD.CRD_PARCELA,
@@ -336,7 +337,7 @@ def job_receivables(cfg, cn, company_id, days_pgto_window, dry_run, max_history_
             CRD.CRD_VALOR_PAGO,
             CR.CON_CLIENTE, CR.CON_EMISSAO, CR.CON_DOCUMENTO, CR.CON_OBS
         FROM CONTAS_RECEBER_DADOS CRD WITH (NOLOCK)
-        LEFT JOIN CONTAS_RECEBER CR WITH (NOLOCK) ON CR.CON_CODIGO = CRD.CRD_CODIGO
+        LEFT JOIN CONTAS_RECEBER CR WITH (NOLOCK) ON CR.CON_VENDAS = CRD.CRD_CODIGO
         WHERE CRD.CRD_VENCIMENTO_AT >= ?
           AND (
                 CRD.CRD_ID > ?

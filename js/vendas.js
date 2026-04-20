@@ -21,7 +21,68 @@
     MES = HOJE.getMonth(); ANO = HOJE.getFullYear(); MES_NUM = MES + 1;
     init();
   }
-  window.DMPAY_VENDAS = { nav, navHoje };
+  // Cache do último fechamento pra drawer
+  let _ultimoFiadoItens = [];
+  let _ultimoSangriaItens = [];
+  let _ultimaDataFechamento = null;
+
+  function abrirDrawer(titulo, sub, itens, totalStr) {
+    const bg = document.getElementById('drawer-bg');
+    const dr = document.getElementById('drawer');
+    const tt = document.getElementById('drawer-title');
+    const ss = document.getElementById('drawer-sub');
+    const bd = document.getElementById('drawer-body');
+    const tot = document.getElementById('drawer-total');
+    if (!bg || !dr || !bd) return;
+    tt.textContent = titulo;
+    ss.textContent = sub;
+    tot.textContent = totalStr;
+    if (!itens.length) {
+      bd.innerHTML = '<div class="drawer-empty">Sem registros nesse dia.</div>';
+    } else {
+      bd.innerHTML = itens.map(it => `
+        <div class="drawer-row">
+          <div>
+            <div class="drawer-row-name">${it.nome}</div>
+            <div class="drawer-row-meta">${it.meta}</div>
+          </div>
+          <div class="drawer-row-val">R$ ${fmtBRLfull(it.valor)}</div>
+        </div>
+      `).join('');
+    }
+    bg.classList.add('open');
+    dr.classList.add('open');
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+  }
+
+  function fecharDrawer() {
+    document.getElementById('drawer-bg')?.classList.remove('open');
+    document.getElementById('drawer')?.classList.remove('open');
+  }
+
+  function abrirFiado() {
+    const dt = _ultimaDataFechamento ? _ultimaDataFechamento.split('-').reverse().join('/') : '';
+    const total = _ultimoFiadoItens.reduce((s,i)=>s+Number(i.valor||0),0);
+    abrirDrawer(
+      'Clientes que quitaram fiado',
+      `${_ultimoFiadoItens.length} parcela${_ultimoFiadoItens.length!==1?'s':''} recebida${_ultimoFiadoItens.length!==1?'s':''} em ${dt}`,
+      _ultimoFiadoItens,
+      'R$ ' + fmtBRLfull(total)
+    );
+  }
+
+  function abrirSangria() {
+    const dt = _ultimaDataFechamento ? _ultimaDataFechamento.split('-').reverse().join('/') : '';
+    const total = _ultimoSangriaItens.reduce((s,i)=>s+Number(i.valor||0),0);
+    abrirDrawer(
+      'Sangrias do dia',
+      `${_ultimoSangriaItens.length} retirada${_ultimoSangriaItens.length!==1?'s':''} em ${dt}`,
+      _ultimoSangriaItens,
+      'R$ ' + fmtBRLfull(total)
+    );
+  }
+
+  window.DMPAY_VENDAS = { nav, navHoje, abrirFiado, abrirSangria, fecharDrawer };
 
   async function init() {
     if (!window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
@@ -247,6 +308,100 @@
     // Banner sync: atualiza última sincronização
     const syncTitle = document.querySelector('.sync-title b');
     if (syncTitle) syncTitle.textContent = `Sincronizado com iCommerce`;
+
+    // === Fechamento do dia: Recebimentos de Fiado + Sangrias + Caixa líquido ===
+    await carregarFechamentoDia(COMPANY_ID, ultimoDia, porDia[ultimoDia] || 0);
+
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+  }
+
+  async function carregarFechamentoDia(companyId, dataIso, totalVendasDia) {
+    if (!dataIso) return;
+    _ultimaDataFechamento = dataIso;
+    const [y,m,d] = dataIso.split('-');
+    const dtLabel = `${d}/${m}/${y}`;
+    const reconData = document.getElementById('recon-data');
+    if (reconData) reconData.textContent = dtLabel;
+
+    const inicio = dataIso + 'T00:00:00';
+    const fim = dataIso + 'T23:59:59.999';
+
+    // 1) Recebimentos de fiado: parcelas com received_at no dia
+    const { data: recs, error: errR } = await sb.from('receivables')
+      .select('id, amount, received_at, description, customer_id, customers(name)')
+      .eq('company_id', companyId)
+      .gte('received_at', inicio)
+      .lte('received_at', fim)
+      .not('received_at', 'is', null)
+      .limit(5000);
+    if (errR) { console.error('fechamento fiado', errR); }
+
+    const fiadoRows = (recs || []).map(r => ({
+      nome: (r.customers && r.customers.name) || 'Cliente sem nome',
+      meta: `${r.description || '—'} · ${new Date(r.received_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`,
+      valor: Number(r.amount || 0)
+    }));
+    _ultimoFiadoItens = fiadoRows;
+
+    const totalFiado = fiadoRows.reduce((s,i)=>s+i.valor, 0);
+    const qtdFiado = fiadoRows.length;
+
+    const fiadoValEl = document.getElementById('fiado-valor');
+    const fiadoDetEl = document.getElementById('fiado-detalhe');
+    const fiadoAlertEl = document.getElementById('fiado-alerta');
+    const btnFiado = document.getElementById('btn-fiado-detalhes');
+    if (fiadoValEl) fiadoValEl.textContent = 'R$ ' + fmtBRLfull(totalFiado);
+    if (fiadoDetEl) fiadoDetEl.textContent = qtdFiado === 0
+      ? 'Nenhum cliente quitou fiado neste dia.'
+      : `${qtdFiado} parcela${qtdFiado!==1?'s':''} quitada${qtdFiado!==1?'s':''}`;
+    if (btnFiado) btnFiado.disabled = qtdFiado === 0;
+
+    // Alerta operacional: iCommerce só permite marcar DINHEIRO/PIX/PIX-POS na quitação.
+    // Sem integração com maquininha, 100% vem marcado como dinheiro e o fechamento não bate.
+    // Mostramos o alerta quando há recebimento mas sem outra forma registrada.
+    if (fiadoAlertEl) {
+      if (qtdFiado >= 3) {
+        fiadoAlertEl.style.display = 'flex';
+        fiadoAlertEl.innerHTML = `<i data-lucide="alert-triangle"></i><span>Verifique como o caixa marcou a forma. Cliente que paga fiado via PIX ou cartão costuma ser registrado como "Dinheiro" por hábito.</span>`;
+      } else {
+        fiadoAlertEl.style.display = 'none';
+      }
+    }
+
+    // 2) Sangrias: cash_withdrawals com withdrawal_date = dia
+    const { data: sangs, error: errS } = await sb.from('cash_withdrawals')
+      .select('amount, operator, notes, withdrawal_date')
+      .eq('company_id', companyId)
+      .eq('withdrawal_date', dataIso)
+      .limit(500);
+    if (errS) { console.error('fechamento sangria', errS); }
+
+    const sangRows = (sangs || []).map(s => ({
+      nome: s.operator ? `Operador ${s.operator}` : 'Retirada de caixa',
+      meta: (s.notes || '—').slice(0, 80),
+      valor: Number(s.amount || 0)
+    }));
+    _ultimoSangriaItens = sangRows;
+    const totalSangria = sangRows.reduce((s,i)=>s+i.valor, 0);
+    const qtdSangria = sangRows.length;
+
+    const sangValEl = document.getElementById('sangria-valor');
+    const sangDetEl = document.getElementById('sangria-detalhe');
+    const btnSang = document.getElementById('btn-sangria-detalhes');
+    if (sangValEl) sangValEl.textContent = 'R$ ' + fmtBRLfull(totalSangria);
+    if (sangDetEl) sangDetEl.textContent = qtdSangria === 0
+      ? 'Nenhuma sangria neste dia.'
+      : `${qtdSangria} retirada${qtdSangria!==1?'s':''} do caixa`;
+    if (btnSang) btnSang.disabled = qtdSangria === 0;
+
+    // 3) Caixa líquido esperado = vendas + fiado recebido − sangrias
+    const liquido = Number(totalVendasDia || 0) + totalFiado - totalSangria;
+    const liqValEl = document.getElementById('liquido-valor');
+    const liqDetEl = document.getElementById('liquido-detalhe');
+    if (liqValEl) liqValEl.textContent = 'R$ ' + fmtBRLfull(liquido);
+    if (liqDetEl) {
+      liqDetEl.innerHTML = `<span style="font-family:'Geist Mono',monospace;font-size:11px">${fmtBRLfull(totalVendasDia)} + ${fmtBRLfull(totalFiado)} − ${fmtBRLfull(totalSangria)}</span>`;
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
