@@ -249,4 +249,44 @@ function _fornLoad() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', _fornLoad);
+// ── Init — mesmo padrão do contas-receber.js que funciona
+function _fornInit() {
+  if (!window.sb || !window.DMPAY_COMPANY) { setTimeout(_fornInit, 100); return; }
+
+  // Busca — addEventListener igual ao contas-receber
+  var search = document.querySelector('.search input');
+  if (search) {
+    var _to;
+    search.addEventListener('input', function(e) {
+      clearTimeout(_to);
+      _to = setTimeout(function() {
+        window._FORN.busca = e.target.value;
+        window._FORN_render();
+      }, 200);
+    });
+  }
+
+  // Chips — adiciona listener pelo data-index (HTML mantém onclick como fallback)
+  document.querySelectorAll('.status-chip').forEach(function(chip, i) {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.status-chip').forEach(function(c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      window._FORN.filtro = i === 0 ? 'todos' : i === 1 ? 'recorrentes' : 'sem-compra';
+      window._FORN_render();
+    });
+  });
+
+  // Dropdown tipo
+  var sel = document.querySelector('.filter-select');
+  if (sel) {
+    sel.addEventListener('change', function() {
+      window._FORN.tipo = sel.value;
+      window._FORN_render();
+    });
+  }
+
+  _fornLoad();
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _fornInit);
+else _fornInit();

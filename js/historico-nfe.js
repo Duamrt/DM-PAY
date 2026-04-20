@@ -308,6 +308,20 @@
   window.filterStatus = filterStatus;
   window.closeDrawer = closeDrawer;
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
-  else load();
+  function initListeners() {
+    var search = document.querySelector('.search input');
+    if (search) {
+      var _to;
+      search.addEventListener('input', function(e) {
+        clearTimeout(_to);
+        _to = setTimeout(function() { BUSCA = e.target.value; render(); }, 200);
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { initListeners(); load(); });
+  } else {
+    initListeners(); load();
+  }
 })();
