@@ -64,7 +64,7 @@
       const ids = INVOICES.map(i => i.id);
       const payRes = await window.sb
         .from('payables')
-        .select('invoice_id, id, amount, status')
+        .select('id, invoice_id, amount, due_date, status, payment_method, boleto_line, notes')
         .in('invoice_id', ids);
       const byInv = {};
       (payRes.data || []).forEach(p => {

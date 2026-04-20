@@ -429,11 +429,15 @@
       });
     });
 
-    // Dispensar alerta
-    document.querySelector('.alert-close').addEventListener('click', (e) => {
-      e.stopPropagation();
-      document.querySelector('.alert').style.display = 'none';
-    });
+    // Dispensar alerta (elemento opcional — pode não existir após limpeza)
+    const alertClose = document.querySelector('.alert-close');
+    if (alertClose) {
+      alertClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const a = document.querySelector('.alert');
+        if (a) a.style.display = 'none';
+      });
+    }
 
     // ========================================
     // Algoritmo FEBRABAN — gera boletos válidos (DVs corretos)
