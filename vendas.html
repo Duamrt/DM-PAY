@@ -201,6 +201,16 @@
     .recon-expand{margin-top:8px;padding:0;background:none;border:none;color:var(--accent);font-size:11.5px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit}
     .recon-expand:hover{text-decoration:underline}
     .recon-expand:disabled{color:var(--text-soft);cursor:default;text-decoration:none}
+    /* Navegação de data */
+    .recon-nav{display:inline-flex;align-items:center;gap:6px}
+    .recon-nav-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer;display:grid;place-items:center;padding:0;font-family:inherit}
+    .recon-nav-btn:hover:not(:disabled){background:var(--bg-hover);color:var(--text);border-color:var(--border-strong)}
+    .recon-nav-btn:disabled{opacity:0.4;cursor:default}
+    .recon-nav-btn svg{width:14px;height:14px}
+    .recon-date-input{padding:5px 9px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;font-size:12px;font-weight:500;outline:none;cursor:pointer}
+    .recon-date-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+    .hm-cell{cursor:pointer}
+    .hm-cell.selected{box-shadow:0 0 0 2px var(--accent);border-color:var(--accent)}
     /* Drawer lateral (fiado/sangria detalhes) */
     .drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:150}
     .drawer-bg.open{display:block}
@@ -523,7 +533,12 @@
         <div class="recon-card-head">
           <div>
             <h3><i data-lucide="wallet"></i> Fechamento do dia <span id="recon-data" class="recon-date">—</span> <span class="auto-tag"><i data-lucide="zap"></i>Auto · iCommerce</span></h3>
-            <div class="recon-sub">Quanto entrou de quitação de fiado + sangrias feitas pelo caixa no mesmo dia.</div>
+            <div class="recon-sub">Quanto entrou de quitação de fiado + sangrias feitas pelo caixa no mesmo dia. Clique no calendário abaixo pra trocar a data.</div>
+          </div>
+          <div class="recon-nav">
+            <button class="recon-nav-btn" id="recon-prev" title="Dia anterior com venda" onclick="window.DMPAY_VENDAS && DMPAY_VENDAS.prevDia()"><i data-lucide="chevron-left"></i></button>
+            <input type="date" id="recon-date-picker" class="recon-date-input" onchange="window.DMPAY_VENDAS && DMPAY_VENDAS.onPickDate(this.value)">
+            <button class="recon-nav-btn" id="recon-next" title="Próximo dia com venda" onclick="window.DMPAY_VENDAS && DMPAY_VENDAS.nextDia()"><i data-lucide="chevron-right"></i></button>
           </div>
         </div>
         <div class="recon-grid">

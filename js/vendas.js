@@ -25,6 +25,10 @@
   let _ultimoFiadoItens = [];
   let _ultimoSangriaItens = [];
   let _ultimaDataFechamento = null;
+  // Cache pra navegação de data
+  let _COMPANY_ID = null;
+  let _porDia = {};
+  let _diasOrdenados = []; // ISO, ordem crescente, só dias com venda
 
   function abrirDrawer(titulo, sub, itens, totalStr) {
     const bg = document.getElementById('drawer-bg');
@@ -82,11 +86,48 @@
     );
   }
 
-  window.DMPAY_VENDAS = { nav, navHoje, abrirFiado, abrirSangria, fecharDrawer };
+  async function selectarData(iso) {
+    if (!iso || !_COMPANY_ID) return;
+    await carregarFechamentoDia(_COMPANY_ID, iso, _porDia[iso] || 0);
+    // destaca cell do heatmap
+    document.querySelectorAll('.hm-cell.selected').forEach(c => c.classList.remove('selected'));
+    const cell = document.querySelector(`.hm-cell[data-iso="${iso}"]`);
+    if (cell) cell.classList.add('selected');
+  }
+
+  function onPickDate(iso) {
+    if (iso) selectarData(iso);
+  }
+
+  function prevDia() {
+    if (!_ultimaDataFechamento || !_diasOrdenados.length) return;
+    const idx = _diasOrdenados.indexOf(_ultimaDataFechamento);
+    // se data atual não está na lista, pega o imediato anterior
+    if (idx < 0) {
+      const menor = _diasOrdenados.filter(d => d < _ultimaDataFechamento).pop();
+      if (menor) selectarData(menor);
+      return;
+    }
+    if (idx > 0) selectarData(_diasOrdenados[idx - 1]);
+  }
+
+  function nextDia() {
+    if (!_ultimaDataFechamento || !_diasOrdenados.length) return;
+    const idx = _diasOrdenados.indexOf(_ultimaDataFechamento);
+    if (idx < 0) {
+      const maior = _diasOrdenados.find(d => d > _ultimaDataFechamento);
+      if (maior) selectarData(maior);
+      return;
+    }
+    if (idx >= 0 && idx < _diasOrdenados.length - 1) selectarData(_diasOrdenados[idx + 1]);
+  }
+
+  window.DMPAY_VENDAS = { nav, navHoje, abrirFiado, abrirSangria, fecharDrawer, selectarData, prevDia, nextDia, onPickDate };
 
   async function init() {
     if (!window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
     const COMPANY_ID = window.DMPAY_COMPANY.id;
+    _COMPANY_ID = COMPANY_ID;
     const periodoEl = document.getElementById('vendas-periodo');
     if (periodoEl) periodoEl.textContent = `${MESES[MES]} / ${String(ANO).slice(2)}`;
 
@@ -112,6 +153,8 @@
       if (!porDiaForma[d]) porDiaForma[d] = {};
       porDiaForma[d][s.payment_method] = (porDiaForma[d][s.payment_method] || 0) + Number(s.amount);
     });
+    _porDia = porDia;
+    _diasOrdenados = Object.keys(porDia).sort();
 
     // === KPIs ===
     const mesAtual = Object.keys(porDia).filter(d => d >= inicioMes);
@@ -197,6 +240,7 @@
         const val = porDia[iso];
         const cell = document.createElement('div');
         cell.className = 'hm-cell';
+        cell.setAttribute('data-iso', iso);
         if (iso === HOJE.toISOString().slice(0,10)) cell.classList.add('today');
         if (!val) cell.classList.add('future');
         if (val) {
@@ -208,6 +252,8 @@
           cell.style.background = bg;
           cell.style.opacity = Math.min(opacity,1);
           cell.style.color = intensity > 0.7 ? 'white' : 'var(--text)';
+          cell.title = `Clique pra ver o fechamento de ${String(d).padStart(2,'0')}/${String(MES_NUM).padStart(2,'0')}`;
+          cell.addEventListener('click', () => selectarData(iso));
         }
         cell.innerHTML = `<div class="hm-num">${String(d).padStart(2,'0')}</div>` + (val ? `<div class="hm-val">${(val/1000).toFixed(1)}k</div>` : '');
         hmGrid.appendChild(cell);
@@ -322,6 +368,18 @@
     const dtLabel = `${d}/${m}/${y}`;
     const reconData = document.getElementById('recon-data');
     if (reconData) reconData.textContent = dtLabel;
+    const picker = document.getElementById('recon-date-picker');
+    if (picker) picker.value = dataIso;
+    // destaca heatmap cell
+    document.querySelectorAll('.hm-cell.selected').forEach(c => c.classList.remove('selected'));
+    const cell = document.querySelector(`.hm-cell[data-iso="${dataIso}"]`);
+    if (cell) cell.classList.add('selected');
+    // desabilita setas de navegação se não houver dias anterior/posterior
+    const idx = _diasOrdenados.indexOf(dataIso);
+    const btnPrev = document.getElementById('recon-prev');
+    const btnNext = document.getElementById('recon-next');
+    if (btnPrev) btnPrev.disabled = idx <= 0;
+    if (btnNext) btnNext.disabled = idx < 0 || idx >= _diasOrdenados.length - 1;
 
     const inicio = dataIso + 'T00:00:00';
     const fim = dataIso + 'T23:59:59.999';
