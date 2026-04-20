@@ -280,8 +280,8 @@
           <select class="month-select" id="dre-mes-sel">
             <option>Carregando...</option>
           </select>
+          <button id="btn-lancar-impostos" class="btn btn-ghost" style="border-color:var(--warn);color:var(--warn)"><i data-lucide="calculator"></i> Lançar impostos</button>
           <button class="btn btn-ghost" data-action="exportar"><i data-lucide="download"></i> Exportar PDF</button>
-          <button class="btn btn-ghost"><i data-lucide="send"></i> Enviar contador</button>
         </div>
       </div>
 
@@ -624,23 +624,6 @@
       const next = cur === 'light' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('dmpay-theme', next);
-    }
-
-    function drill(key, title) {
-      const valEl = document.getElementById('v-' + key.replace('receita-bruta','rb').replace('op-vendas','dv').replace('op-adm','dadm').replace('op-gerais','dger').replace('rec-fin','rf').replace('desp-fin','df'));
-      const val = valEl ? valEl.textContent : '—';
-      document.getElementById('drillTitle').innerHTML = '<i data-lucide="bar-chart-3"></i> ' + title;
-      document.getElementById('drillCode').textContent = 'Categoria DRE · ' + key;
-      document.getElementById('drillValue').textContent = val !== '—' ? 'R$ ' + val : '—';
-      document.getElementById('drillDesc').textContent = document.getElementById('dre-mes-titulo')?.textContent || '—';
-      document.getElementById('drillList').innerHTML = '<div class="drill-item"><span class="drill-item-name">Detalhamento em construção</span><span class="drill-item-val">—</span></div>';
-      document.getElementById('drawer').classList.add('open');
-      document.getElementById('drawerBg').classList.add('open');
-      lucide.createIcons();
-    }
-    function closeDrill(){
-      document.getElementById('drawer').classList.remove('open');
-      document.getElementById('drawerBg').classList.remove('open');
     }
   </script>
   <script src="js/dre.js"></script>

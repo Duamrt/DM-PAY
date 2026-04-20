@@ -1,9 +1,9 @@
 // js/dre.js — DRE Gerencial real
 (function () {
-  // Alíquotas estimadas (Lucro Presumido — ajustar com contador)
-  const ICMS = 0.085;
-  const PIS  = 0.0165;
-  const COF  = 0.076;
+  // Alíquotas de fallback (estimativa enquanto contador não lançar os valores reais)
+  const ICMS_EST = 0.085;
+  const PIS_EST  = 0.0165;
+  const COF_EST  = 0.076;
   const IRPJ = 0.15;
   const IRPJ_AD_BASE = 20000;
   const CSLL = 0.09;
@@ -15,7 +15,6 @@
 
   const fmt  = v => Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
   const pctS = (v,base) => base ? (v/base*100).toFixed(1).replace('.',',')+'%' : '—';
-  const dp   = (v,base) => base ? ((v-base)/base*100).toFixed(1).replace('.',',')+'%' : '—';
 
   function $v(id) { return document.getElementById(id); }
   function set(id, txt, opacity) {
@@ -31,7 +30,6 @@
     el.className = 'margem-val ' + (v >= high ? 'good' : v >= low ? 'warn' : 'bad');
   }
 
-  // ── zero ──────────────────────────────────────────────────────────────────
   function zeroAll() {
     ['v-rb','v-icms','v-pis','v-cofins','v-dev','v-rl',
      'v-cmv','v-lb',
@@ -50,7 +48,6 @@
     ].forEach(id => { set(id,'—',0.4); });
   }
 
-  // ── fetch ─────────────────────────────────────────────────────────────────
   function monthRange(ano, mes) {
     const ini = `${ano}-${String(mes).padStart(2,'0')}-01`;
     const prox = mes === 12 ? `${ano+1}-01-01` : `${ano}-${String(mes+1).padStart(2,'0')}-01`;
@@ -69,7 +66,7 @@
 
   async function fetchInvoices(ano, mes) {
     const { ini, prox } = monthRange(ano, mes);
-    const { data } = await sb.from('invoices').select('total,supplier_id,nf_number')
+    const { data } = await sb.from('invoices').select('total,supplier_id,suppliers(legal_name,trade_name)')
       .eq('company_id', CID).gte('issue_date', ini).lt('issue_date', prox);
     return data || [];
   }
@@ -84,66 +81,124 @@
     return data || [];
   }
 
-  // ── render ────────────────────────────────────────────────────────────────
+  async function fetchTaxes(ano, mes) {
+    const { data } = await sb.from('dre_taxes')
+      .select('icms_net,pis_net,cofins_net,devolucoes,notes,updated_at')
+      .eq('company_id', CID).eq('year', ano).eq('month', mes).maybeSingle();
+    return data || null;
+  }
+
+  // ── Lançar impostos (modal DMPAY_UI) ─────────────────────────────────────
+  async function lancarImpostos() {
+    if (!window.DMPAY_UI) { alert('UI não carregada.'); return; }
+
+    const current = await fetchTaxes(ANO, MES);
+    const mesLabel = `${MESES_LONGO[MES-1]} / ${ANO}`;
+
+    const vals = await window.DMPAY_UI.open({
+      title: `Impostos — ${mesLabel}`,
+      desc: 'Valores LÍQUIDOS após abatimento de créditos (conforme guias do contador). ICMS, PIS e COFINS não-cumulativos = débito s/ vendas − crédito s/ compras.',
+      fields: [
+        { key: 'icms',    label: 'ICMS líquido (R$) *',    type: 'number', value: current ? Number(current.icms_net).toFixed(2)   : '', placeholder: '0,00' },
+        { key: 'pis',     label: 'PIS líquido (R$) *',     type: 'number', value: current ? Number(current.pis_net).toFixed(2)    : '', placeholder: '0,00' },
+        { key: 'cofins',  label: 'COFINS líquido (R$) *',  type: 'number', value: current ? Number(current.cofins_net).toFixed(2) : '', placeholder: '0,00' },
+        { key: 'dev',     label: 'Devoluções (R$)',         type: 'number', value: current ? Number(current.devolucoes).toFixed(2) : '0', placeholder: '0,00' },
+        { key: 'notes',   label: 'Observação (opcional)', multiline: false, value: current?.notes || '', placeholder: 'Ex: guia DARF 25/04, regime não-cumulativo' }
+      ],
+      submitLabel: 'Salvar',
+      cancelLabel: 'Cancelar',
+      onSubmit: (v) => {
+        const n = (k) => Number(String(v[k]||'0').replace(/[^\d,]/g,'').replace(',','.'));
+        if (isNaN(n('icms')) || isNaN(n('pis')) || isNaN(n('cofins'))) throw new Error('Preencha os valores de ICMS, PIS e COFINS.');
+        return true;
+      }
+    });
+
+    if (!vals) return;
+
+    const parse = (k) => Number(String(vals[k]||'0').replace(/[^\d,]/g,'').replace(',','.')) || 0;
+    const userId = window.DMPAY_COMPANY?._userId || null;
+
+    const payload = {
+      company_id:  CID,
+      year:        ANO,
+      month:       MES,
+      icms_net:    parse('icms'),
+      pis_net:     parse('pis'),
+      cofins_net:  parse('cofins'),
+      devolucoes:  parse('dev'),
+      notes:       (vals.notes||'').trim() || null,
+      updated_by:  userId,
+      updated_at:  new Date().toISOString()
+    };
+
+    const { error } = await sb.from('dre_taxes')
+      .upsert(payload, { onConflict: 'company_id,year,month' });
+
+    if (error) { alert('Erro ao salvar: ' + error.message); return; }
+
+    await dreLoad();
+  }
+
+  // ── Render principal ──────────────────────────────────────────────────────
   async function dreLoad() {
     zeroAll();
     set('dre-mes-titulo', `${MESES_LONGO[MES-1]} / ${ANO}`);
 
     const prev = prevMonth(ANO, MES);
-    const [sales, salesAnt, invs, pays] = await Promise.all([
+    const [sales, salesAnt, invs, pays, taxes] = await Promise.all([
       fetchSales(ANO, MES),
       fetchSales(prev.ano, prev.mes),
       fetchInvoices(ANO, MES),
       fetchPayables(ANO, MES),
+      fetchTaxes(ANO, MES),
     ]);
 
     const rb    = sales.reduce((s,r) => s + Number(r.amount), 0);
     const rbAnt = salesAnt.reduce((s,r) => s + Number(r.amount), 0);
 
-    // ── Receita Bruta ──
     set('v-rb', fmt(rb), 1); setClass('v-rb','cas-val plus');
     set('p-rb', '—', 1);
 
-    // ── Deduções fiscais estimadas ──
-    const icmsV = rb * ICMS;
-    const pisV  = rb * PIS;
-    const cofV  = rb * COF;
-    set('v-icms', fmt(icmsV), 1); set('p-icms', pctS(icmsV,rb)+' est.', 1);
-    set('v-pis',  fmt(pisV),  1); set('p-pis',  pctS(pisV,rb)+' est.',  1);
-    set('v-cofins',fmt(cofV), 1); set('p-cofins',pctS(cofV,rb)+' est.', 1);
-    set('v-dev','—',0.4); set('p-dev','—',0.4);
+    // Impostos: real (contador) ou estimativa
+    const taxReal = taxes !== null;
+    const icmsV = taxReal ? Number(taxes.icms_net)   : rb * ICMS_EST;
+    const pisV  = taxReal ? Number(taxes.pis_net)    : rb * PIS_EST;
+    const cofV  = taxReal ? Number(taxes.cofins_net) : rb * COF_EST;
+    const devV  = taxReal ? Number(taxes.devolucoes) : 0;
 
-    // ── Receita Líquida ──
-    const rl = rb - icmsV - pisV - cofV;
+    const tag = taxReal ? '' : ' est.';
+    set('v-icms',   fmt(icmsV), 1); set('p-icms',   pctS(icmsV,rb) + tag, 1);
+    set('v-pis',    fmt(pisV),  1); set('p-pis',    pctS(pisV,rb)  + tag, 1);
+    set('v-cofins', fmt(cofV),  1); set('p-cofins', pctS(cofV,rb)  + tag, 1);
+    if (devV > 0) { set('v-dev', fmt(devV), 1); set('p-dev', pctS(devV,rb), 1); }
+    else          { set('v-dev','—',0.4); set('p-dev','—',0.4); }
+
+    const rl = rb - icmsV - pisV - cofV - devV;
     set('v-rl', fmt(rl), 1); setClass('v-rl','cas-val total');
     set('p-rl', '100,0%', 1);
 
-    // ── CMV ──
+    // CMV via NF-e importadas
     const cmv = invs.reduce((s,r) => s + Number(r.total||0), 0);
     if (cmv > 0) {
       set('v-cmv', fmt(cmv), 1); setClass('v-cmv','cas-val minus');
       set('p-cmv', pctS(cmv,rl), 1);
     }
 
-    // ── Lucro Bruto ──
     const lb = rl - cmv;
-    if (cmv > 0 || true) { // sempre calcula
-      set('v-lb', cmv > 0 ? fmt(lb) : fmt(rl)+' *', 1);
-      setClass('v-lb', 'cas-val ' + (lb >= 0 ? 'total' : 'minus'));
-      set('p-lb', cmv > 0 ? pctS(lb,rl) : '— *', 1);
-    }
+    set('v-lb', cmv > 0 ? fmt(lb) : fmt(rl)+' *', 1);
+    setClass('v-lb', 'cas-val ' + (lb >= 0 ? 'total' : 'minus'));
+    set('p-lb', cmv > 0 ? pctS(lb,rl) : '— *', 1);
 
-    // ── Despesas por categoria ──
+    // Despesas por categoria (palavras-chave)
     const byCat = {};
     pays.forEach(p => {
       const cat = p.expense_categories?.name || 'sem-categoria';
       byCat[cat] = (byCat[cat]||0) + Number(p.amount||0);
     });
-
-    // Agrupamento inteligente por palavras-chave no nome da categoria
-    function sumCats(...keywords) {
+    function sumCats(...kws) {
       return Object.entries(byCat).filter(([k]) =>
-        keywords.some(kw => k.toLowerCase().includes(kw.toLowerCase()))
+        kws.some(kw => k.toLowerCase().includes(kw.toLowerCase()))
       ).reduce((s,[,v]) => s+v, 0);
     }
 
@@ -165,7 +220,6 @@
         if (idPct) set(idPct, pctS(v,rl), 1);
       }
     }
-
     setDesp('v-dv','p-dv', dvTotal);
     setDesp('v-folha',null, folha);
     setDesp('v-maq',null, maqTaxas);
@@ -176,21 +230,12 @@
     setDesp('v-aluguel',null, aluguel);
     setDesp('v-internet',null, internet);
 
-    // ── EBIT ──
-    const ebit = lb - despOp;
+    const ebitV = (cmv > 0 ? lb : rl) - despOp;
     if (despOp > 0 || cmv > 0) {
-      const ebitV = cmv > 0 ? ebit : rl - despOp;
       set('v-ebit', fmt(ebitV), 1);
       setClass('v-ebit','cas-val ' + (ebitV >= 0 ? 'total' : 'minus'));
       set('p-ebit', pctS(ebitV,rl), 1);
-    }
 
-    // ── Resultado financeiro ── sem dados por ora
-    // ficam "—"
-
-    // ── EBT, IRPJ, CSLL, Lucro Líquido ── só se tiver EBIT calculado
-    if (despOp > 0 || cmv > 0) {
-      const ebitV = cmv > 0 ? ebit : rl - despOp;
       const irpjV   = ebitV > 0 ? ebitV * IRPJ : 0;
       const irpjAdV = ebitV > IRPJ_AD_BASE ? (ebitV - IRPJ_AD_BASE) * 0.10 : 0;
       const csllV   = ebitV > 0 ? ebitV * CSLL : 0;
@@ -198,25 +243,22 @@
 
       set('v-ebt', fmt(ebitV), 1); setClass('v-ebt','cas-val total');
       set('p-ebt', pctS(ebitV,rl), 1);
-      set('v-irpj', fmt(irpjV), 1);
+      set('v-irpj',   fmt(irpjV),   1);
       set('v-irpjad', fmt(irpjAdV), 1);
-      set('v-csll', fmt(csllV), 1);
+      set('v-csll',   fmt(csllV),   1);
       set('v-ll', fmt(ll), 1); setClass('v-ll','cas-val grand');
       set('p-ll', pctS(ll,rl) + (cmv === 0 ? ' *' : ''), 1);
 
-      // ── Margens ──
       if (rl > 0) {
         const lbCalc = cmv > 0 ? lb : rl;
-        setMargemVal('v-mb', lbCalc/rl, 0.25, 0.35);
-        setMargemVal('v-mop', ebitV/rl, 0.05, 0.15);
-        setMargemVal('v-ml', ll/rl, 0.03, 0.08);
+        setMargemVal('v-mb',  lbCalc/rl, 0.25, 0.35);
+        setMargemVal('v-mop', ebitV/rl,  0.05, 0.15);
+        setMargemVal('v-ml',  ll/rl,     0.03, 0.08);
       }
     } else if (rl > 0) {
-      // Só Receita Líquida disponível
       setMargemVal('v-mb', rl/rb, 0.15, 0.25);
     }
 
-    // ── Vs mês anterior ──
     if (rbAnt > 0) {
       const dRb  = (rb - rbAnt) / rbAnt;
       const dRbA = rb - rbAnt;
@@ -226,23 +268,107 @@
       if ($v('delta-rb-p')) $v('delta-rb-p').className = cls;
     }
 
-    // ── Disclaimer ──
+    // Atualiza disclaimer e botão
     const disc = document.querySelector('.disclaimer div');
     if (disc) {
+      const taxNote = taxReal
+        ? `Deduções fiscais <b>reais</b> (lançadas pelo contador${taxes.notes ? ' — ' + taxes.notes : ''}).`
+        : `Deduções fiscais <b>estimadas</b> — ICMS ${(ICMS_EST*100).toFixed(1)}% · PIS ${(PIS_EST*100).toFixed(2)}% · COFINS ${(COF_EST*100).toFixed(1)}%. <a href="#" onclick="DMPAY_DRE.lancarImpostos();return false" style="color:var(--warn);font-weight:600">Lançar valores reais →</a>`;
       const cmvNote = cmv > 0
-        ? `CMV de NF-e importadas: <b>R$ ${fmt(cmv)}</b>.`
-        : 'CMV: <b>—</b> (importe NF-e de compras para calcular).';
-      const catNote = despOp > 0 ? '' : ' <b>Despesas operacionais</b>: configure categorias em <a href="categorias.html" style="color:var(--warn)">Categorias</a> para aparecerem aqui.';
-      disc.innerHTML = `<b>Dados reais onde disponível.</b> Deduções fiscais (ICMS/PIS/COFINS) são <b>estimadas</b> — confirme alíquotas com seu contador. ${cmvNote}${catNote}`;
+        ? `CMV: <b>R$ ${fmt(cmv)}</b>.`
+        : 'CMV: <b>—</b> (importe NF-e de compras).';
+      disc.innerHTML = `<b>Dados reais onde disponível.</b> ${taxNote} ${cmvNote}`;
     }
 
-    // ── Chart ──
-    await renderChart();
+    // Badge no botão
+    const btn = document.getElementById('btn-lancar-impostos');
+    if (btn) {
+      btn.innerHTML = taxReal
+        ? '<i data-lucide="check-circle" style="width:14px;height:14px"></i> Impostos lançados'
+        : '<i data-lucide="calculator" style="width:14px;height:14px"></i> Lançar impostos';
+      btn.style.borderColor = taxReal ? 'var(--success)' : 'var(--warn)';
+      btn.style.color       = taxReal ? 'var(--success)' : 'var(--warn)';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    await renderChart(taxReal);
   }
+
+  // ── Drill-down ───────────────────────────────────────────────────────────
+  async function drill(key, title) {
+    const idMap = {
+      'receita-bruta': 'rb', 'icms': 'icms', 'pis': 'pis', 'cofins': 'cofins',
+      'dev': 'dev', 'cmv': 'cmv', 'op-vendas': 'dv', 'op-adm': 'dadm',
+      'op-gerais': 'dger', 'rec-fin': 'rf', 'desp-fin': 'df', 'outras': 'outras'
+    };
+    const valEl = $v('v-' + (idMap[key] || key));
+    const val = valEl ? valEl.textContent : '—';
+
+    document.getElementById('drillTitle').innerHTML = '<i data-lucide="bar-chart-3"></i> ' + title;
+    document.getElementById('drillCode').textContent = `${MESES_LONGO[MES-1]} / ${ANO}`;
+    document.getElementById('drillValue').textContent = val !== '—' ? val : '—';
+    document.getElementById('drillDesc').textContent = val !== '—' ? '% da Receita Líquida' : 'Sem dados para este mês';
+
+    let items = [];
+
+    if (key === 'cmv') {
+      const { ini, prox } = monthRange(ANO, MES);
+      const { data: invs } = await sb.from('invoices')
+        .select('total,suppliers(legal_name,trade_name)')
+        .eq('company_id', CID).gte('issue_date', ini).lt('issue_date', prox)
+        .order('total', { ascending: false });
+      items = (invs||[]).map(i => ({
+        name: i.suppliers?.legal_name || i.suppliers?.trade_name || 'Fornecedor',
+        val: fmt(i.total)
+      }));
+    } else if (key === 'receita-bruta') {
+      const rows = sales_cache || [];
+      const byPm = {};
+      const pmLabel = { dinheiro:'Dinheiro', pix:'PIX', debito:'Débito', credito:'Crédito', faturado:'Fiado/Faturado', outros:'Outros' };
+      rows.forEach(r => { byPm[r.payment_method] = (byPm[r.payment_method]||0) + Number(r.amount); });
+      items = Object.entries(byPm).sort(([,a],[,b])=>b-a).map(([pm,v]) => ({ name: pmLabel[pm]||pm, val: fmt(v) }));
+    } else if (['icms','pis','cofins'].includes(key)) {
+      const taxes = await fetchTaxes(ANO, MES);
+      if (taxes) {
+        items = [
+          { name: 'Valor líquido (após créditos)', val: fmt(key==='icms'?taxes.icms_net:key==='pis'?taxes.pis_net:taxes.cofins_net) },
+          { name: 'Regime: Lucro Real não-cumulativo', val: '' },
+          { name: 'Obs', val: taxes.notes || '—' }
+        ];
+      } else {
+        const rb = Number($v('v-rb')?.textContent?.replace(/\./g,'').replace(',','.')) || 0;
+        const rate = key==='icms'?ICMS_EST:key==='pis'?PIS_EST:COF_EST;
+        items = [
+          { name: 'Estimativa sobre Receita Bruta', val: `${(rate*100).toFixed(2)}%` },
+          { name: 'Valor estimado', val: fmt(rb * rate) },
+          { name: '⚠️ Clique em "Lançar impostos" para usar valores reais', val: '' }
+        ];
+      }
+    } else {
+      items = [{ name: 'Detalhamento disponível em breve', val: '—' }];
+    }
+
+    const list = document.getElementById('drillList');
+    if (items.length === 0) {
+      list.innerHTML = '<div class="drill-item"><span class="drill-item-name">Sem dados este mês</span><span class="drill-item-val">—</span></div>';
+    } else {
+      list.innerHTML = items.map(i => `
+        <div class="drill-item">
+          <span class="drill-item-name">${i.name}</span>
+          <span class="drill-item-val">${i.val}</span>
+        </div>`).join('');
+    }
+
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawerBg').classList.add('open');
+    if (window.lucide) lucide.createIcons();
+  }
+
+  let sales_cache = [];
 
   // ── Chart ────────────────────────────────────────────────────────────────
   let dreChart;
-  async function renderChart() {
+  async function renderChart(taxReal) {
     const { data: allSales } = await sb.from('daily_sales').select('sale_date,amount')
       .eq('company_id', CID).order('sale_date', { ascending: true }).limit(5000);
 
@@ -265,7 +391,7 @@
     const keys = Object.keys(byMes).sort().slice(-12);
     const labels = keys.map(k => { const [a,m]=k.split('-'); return `${MESES_CURTO[+m-1]}/${String(a).slice(2)}`; });
     const rbData = keys.map(k => Math.round((byMes[k]||0)/1000));
-    const rlData = rbData.map(v => Math.round(v * (1 - ICMS - PIS - COF)));
+    const rlData = rbData.map(v => Math.round(v * (1 - ICMS_EST - PIS_EST - COF_EST)));
     const lbData = keys.map((k,i) => {
       const cmvK = invByMes[k]||0;
       if (!cmvK) return null;
@@ -275,9 +401,6 @@
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const tColor = isDark ? '#9CA3AF' : '#6B7280';
     const gColor = isDark ? '#222832' : '#E5E7EB';
-    const accent  = isDark ? '#3B82F6' : '#2563EB';
-    const warn    = isDark ? '#FBBF24' : '#D97706';
-    const success = '#10B981';
 
     if (dreChart) dreChart.destroy();
     dreChart = new Chart(document.getElementById('dreChart'), {
@@ -285,9 +408,9 @@
       data: {
         labels,
         datasets: [
-          { label:'Receita Bruta', data:rbData, borderColor:accent, backgroundColor:'transparent', tension:0.35, borderWidth:2.5, pointRadius:3, pointHoverRadius:6, pointBackgroundColor:accent },
-          { label:'Receita Líquida', data:rlData, borderColor:warn, backgroundColor:'transparent', tension:0.35, borderWidth:2, pointRadius:2, pointHoverRadius:5, pointBackgroundColor:warn, borderDash:[4,3] },
-          { label:'Lucro Bruto', data:lbData, borderColor:success, backgroundColor:'transparent', tension:0.35, borderWidth:2, pointRadius:2, pointHoverRadius:5, pointBackgroundColor:success }
+          { label:'Receita Bruta', data:rbData, borderColor: isDark?'#3B82F6':'#2563EB', backgroundColor:'transparent', tension:0.35, borderWidth:2.5, pointRadius:3, pointHoverRadius:6 },
+          { label:'Receita Líquida', data:rlData, borderColor: isDark?'#FBBF24':'#D97706', backgroundColor:'transparent', tension:0.35, borderWidth:2, pointRadius:2, pointHoverRadius:5, borderDash:[4,3] },
+          { label:'Lucro Bruto', data:lbData, borderColor:'#10B981', backgroundColor:'transparent', tension:0.35, borderWidth:2, pointRadius:2, pointHoverRadius:5 }
         ]
       },
       options: {
@@ -296,8 +419,8 @@
         plugins:{
           legend:{ display:false },
           tooltip:{
-            backgroundColor: isDark ? '#1A1F27' : '#111827', titleColor:'#F3F4F6', bodyColor:'#F3F4F6', padding:10,
-            callbacks:{ label: ctx => ctx.dataset.label + ': R$ ' + (ctx.parsed.y != null ? ctx.parsed.y.toLocaleString('pt-BR') + 'k' : '—') }
+            backgroundColor: isDark?'#1A1F27':'#111827', titleColor:'#F3F4F6', bodyColor:'#F3F4F6', padding:10,
+            callbacks:{ label: ctx => ctx.dataset.label + ': R$ ' + (ctx.parsed.y != null ? ctx.parsed.y.toLocaleString('pt-BR')+'k' : '—') }
           }
         },
         scales:{
@@ -361,6 +484,8 @@
       });
     });
 
+    document.getElementById('btn-lancar-impostos')?.addEventListener('click', lancarImpostos);
+
     document.querySelector('.btn[data-action="exportar"]')?.addEventListener('click', () => {
       alert('Exportar PDF: em construção. Os dados reais já estão na tela para copiar.');
     });
@@ -368,6 +493,13 @@
     await buildMonthSelect();
     await dreLoad();
   }
+
+  window.DMPAY_DRE = { lancarImpostos, drill };
+  window.drill = (key, title) => window.DMPAY_DRE.drill(key, title);
+  window.closeDrill = () => {
+    document.getElementById('drawer')?.classList.remove('open');
+    document.getElementById('drawerBg')?.classList.remove('open');
+  };
 
   init();
 })();
