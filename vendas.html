@@ -160,6 +160,7 @@
     .pay-ico.debito{background:var(--pay-debito)}
     .pay-ico.pix{background:var(--pay-pix)}
     .pay-ico.fiado{background:var(--pay-fiado)}
+    .pay-ico.troco{background:var(--danger)}
     .pay-info{min-width:0}
     .pay-name{font-size:13px;font-weight:500;letter-spacing:-.01em;line-height:1.1}
     .pay-bar{height:4px;background:var(--bg-soft);border-radius:2px;margin-top:5px;overflow:hidden}
@@ -169,6 +170,7 @@
     .pay-bar-fill.debito{background:var(--pay-debito)}
     .pay-bar-fill.pix{background:var(--pay-pix)}
     .pay-bar-fill.fiado{background:var(--pay-fiado)}
+    .pay-bar-fill.troco{background:var(--danger)}
     .pay-value{text-align:right}
     .pay-val-main{font-size:13px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.01em}
     .pay-val-pct{font-size:10.5px;color:var(--text-soft);margin-top:1px;font-family:'Geist Mono',monospace}
@@ -517,6 +519,18 @@
             </div>
             <div class="pay-value">
               <div class="pay-val-main">—</div>
+              <div class="pay-val-pct">—</div>
+            </div>
+          </div>
+
+          <div class="pay-row" id="pay-row-troco" style="display:none">
+            <div class="pay-ico troco"><i data-lucide="corner-up-left"></i></div>
+            <div class="pay-info">
+              <div class="pay-name">Troco <span style="font-size:10.5px;font-weight:500;color:var(--text-soft)">· devolvido ao cliente</span></div>
+              <div class="pay-bar"><div class="pay-bar-fill troco" style="width:0%"></div></div>
+            </div>
+            <div class="pay-value">
+              <div class="pay-val-main" style="color:var(--danger)">—</div>
               <div class="pay-val-pct">—</div>
             </div>
           </div>

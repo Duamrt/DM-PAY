@@ -197,11 +197,10 @@
     if (ultimoDia) {
       const formas = porDiaForma[ultimoDia] || {};
       const totalDia = porDia[ultimoDia]; // líquido (já inclui troco negativo)
-      // Dinheiro líquido = bruto recebido − troco devolvido (troco vem negativo no banco)
-      const troco = Number(formas.troco || 0);
-      const dinheiroLiquido = Number(formas.dinheiro || 0) + troco;
-      const valoresLiq = {
-        dinheiro: dinheiroLiquido,
+      const troco = Number(formas.troco || 0); // vem negativo do banco
+      // As 5 formas mostradas em valores BRUTOS
+      const valoresBrutos = {
+        dinheiro: Number(formas.dinheiro || 0),
         credito: Number(formas.credito || 0),
         debito: Number(formas.debito || 0),
         pix: Number(formas.pix || 0),
@@ -210,7 +209,7 @@
       const rows = document.querySelectorAll('.pay-card .pay-row');
       ['dinheiro','credito','debito','pix','a_prazo'].forEach((k, i) => {
         if (!rows[i]) return;
-        const v = valoresLiq[k];
+        const v = valoresBrutos[k];
         const pct = totalDia > 0 ? (v/totalDia * 100) : 0;
         const valMain = rows[i].querySelector('.pay-val-main');
         const valPct = rows[i].querySelector('.pay-val-pct');
@@ -218,15 +217,28 @@
         if (valMain) valMain.textContent = 'R$ ' + fmtBRLfull(v);
         if (valPct) valPct.textContent = pct.toFixed(1) + '%';
         if (barFill) barFill.style.width = Math.max(pct, 0) + '%';
-        // Hint de troco na linha do dinheiro
-        if (k === 'dinheiro' && troco < 0) {
-          const nameEl = rows[i].querySelector('.pay-name');
-          if (nameEl) nameEl.innerHTML = `Dinheiro <span style="font-size:10px;color:var(--text-soft);font-weight:500">· bruto R$ ${fmtBRLfull(formas.dinheiro||0)} − troco R$ ${fmtBRLfull(-troco)}</span>`;
-        } else if (k === 'dinheiro') {
+        // Reset do nome do Dinheiro (remover legacy hint se existir)
+        if (k === 'dinheiro') {
           const nameEl = rows[i].querySelector('.pay-name');
           if (nameEl) nameEl.textContent = 'Dinheiro';
         }
       });
+      // Linha do troco: só aparece se houver troco no dia
+      const trocoRow = document.getElementById('pay-row-troco');
+      if (trocoRow) {
+        if (troco < 0) {
+          trocoRow.style.display = '';
+          const pct = totalDia > 0 ? (troco/totalDia * 100) : 0;
+          const valMain = trocoRow.querySelector('.pay-val-main');
+          const valPct = trocoRow.querySelector('.pay-val-pct');
+          const barFill = trocoRow.querySelector('.pay-bar-fill');
+          if (valMain) valMain.textContent = '− R$ ' + fmtBRLfull(-troco);
+          if (valPct) valPct.textContent = pct.toFixed(1) + '%';
+          if (barFill) barFill.style.width = Math.abs(pct) + '%';
+        } else {
+          trocoRow.style.display = 'none';
+        }
+      }
       const totalBox = document.querySelector('.pay-card .pay-total');
       if (totalBox) {
         const [y,m,d] = ultimoDia.split('-');
