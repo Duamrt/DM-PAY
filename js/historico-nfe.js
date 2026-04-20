@@ -178,11 +178,26 @@
           <div class="mono" style="font-size:11px;word-break:break-all;color:var(--text-muted);margin-bottom:18px">${esc(inv.nfe_key || '—')}</div>
           ${inv._payables && inv._payables.length ? `
             <div style="color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Parcelas (${inv._payables.length})</div>
-            <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;flex-direction:column;gap:8px">
               ${inv._payables.map((p, idx) => `
-                <div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--bg-soft);border-radius:6px;font-size:13px">
-                  <span>Parcela ${idx + 1} · ${p.status === 'paid' ? 'paga' : 'em aberto'}</span>
-                  <span class="mono">${fmtBRL(p.amount)}</span>
+                <div style="padding:10px 12px;background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;font-size:13px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                    <div style="min-width:0;flex:1">
+                      <div style="font-weight:500">Parcela ${idx + 1} · ${p.status === 'paid' ? '✓ paga' : p.status === 'open' ? 'em aberto' : esc(p.status)}</div>
+                      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">
+                        venc ${brDate(p.due_date)}${p.payment_method ? ' · ' + esc(p.payment_method) : ''}
+                      </div>
+                    </div>
+                    <div style="text-align:right">
+                      <div class="mono" style="font-weight:600;font-size:14px">${fmtBRL(p.amount)}</div>
+                      <button onclick="event.stopPropagation();DMPAY_HISTNF.editParcela('${p.id}')"
+                              style="background:transparent;border:1px solid var(--border);color:var(--accent);padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;margin-top:4px;font-family:inherit">
+                        <i data-lucide="pencil" style="width:11px;height:11px;vertical-align:middle"></i> Editar
+                      </button>
+                    </div>
+                  </div>
+                  ${p.boleto_line ? `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);font-family:monospace;font-size:10.5px;color:var(--text-muted);word-break:break-all">${esc(p.boleto_line)}</div>` : ''}
+                  ${p.notes ? `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);font-size:12px;color:var(--text-muted);font-style:italic">📝 ${esc(p.notes)}</div>` : ''}
                 </div>
               `).join('')}
             </div>
@@ -198,7 +213,72 @@
     document.getElementById('drawerBg').classList.remove('open');
   }
 
-  window.DMPAY_HISTNF = { load, filterStatus, openDetail, closeDrawer };
+  async function editParcela(payableId) {
+    // Encontra a payable no cache (em qualquer invoice)
+    let p = null, inv = null;
+    for (const i of INVOICES) {
+      const found = (i._payables || []).find(x => x.id === payableId);
+      if (found) { p = found; inv = i; break; }
+    }
+    if (!p) { alert('Parcela não encontrada.'); return; }
+    if (!window.DMPAY_UI) { alert('UI não carregada.'); return; }
+
+    const valorBefore = p.amount;
+    const boletoBefore = p.boleto_line || '';
+    const notesBefore = p.notes || '';
+
+    const vals = await window.DMPAY_UI.open({
+      title: 'Editar parcela',
+      desc: 'Ajuste valor e/ou código de barras. Use observação pra documentar por que mudou (ex: devolução parcial).',
+      fields: [
+        { key: 'amount', label: 'Valor (R$) *', type: 'number', value: Number(valorBefore).toFixed(2), placeholder: '0,00', hint: 'Use ponto como separador decimal. Ex: 3496.38' },
+        { key: 'boleto_line', label: 'Linha digitável do boleto', multiline: true, value: boletoBefore, placeholder: '23793.38128 00000.000000 00000.000000 1 99990000000000', hint: 'Deixe em branco se ainda não recebeu o boleto. Aceita 44 ou 47 dígitos.' },
+        { key: 'notes', label: 'Observação / motivo da alteração', multiline: true, value: notesBefore, placeholder: 'Ex: Devolução parcial de 3 unidades do item X (R$ 180,00). Boleto recalculado pelo fornecedor.' }
+      ],
+      submitLabel: 'Salvar alteração',
+      cancelLabel: 'Cancelar',
+      onSubmit: (v) => {
+        const n = Number(String(v.amount).replace(',', '.'));
+        if (!isFinite(n) || n <= 0) throw new Error('Valor precisa ser maior que zero.');
+        const raw = (v.boleto_line || '').replace(/\D/g, '');
+        if (raw && ![44, 47, 48].includes(raw.length)) {
+          throw new Error(`Linha digitável com ${raw.length} dígitos (precisa ter 44, 47 ou 48). Limpe ou corrija.`);
+        }
+        if (Math.abs(n - valorBefore) > 0 && !(v.notes || '').trim()) {
+          throw new Error('Valor alterado — preencha a observação explicando o motivo.');
+        }
+        return true;
+      }
+    });
+
+    if (!vals) return;
+
+    const amount = Number(String(vals.amount).replace(',', '.'));
+    const boleto_line = (vals.boleto_line || '').trim() || null;
+    const notes = (vals.notes || '').trim() || null;
+    const payment_method = boleto_line ? 'boleto' : (p.payment_method || null);
+
+    const payload = { amount, boleto_line, notes, payment_method };
+    const { error } = await window.sb.from('payables').update(payload).eq('id', payableId);
+    if (error) {
+      alert('Erro ao salvar: ' + error.message);
+      return;
+    }
+
+    // Auditoria (pilar #2)
+    if (window.DMPAY_AUDIT) {
+      window.DMPAY_AUDIT.update('payable', payableId,
+        { amount: valorBefore, boleto_line: boletoBefore, notes: notesBefore, payment_method: p.payment_method || null },
+        payload
+      );
+    }
+
+    // Atualiza cache + re-renderiza drawer
+    Object.assign(p, payload);
+    openDetail(inv.id);
+  }
+
+  window.DMPAY_HISTNF = { load, filterStatus, openDetail, closeDrawer, editParcela };
   // Substitui as funções inline pré-existentes no HTML
   window.filterStatus = filterStatus;
   window.closeDrawer = closeDrawer;
