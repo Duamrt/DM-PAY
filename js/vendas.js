@@ -253,8 +253,32 @@
       renderFormasPagamento(ultimoDia);
       const payTitle = document.querySelector('.pay-card h3');
       if (payTitle) {
-        const firstText = payTitle.childNodes[0];
-        if (firstText) firstText.textContent = ' Formas de pagamento — ';
+        const [yU, mU, dU] = ultimoDia.split('-');
+        const dtLabel = `${dU}/${mU}`;
+        const hojeIso = HOJE.toISOString().slice(0,10);
+        const isHoje = ultimoDia === hojeIso;
+        const sufixo = isHoje ? `<span style="color:var(--text-soft);font-weight:500">hoje · ${dtLabel}</span>` : `<span style="color:var(--warn);font-weight:500">último dia com venda · ${dtLabel}</span>`;
+        payTitle.innerHTML = `<i data-lucide="wallet"></i> Formas de pagamento — ${sufixo} <span class="auto-tag"><i data-lucide="zap"></i>Auto · iCommerce</span>`;
+      }
+      // Banner se último dia ≠ hoje (indica gap de sincronização / caixa fechado)
+      const hojeIso = HOJE.toISOString().slice(0,10);
+      if (ultimoDia !== hojeIso) {
+        const diffMs = new Date(hojeIso + 'T00:00:00') - new Date(ultimoDia + 'T00:00:00');
+        const diffDias = Math.floor(diffMs / 86400000);
+        let bannerGap = document.getElementById('vendas-gap-banner');
+        if (!bannerGap) {
+          bannerGap = document.createElement('div');
+          bannerGap.id = 'vendas-gap-banner';
+          bannerGap.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:var(--warn-soft,#FEF3C7);border:1px solid var(--warn,#D97706);border-radius:10px;margin:0 0 14px;font-size:13px;color:var(--text);line-height:1.5';
+          const kpiGrid = document.querySelector('.kpi-grid');
+          if (kpiGrid && kpiGrid.parentNode) kpiGrid.parentNode.insertBefore(bannerGap, kpiGrid);
+        }
+        const [yU, mU, dU] = ultimoDia.split('-');
+        const dtLabel = `${dU}/${mU}`;
+        bannerGap.innerHTML = `<i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--warn);flex-shrink:0;margin-top:1px"></i><div style="flex:1"><b style="color:var(--warn)">Sem vendas registradas há ${diffDias} dia${diffDias>1?'s':''}.</b> A última venda é de <b>${dtLabel}</b>. Verifique se o caixa foi aberto no Mercadinho ou se a sincronização com o iCommerce travou.</div>`;
+      } else {
+        const bannerGap = document.getElementById('vendas-gap-banner');
+        if (bannerGap) bannerGap.remove();
       }
     }
 
