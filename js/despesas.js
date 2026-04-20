@@ -170,7 +170,7 @@
   async function salvarNova(form) {
     const COMPANY_ID = window.DMPAY_COMPANY.id;
     const nome = form.nome.trim();
-    const amount = parseFloat(String(form.valor).replace(/\./g,'').replace(',','.'));
+    const amount = parseFloat(String(form.valor).replace(/[^\d,]/g,'').replace(',','.'));
     const due = parseInt(form.dia, 10);
     if (!nome || !amount || !due) { alert('Preencha descrição, valor e dia'); return; }
     const categoria = form.categoria || 'Geral';
@@ -240,7 +240,7 @@
           categoria: document.querySelector('.cat-option.selected')?.dataset.cat || 'Geral'
         };
         if (editId) {
-          const amount = parseFloat(String(form.valor).replace(/\./g,'').replace(',','.'));
+          const amount = parseFloat(String(form.valor).replace(/[^\d,]/g,'').replace(',','.'));
           const due = parseInt(form.dia, 10);
           const { error } = await sb.from('fixed_expenses').update({
             description: form.nome, amount, due_day: due
