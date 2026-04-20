@@ -248,22 +248,33 @@
     }
   }
 
-  function handleFile(file) {
+  async function handleFile(file) {
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.xml')) {
-      alert('Por favor selecione um arquivo .xml');
+
+    // Cofre de arquivos (pilar #3 Gemini): valida magic number + tamanho + rename UUID
+    if (!window.DMPAY_UPLOAD) {
+      alert('Sistema de upload seguro ainda carregando. Aguarde 1s e tente de novo.');
       return;
     }
+    const san = await window.DMPAY_UPLOAD.sanitize(file, { types: ['xml'], maxMb: 10 });
+    if (!san.ok) {
+      alert('Upload bloqueado: ' + san.error);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = function(e) {
       try {
         PARSED = parseNFe(e.target.result);
+        if (PARSED) {
+          PARSED._upload = { safeName: san.safeName, originalName: san.original.name, size: san.original.size };
+        }
         renderPreview(PARSED);
       } catch (err) {
         alert('Erro ao ler XML: ' + err.message);
       }
     };
-    reader.readAsText(file, 'utf-8');
+    reader.readAsText(san.file, 'utf-8');
   }
 
   function init() {
