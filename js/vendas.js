@@ -376,11 +376,15 @@
       .limit(500);
     if (errS) { console.error('fechamento sangria', errS); }
 
-    const sangRows = (sangs || []).map(s => ({
-      nome: s.operator ? `Operador ${s.operator}` : 'Retirada de caixa',
-      meta: (s.notes || '—').slice(0, 80),
-      valor: Number(s.amount || 0)
-    }));
+    const sangRows = (sangs || []).map(s => {
+      const notas = (s.notes || '').replace(/\r?\n/g, ' ').split('|').map(x=>x.trim()).filter(Boolean);
+      const resumo = notas.length ? notas.join(' · ') : 'sem descrição';
+      return {
+        nome: s.operator ? `Caixa ${s.operator} — ${notas.length} item${notas.length!==1?'s':''}` : 'Retirada de caixa',
+        meta: resumo.slice(0, 110),
+        valor: Number(s.amount || 0)
+      };
+    });
     _ultimoSangriaItens = sangRows;
     const totalSangria = sangRows.reduce((s,i)=>s+i.valor, 0);
     const qtdSangria = sangRows.length;

@@ -176,29 +176,29 @@
     .pay-total-val{font-family:'Geist Mono',monospace;letter-spacing:-.02em;font-size:18px}
 
     /* Fechamento do dia: Fiado + Sangria + Líquido */
-    .recon-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:18px}
-    .recon-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:14px;flex-wrap:wrap}
-    .recon-card-head h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px}
-    .recon-card-head h3 svg{width:14px;height:14px;color:var(--accent)}
-    .recon-date{font-family:'Geist Mono',monospace;font-size:12px;color:var(--text-muted);font-weight:500;margin-left:4px}
-    .recon-sub{font-size:12px;color:var(--text-muted);margin-top:4px;max-width:520px}
-    .recon-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .recon-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px}
+    .recon-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:12px;flex-wrap:wrap}
+    .recon-card-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px}
+    .recon-card-head h3 svg{width:13px;height:13px;color:var(--accent)}
+    .recon-date{font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-muted);font-weight:500;margin-left:4px}
+    .recon-sub{font-size:11.5px;color:var(--text-muted);margin-top:3px;max-width:520px}
+    .recon-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
     @media (max-width:900px){.recon-grid{grid-template-columns:1fr}}
-    .recon-item{background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;display:flex;flex-direction:column;gap:6px}
-    .recon-item .recon-ico{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:7px;display:grid;place-items:center}
-    .recon-item .recon-ico svg{width:14px;height:14px}
+    .recon-item{background:var(--bg-soft);border:1px solid var(--border);border-radius:8px;padding:12px 13px 10px;position:relative;display:flex;flex-direction:column;gap:3px;min-height:0}
+    .recon-item .recon-ico{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:6px;display:grid;place-items:center}
+    .recon-item .recon-ico svg{width:12px;height:12px}
     .recon-item.recon-in{border-left:3px solid var(--success)}
     .recon-item.recon-in .recon-ico{background:var(--success-soft);color:var(--success)}
     .recon-item.recon-out{border-left:3px solid var(--danger)}
     .recon-item.recon-out .recon-ico{background:var(--danger-soft);color:var(--danger)}
     .recon-item.recon-liq{border-left:3px solid var(--accent)}
     .recon-item.recon-liq .recon-ico{background:var(--accent-soft);color:var(--accent)}
-    .recon-label{font-size:10.5px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.07em}
-    .recon-val{font-size:26px;font-weight:700;font-family:'Geist',sans-serif;letter-spacing:-.02em;line-height:1.1;margin-top:2px}
-    .recon-sub2{font-size:12px;color:var(--text-muted);line-height:1.4}
-    .recon-alert{display:flex;gap:6px;align-items:flex-start;background:var(--warn-soft);color:var(--warn);padding:8px 10px;border-radius:7px;font-size:11.5px;font-weight:500;line-height:1.35;margin-top:6px}
-    .recon-alert svg{width:13px;height:13px;flex-shrink:0;margin-top:1px}
-    .recon-expand{margin-top:auto;padding-top:6px;background:none;border:none;color:var(--accent);font-size:12px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit}
+    .recon-label{font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.07em;padding-right:30px}
+    .recon-val{font-size:19px;font-weight:700;font-family:'Geist Mono',monospace;letter-spacing:-.02em;line-height:1.15;margin-top:1px}
+    .recon-sub2{font-size:11px;color:var(--text-muted);line-height:1.35}
+    .recon-alert{display:flex;gap:6px;align-items:flex-start;background:var(--warn-soft);color:var(--warn);padding:6px 8px;border-radius:6px;font-size:10.5px;font-weight:500;line-height:1.35;margin-top:6px}
+    .recon-alert svg{width:12px;height:12px;flex-shrink:0;margin-top:1px}
+    .recon-expand{margin-top:8px;padding:0;background:none;border:none;color:var(--accent);font-size:11.5px;font-weight:500;cursor:pointer;text-align:left;font-family:inherit}
     .recon-expand:hover{text-decoration:underline}
     .recon-expand:disabled{color:var(--text-soft);cursor:default;text-decoration:none}
     /* Drawer lateral (fiado/sangria detalhes) */
