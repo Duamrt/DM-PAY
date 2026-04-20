@@ -130,7 +130,11 @@
         const next = !cb.checked;
         cb.checked = next;
         t.classList.toggle('on', next);
-        try { await save({ content_flags: { ...SETTINGS.content_flags, [flag]: next } }); flash(t); }
+        try {
+          await save({ content_flags: { ...SETTINGS.content_flags, [flag]: next } });
+          flash(t);
+          if (window.refreshWAPreview) window.refreshWAPreview();  // atualiza preview
+        }
         catch(err){ alert(err.message); }
       };
     });
@@ -225,17 +229,53 @@
     const brDate = d => d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
     const brDow = d => ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'][d.getDay()];
 
-    const [donoR, pagsR, bankR, salesR] = await Promise.all([
+    const ontem = iso(new Date(Date.now() - 86400000));
+    const mesIni = iso(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+
+    const [donoR, pagsR, bankR, salesOntemR, pagosR, mesR] = await Promise.all([
       sb.from('profiles').select('name').eq('company_id', COMPANY_ID).eq('role','dono').limit(1).maybeSingle(),
       sb.from('payables').select('amount, due_date, description, suppliers(legal_name, trade_name)').eq('company_id', COMPANY_ID).eq('status','open').gte('due_date', iso(inicio)).lte('due_date', iso(fim)).order('amount',{ascending:false}).limit(200),
       sb.from('bank_accounts').select('balance').eq('company_id', COMPANY_ID).eq('active',true),
-      sb.from('daily_sales').select('amount').eq('company_id', COMPANY_ID).gte('sale_date', iso(new Date(Date.now() - 3*86400000)))
+      flags.vendas_ontem
+        ? sb.from('daily_sales').select('amount').eq('company_id', COMPANY_ID).eq('sale_date', ontem)
+        : Promise.resolve({data:[]}),
+      flags.pagos_ontem
+        ? sb.from('payables').select('amount,description,suppliers(legal_name,trade_name)').eq('company_id',COMPANY_ID).neq('status','open').gte('updated_at',ontem+'T00:00:00').limit(50)
+        : Promise.resolve({data:[]}),
+      flags.alerta_dia
+        ? sb.from('payables').select('amount,due_date').eq('company_id',COMPANY_ID).eq('status','open').gte('due_date',mesIni).lte('due_date',iso(fim)).limit(1000)
+        : Promise.resolve({data:[]}),
     ]);
     const nome = (donoR?.data?.name || 'dono').split(' ')[0];
-    const pags = pagsR.data || []; const banks = bankR.data || []; const sales = salesR.data || [];
-    const total = pags.reduce((s,p)=>s+Number(p.amount),0);
-    const saldo = banks.reduce((s,b)=>s+Number(b.balance||0),0);
-    const vendas3d = sales.reduce((s,v)=>s+Number(v.amount),0);
+    const pags   = pagsR.data    || [];
+    const banks  = bankR.data    || [];
+    const vendasOntem = (salesOntemR.data||[]).reduce((s,v)=>s+Number(v.amount),0);
+    const pagos  = pagosR.data   || [];
+    const total  = pags.reduce((s,p)=>s+Number(p.amount),0);
+    const saldo  = banks.reduce((s,b)=>s+Number(b.balance||0),0);
+    const totalPagos = pagos.reduce((s,p)=>s+Number(p.amount),0);
+
+    // Alerta dia pesado
+    let alertaDia = false;
+    if (flags.alerta_dia && total > 0) {
+      const mesPags = mesR.data || [];
+      const porDia = {};
+      mesPags.forEach(p => { const d=(p.due_date||'').slice(0,10); if(d){if(!porDia[d])porDia[d]=0;porDia[d]+=Number(p.amount);} });
+      const vals = Object.values(porDia);
+      if (vals.length >= 3) {
+        const media = vals.reduce((a,b)=>a+b,0)/vals.length;
+        alertaDia = total > media * 1.35;
+      }
+    }
+
+    // Dica contextual
+    let dica = null;
+    if (flags.dica) {
+      const apos = saldo - total;
+      if (apos < 0) dica = 'Caixa fica negativo após pagar tudo. Verifique o que pode postergar.';
+      else if (alertaDia) dica = 'Pico por acúmulo de fim de semana. Na próxima sexta, antecipe.';
+      else if (pags.length === 0) dica = 'Dia tranquilo. Bom momento para antecipar e negociar desconto.';
+    }
     const h = new Date().getHours();
     const saud = h<12?'Bom dia':(h<18?'Boa tarde':'Boa noite');
     const flags = SETTINGS.content_flags || {};
@@ -258,15 +298,14 @@
     linhas.push('');
 
     if (flags.vencimentos !== false) {
-      linhas.push('*Resumo do dia*');
       if (pags.length === 0) {
+        linhas.push('*Resumo do dia*');
         linhas.push('Nenhum boleto vencendo hoje.');
       } else {
         linhas.push(`*TOTAL A PAGAR: ${fmt(total)}* (${pags.length} boleto${pags.length>1?'s':''})`);
-        // Se fim de semana acumulou em segunda, mostra breakdown
         if (temMultiplosDias) {
           linhas.push('');
-          linhas.push('_Pagos hoje (compensação bancária):_');
+          linhas.push('_Compensação bancária (sáb+dom):_');
           diasOrdenados.forEach(dISO => {
             const d = new Date(dISO + 'T00:00:00');
             const agg = porDia[dISO];
@@ -276,22 +315,36 @@
         linhas.push('');
         const topN = Math.min(5, pags.length);
         linhas.push(`*Top ${topN} por valor:*`);
-        pags.slice(0, topN).forEach(p => {
-          const n = p.suppliers?.trade_name || p.suppliers?.legal_name || p.description || '—';
+        pags.slice(0,topN).forEach(p => {
+          const n = p.suppliers?.trade_name||p.suppliers?.legal_name||p.description||'—';
           linhas.push(`• ${n} - ${fmt(p.amount)}`);
         });
         if (pags.length > topN) linhas.push(`• +${pags.length-topN} boleto${pags.length-topN>1?'s':''} menores`);
+        if (alertaDia) { linhas.push(''); linhas.push('⚠️ Dia acima da média — verifique o caixa.'); }
+        if (dica) { linhas.push(''); linhas.push(`💡 Dica: ${dica}`); }
       }
       linhas.push('');
     }
 
     if (flags.saldo !== false) {
+      const apos = saldo - total;
       linhas.push(`*Saldo nos bancos:* ${fmt(saldo)}`);
-      if (total > 0) {
-        const apos = saldo - total;
-        linhas.push(`Após pagar tudo: *${fmt(apos)}*${apos<0?' (caixa negativo)':''}`);
-      }
-      if (flags.vendas_ontem) linhas.push(`Vendas últimos 3 dias: ${fmt(vendas3d)}`);
+      if (total > 0) linhas.push(`Após pagar tudo: *${fmt(apos)}*${apos<0?' ⚠️':''}`);
+      linhas.push('');
+    }
+
+    if (flags.vendas_ontem) {
+      const dtO = new Date(Date.now()-86400000).toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'});
+      linhas.push(`🛒 Vendas de ontem (${dtO}): *${vendasOntem>0?fmt(vendasOntem):'sem registro'}*`);
+      linhas.push('');
+    }
+
+    if (flags.pagos_ontem && pagos.length > 0) {
+      linhas.push(`✅ Boletos pagos ontem: *${fmt(totalPagos)}* (${pagos.length} boleto${pagos.length>1?'s':''})`);
+      pagos.slice(0,3).forEach(p => {
+        const n = p.suppliers?.trade_name||p.suppliers?.legal_name||p.description||'—';
+        linhas.push(`• ${n} - ${fmt(p.amount)}`);
+      });
       linhas.push('');
     }
 
