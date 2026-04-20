@@ -227,9 +227,10 @@
   }
 
   // ============== MODAL CRIAR ==============
+  let AC_CUSTOMERS = []; // cache pra autocomplete
+
   async function openCreate(prefill) {
-    const customers = await loadCustomers();
-    const opts = customers.map(c => `<option value="${c.id}">${c.name} ${c.cpf_cnpj ? '· '+c.cpf_cnpj : ''}</option>`).join('');
+    AC_CUSTOMERS = await loadCustomers();
     const html = `
       <div class="dmp-modal-back" onclick="DMPAY_CR.closeCreate()">
         <div class="dmp-modal" onclick="event.stopPropagation()" style="max-width:520px">
@@ -238,14 +239,12 @@
             <button onclick="DMPAY_CR.closeCreate()"><i data-lucide="x"></i></button>
           </div>
           <div class="dmp-modal-body">
-            <div class="dmp-field">
+            <div class="dmp-field dmp-ac" id="cr-cust-ac">
               <label>Cliente</label>
-              <select id="cr-cust">
-                <option value="">— sem cliente cadastrado —</option>
-                ${opts}
-                <option value="__new">+ Cadastrar novo cliente</option>
-              </select>
-              <div class="dmp-hint">Pode pular e descrever no campo abaixo.</div>
+              <input type="hidden" id="cr-cust" value="">
+              <input type="text" id="cr-cust-search" placeholder="Buscar por nome ou CPF/CNPJ · vazio = sem cliente" autocomplete="off">
+              <div class="dmp-ac-drop" id="cr-cust-drop" style="display:none"></div>
+              <div class="dmp-hint">Digite pra filtrar os ${AC_CUSTOMERS.length} clientes ou deixe em branco pra lançar sem cliente.</div>
             </div>
             <div id="cr-newcust-wrap" style="display:none">
               <div class="dmp-field">
@@ -292,11 +291,68 @@
         </div>
       </div>`;
     document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('cr-cust').addEventListener('change', e => {
-      document.getElementById('cr-newcust-wrap').style.display = e.target.value === '__new' ? 'block' : 'none';
-    });
+    wireAutocompleteCliente();
     lucide.createIcons();
-    setTimeout(() => document.getElementById('cr-desc').focus(), 50);
+    setTimeout(() => document.getElementById('cr-cust-search').focus(), 50);
+  }
+
+  function wireAutocompleteCliente() {
+    const input = document.getElementById('cr-cust-search');
+    const hidden = document.getElementById('cr-cust');
+    const drop = document.getElementById('cr-cust-drop');
+    const newcustWrap = document.getElementById('cr-newcust-wrap');
+    if (!input || !drop) return;
+
+    function render(query) {
+      const q = (query || '').toLowerCase().trim();
+      let lista = AC_CUSTOMERS;
+      if (q) {
+        lista = AC_CUSTOMERS.filter(c =>
+          (c.name || '').toLowerCase().includes(q) ||
+          (c.cpf_cnpj || '').replace(/\D/g, '').includes(q.replace(/\D/g, ''))
+        );
+      }
+      lista = lista.slice(0, 30); // limita 30 resultados
+      const itensHtml = lista.map(c =>
+        `<div class="dmp-ac-item" data-id="${c.id}" data-name="${(c.name || '').replace(/"/g, '&quot;')}">
+          <span>${c.name || '—'}</span>${c.cpf_cnpj ? '<small>' + c.cpf_cnpj + '</small>' : ''}
+        </div>`
+      ).join('');
+      const nenhum = lista.length === 0 ? '<div class="dmp-ac-empty">Nenhum cliente bate com a busca.</div>' : '';
+      const novo = `<div class="dmp-ac-item new-btn" data-id="__new"><span>+ Cadastrar novo cliente</span></div>`;
+      drop.innerHTML = itensHtml + nenhum + novo;
+    }
+
+    function show() { render(input.value); drop.style.display = 'block'; }
+    function hide() { drop.style.display = 'none'; }
+
+    input.addEventListener('focus', show);
+    input.addEventListener('input', () => {
+      hidden.value = '';
+      newcustWrap.style.display = 'none';
+      render(input.value);
+      drop.style.display = 'block';
+    });
+    document.addEventListener('mousedown', (e) => {
+      if (!document.getElementById('cr-cust-ac')?.contains(e.target)) hide();
+    });
+
+    drop.addEventListener('click', (e) => {
+      const item = e.target.closest('.dmp-ac-item');
+      if (!item) return;
+      const id = item.dataset.id;
+      if (id === '__new') {
+        hidden.value = '__new';
+        input.value = '+ Novo cliente';
+        newcustWrap.style.display = 'block';
+        setTimeout(() => document.getElementById('cr-newcust-name')?.focus(), 30);
+      } else {
+        hidden.value = id;
+        input.value = item.dataset.name;
+        newcustWrap.style.display = 'none';
+      }
+      hide();
+    });
   }
   function closeCreate(){ document.querySelectorAll('.dmp-modal-back').forEach(e=>e.remove()); }
 
