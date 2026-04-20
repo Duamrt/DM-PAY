@@ -270,7 +270,12 @@
         };
       });
       const payRes = await sb.from('payables').insert(payables).select('id');
-      if (payRes.error) throw payRes.error;
+      if (payRes.error) {
+        // Rollback manual: se falhou, apaga a invoice criada pra não deixar órfã
+        // (senão o próximo upload da mesma NF bate no unique nfe_key e trava o usuário)
+        try { await sb.from('invoices').delete().eq('id', invoice_id); } catch(_) {}
+        throw payRes.error;
+      }
       if (window.DMPAY_AUDIT) {
         window.DMPAY_AUDIT.import('invoice', invoice_id, {
           nfe_key: PARSED.nfeKey,
