@@ -214,57 +214,87 @@
       const parcelas = PARSED.parcelas.length > 0 ? PARSED.parcelas : [{nDup:'001', dVenc:PARSED.issue_date, vDup:PARSED.total_value}];
 
       let boletosColados = {}; // { parcelaIdx: 'linha digitável' }
+      let formaPagamento = null; // 'boleto' | 'dinheiro' | 'pix' | 'outro'
 
       if (window.DMPAY_UI) {
-        const jaTem = await window.DMPAY_UI.confirm({
-          title: 'Já recebeu o(s) boleto(s)?',
-          desc: `${parcelas.length === 1 ? 'Essa NF tem 1 parcela' : 'Essa NF tem ' + parcelas.length + ' parcelas'}. Se o boleto já chegou por e-mail, cole o código de barras agora. Senão, dá pra colar depois em Contas a pagar.`,
-          okLabel: 'Sim, colar código agora',
-          cancelLabel: 'Ainda não tenho'
+        // Passo 1: escolher forma de pagamento
+        const pmVals = await window.DMPAY_UI.open({
+          title: 'Forma de pagamento',
+          desc: `${parcelas.length === 1 ? '1 parcela' : parcelas.length + ' parcelas'} · ${fmtBRL(PARSED.total_value)}. Como será pago?`,
+          fields: [{
+            key: 'method',
+            label: 'Forma de pagamento *',
+            options: [
+              { value: 'boleto',   label: 'Boleto' },
+              { value: 'dinheiro', label: 'À vista / Dinheiro' },
+              { value: 'pix',      label: 'PIX' },
+              { value: 'outro',    label: 'Outro' }
+            ],
+            value: 'boleto'
+          }],
+          submitLabel: 'Continuar',
+          cancelLabel: 'Cancelar'
         });
 
-        if (jaTem) {
-          const fields = parcelas.map((par, i) => ({
-            key: 'p' + i,
-            label: parcelas.length > 1
-              ? `Parcela ${par.nDup} · venc ${brDate(par.dVenc)} · ${fmtBRL(par.vDup)}`
-              : `Linha digitável · venc ${brDate(par.dVenc)} · ${fmtBRL(par.vDup)}`,
-            multiline: true,
-            placeholder: '23793.38128 00000.000000 00000.000000 1 99990000000000',
-            hint: 'Aceita 44 dígitos (código de barras) ou 47 dígitos (linha digitável). Deixe em branco pra colar depois.'
-          }));
+        if (!pmVals) {
+          btn.disabled = false;
+          btn.innerHTML = original;
+          return;
+        }
+        formaPagamento = pmVals.method || 'boleto';
 
-          const vals = await window.DMPAY_UI.open({
-            title: parcelas.length > 1 ? 'Código de barras por parcela' : 'Código de barras',
-            desc: 'Cole o código que veio no e-mail/boleto. Campos em branco ficam pendentes.',
-            fields,
-            submitLabel: 'Salvar códigos',
-            cancelLabel: 'Pular',
-            onSubmit: (v) => {
-              // Valida tamanhos 44 ou 47 (48 raro, aceito) nos campos preenchidos
-              for (let i = 0; i < parcelas.length; i++) {
-                const raw = (v['p' + i] || '').replace(/\D/g, '');
-                if (raw && ![44, 47, 48].includes(raw.length)) {
-                  throw new Error(`Parcela ${parcelas[i].nDup}: código com ${raw.length} dígitos (precisa ter 44, 47 ou 48). Limpe ou corrija.`);
-                }
-              }
-              return true;
-            }
+        // Passo 2: se boleto, coletar código(s) de barras
+        if (formaPagamento === 'boleto') {
+          const jaTem = await window.DMPAY_UI.confirm({
+            title: 'Já tem o(s) boleto(s)?',
+            desc: 'Se o boleto chegou por e-mail, cole o código agora. Senão, dá pra colar depois em Contas a pagar.',
+            okLabel: 'Sim, colar código agora',
+            cancelLabel: 'Ainda não tenho'
           });
 
-          if (vals) {
-            Object.keys(vals).forEach(k => {
-              const raw = (vals[k] || '').replace(/\D/g, '');
-              if (raw && [44, 47, 48].includes(raw.length)) {
-                boletosColados[parseInt(k.slice(1), 10)] = raw;
+          if (jaTem) {
+            const fields = parcelas.map((par, i) => ({
+              key: 'p' + i,
+              label: parcelas.length > 1
+                ? `Parcela ${par.nDup} · venc ${brDate(par.dVenc)} · ${fmtBRL(par.vDup)}`
+                : `Linha digitável · venc ${brDate(par.dVenc)} · ${fmtBRL(par.vDup)}`,
+              multiline: true,
+              placeholder: '23793.38128 00000.000000 00000.000000 1 99990000000000',
+              hint: 'Aceita 44 dígitos (código de barras) ou 47 dígitos (linha digitável). Deixe em branco pra colar depois.'
+            }));
+
+            const vals = await window.DMPAY_UI.open({
+              title: parcelas.length > 1 ? 'Código de barras por parcela' : 'Código de barras',
+              desc: 'Cole o código que veio no e-mail/boleto. Campos em branco ficam pendentes.',
+              fields,
+              submitLabel: 'Salvar códigos',
+              cancelLabel: 'Pular',
+              onSubmit: (v) => {
+                for (let i = 0; i < parcelas.length; i++) {
+                  const raw = (v['p' + i] || '').replace(/\D/g, '');
+                  if (raw && ![44, 47, 48].includes(raw.length)) {
+                    throw new Error(`Parcela ${parcelas[i].nDup}: código com ${raw.length} dígitos (precisa ter 44, 47 ou 48). Limpe ou corrija.`);
+                  }
+                }
+                return true;
               }
             });
+
+            if (vals) {
+              Object.keys(vals).forEach(k => {
+                const raw = (vals[k] || '').replace(/\D/g, '');
+                if (raw && [44, 47, 48].includes(raw.length)) {
+                  boletosColados[parseInt(k.slice(1), 10)] = raw;
+                }
+              });
+            }
           }
         }
       }
 
       const payables = parcelas.map((par, idx) => {
-        const codigo = boletosColados[idx] || null;
+        const codigo = formaPagamento === 'boleto' ? (boletosColados[idx] || null) : null;
+        const pm = formaPagamento || null;
         return {
           company_id: COMPANY_ID,
           invoice_id: invoice_id,
@@ -272,7 +302,7 @@
           description: `NF ${PARSED.number} ${PARSED.fornecedor.legal_name} ${parcelas.length > 1 ? '· parc '+par.nDup : ''}`.trim(),
           amount: par.vDup,
           due_date: par.dVenc,
-          payment_method: codigo ? 'boleto' : null,
+          payment_method: pm === 'boleto' && codigo ? 'boleto' : (pm !== 'boleto' ? pm : null),
           boleto_line: codigo,
           status: 'open'
         };

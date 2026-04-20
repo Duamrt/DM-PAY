@@ -256,22 +256,25 @@
     if (!window.DMPAY_UI) { alert('UI não carregada.'); return; }
 
     const valorBefore = p.amount;
+    const dueBefore = (p.due_date || '').split('T')[0];
     const boletoBefore = p.boleto_line || '';
     const notesBefore = p.notes || '';
 
     const vals = await window.DMPAY_UI.open({
       title: 'Editar parcela',
-      desc: 'Ajuste valor e/ou código de barras. Use observação pra documentar o motivo.',
+      desc: 'Ajuste valor, vencimento e/ou código de barras. Use observação pra documentar o motivo.',
       fields: [
-        { key: 'amount', label: 'Valor (R$) *', type: 'number', value: Number(valorBefore).toFixed(2), placeholder: '0,00' },
-        { key: 'boleto_line', label: 'Linha digitável do boleto', multiline: true, value: boletoBefore, placeholder: '23793.38128 00000.000000 00000.000000 1 99990000000000' },
-        { key: 'notes', label: 'Observação / motivo', multiline: true, value: notesBefore }
+        { key: 'amount',     label: 'Valor (R$) *',               type: 'number', value: Number(valorBefore).toFixed(2), placeholder: '0,00' },
+        { key: 'due_date',   label: 'Data de vencimento *',        type: 'date',   value: dueBefore },
+        { key: 'boleto_line', label: 'Linha digitável do boleto',  multiline: true, value: boletoBefore, placeholder: '23793.38128 00000.000000 00000.000000 1 99990000000000' },
+        { key: 'notes',      label: 'Observação / motivo',         multiline: true, value: notesBefore }
       ],
       submitLabel: 'Salvar',
       cancelLabel: 'Cancelar',
       onSubmit: (v) => {
         const n = Number(String(v.amount).replace(',', '.'));
         if (!isFinite(n) || n <= 0) throw new Error('Valor precisa ser maior que zero.');
+        if (!v.due_date) throw new Error('Data de vencimento é obrigatória.');
         const raw = (v.boleto_line || '').replace(/\D/g, '');
         if (raw && ![44, 47, 48].includes(raw.length)) throw new Error(`Linha digitável com ${raw.length} dígitos (precisa ter 44, 47 ou 48).`);
         if (Math.abs(n - valorBefore) > 0 && !(v.notes || '').trim()) throw new Error('Valor alterado — preencha a observação.');
@@ -282,21 +285,22 @@
     if (!vals) return;
 
     const amount = Number(String(vals.amount).replace(',', '.'));
+    const due_date = vals.due_date || dueBefore;
     const boleto_line = (vals.boleto_line || '').trim() || null;
     const notes = (vals.notes || '').trim() || null;
     const payment_method = boleto_line ? 'boleto' : (p.payment_method || null);
 
-    const { error } = await window.sb.from('payables').update({ amount, boleto_line, notes, payment_method }).eq('id', payableId);
+    const { error } = await window.sb.from('payables').update({ amount, due_date, boleto_line, notes, payment_method }).eq('id', payableId);
     if (error) { alert('Erro ao salvar: ' + error.message); return; }
 
     if (window.DMPAY_AUDIT) {
       window.DMPAY_AUDIT.update('payable', payableId,
-        { amount: valorBefore, boleto_line: boletoBefore, notes: notesBefore, payment_method: p.payment_method || null },
-        { amount, boleto_line, notes, payment_method }
+        { amount: valorBefore, due_date: dueBefore, boleto_line: boletoBefore, notes: notesBefore, payment_method: p.payment_method || null },
+        { amount, due_date, boleto_line, notes, payment_method }
       );
     }
 
-    Object.assign(p, { amount, boleto_line, notes, payment_method });
+    Object.assign(p, { amount, due_date, boleto_line, notes, payment_method });
     renderParcelas(inv);
   }
 

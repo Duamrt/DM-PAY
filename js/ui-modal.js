@@ -60,9 +60,11 @@
       const fieldsHtml = (fields || []).map((f, i) => `
         <div class="dmp-field">
           <label for="dmp-f-${i}">${f.label || ''}</label>
-          ${f.multiline
-            ? `<textarea id="dmp-f-${i}" data-key="${f.key}" placeholder="${f.placeholder||''}">${f.value||''}</textarea>`
-            : `<input id="dmp-f-${i}" data-key="${f.key}" type="${f.type||'text'}" placeholder="${f.placeholder||''}" value="${(f.value||'').toString().replace(/"/g,'&quot;')}" ${f.maxlength?'maxlength="'+f.maxlength+'"':''} ${f.required?'required':''}>`
+          ${f.options
+            ? `<select id="dmp-f-${i}" data-key="${f.key}">${f.options.map(o=>`<option value="${o.value}"${o.value===String(f.value||'')?` selected`:``}>${o.label}</option>`).join('')}</select>`
+            : f.multiline
+              ? `<textarea id="dmp-f-${i}" data-key="${f.key}" placeholder="${f.placeholder||''}">${f.value||''}</textarea>`
+              : `<input id="dmp-f-${i}" data-key="${f.key}" type="${f.type||'text'}" placeholder="${f.placeholder||''}" value="${(f.value||'').toString().replace(/"/g,'&quot;')}" ${f.maxlength?'maxlength="'+f.maxlength+'"':''} ${f.required?'required':''}>`
           }
           ${f.hint ? `<div class="hint">${f.hint}</div>` : ''}
         </div>`).join('');
