@@ -217,6 +217,7 @@
   <script src="dmpay-mobile.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/audit.js"></script>
   <script src="js/auth-guard.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/ui-modal.js"></script>
@@ -313,6 +314,10 @@
           </div>
           <div class="tab" onclick="selTab('preferencias', this)">
             <i data-lucide="sliders"></i> Preferências
+            <i class="tab-check" data-lucide="check-circle"></i>
+          </div>
+          <div class="tab" onclick="selTab('historico', this)">
+            <i data-lucide="history"></i> Histórico
             <i class="tab-check" data-lucide="check-circle"></i>
           </div>
         </nav>
@@ -837,6 +842,107 @@
             </div>
           </div>
 
+          <!-- HISTÓRICO (AUDIT LOG) -->
+          <div class="panel" id="panel-historico">
+            <div class="panel-head">
+              <div>
+                <h2><i data-lucide="history"></i> Histórico de alterações</h2>
+                <p>Tudo que foi criado, alterado, excluído, pago, recebido ou estornado fica registrado aqui. <b>Quem</b> fez, <b>quando</b>, <b>o quê</b> e <b>antes → depois</b>. Pilar de auditoria — nada passa batido.</p>
+              </div>
+              <span class="status ok">Ativo</span>
+            </div>
+            <div class="panel-body">
+              <style>
+                .hist-filters{display:grid;grid-template-columns:1fr 160px 160px 160px auto;gap:10px;align-items:end;margin-bottom:18px;flex-wrap:wrap}
+                .hist-filters .field{min-width:0}
+                .hist-filters input,.hist-filters select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;outline:none}
+                .hist-filters input:focus,.hist-filters select:focus{border-color:var(--accent)}
+                .hist-filters label{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;display:block}
+                .hist-stats{display:flex;gap:16px;margin-bottom:14px;font-size:12px;color:var(--text-muted)}
+                .hist-stats b{color:var(--text);font-weight:600}
+                .hist-table{width:100%;border-collapse:collapse;font-size:13px}
+                .hist-table thead th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;background:var(--bg-soft);position:sticky;top:0}
+                .hist-table tbody tr{cursor:pointer}
+                .hist-table tbody tr:hover{background:var(--bg-hover)}
+                .hist-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+                .hist-table td.time{color:var(--text-muted);font-size:12px;white-space:nowrap;font-family:'Geist Mono',monospace}
+                .hist-table td.user{font-weight:500}
+                .hist-table td.user .email{color:var(--text-muted);font-size:11px;font-weight:400}
+                .hist-pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+                .hist-pill.create{background:var(--success-soft);color:var(--success)}
+                .hist-pill.update{background:var(--accent-soft);color:var(--accent)}
+                .hist-pill.delete{background:var(--danger-soft);color:var(--danger)}
+                .hist-pill.pay,.hist-pill.receive{background:var(--success-soft);color:var(--success)}
+                .hist-pill.estorno,.hist-pill.cancel{background:var(--warn-soft);color:var(--warn)}
+                .hist-pill.import{background:var(--bg-hover);color:var(--text-muted)}
+                .hist-entity{font-family:'Geist Mono',monospace;font-size:12px;color:var(--text-muted)}
+                .hist-detail{background:var(--bg-soft);border-top:1px solid var(--border);padding:14px 16px;font-family:'Geist Mono',monospace;font-size:11.5px;white-space:pre-wrap;color:var(--text-muted);max-height:300px;overflow:auto}
+                .hist-detail b{color:var(--text);font-weight:600}
+                .hist-detail .diff-before{color:var(--danger)}
+                .hist-detail .diff-after{color:var(--success)}
+                .hist-empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
+                .hist-empty svg{width:36px;height:36px;opacity:.4;margin-bottom:10px}
+                .hist-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;max-height:600px;overflow-y:auto}
+                .hist-meta{font-size:11px;color:var(--text-soft);margin-top:4px}
+                @media (max-width:720px){.hist-filters{grid-template-columns:1fr 1fr;gap:8px}.hist-table td.time{font-size:11px}}
+              </style>
+
+              <div class="hist-filters">
+                <div class="field">
+                  <label>Buscar (entidade, usuário, email)</label>
+                  <input type="text" id="hist-busca" placeholder="ex: payable, reginaldo, @hotmail" />
+                </div>
+                <div class="field">
+                  <label>Ação</label>
+                  <select id="hist-acao">
+                    <option value="">todas</option>
+                    <option value="create">criado</option>
+                    <option value="update">alterado</option>
+                    <option value="delete">excluído</option>
+                    <option value="pay">pago</option>
+                    <option value="receive">recebido</option>
+                    <option value="estorno">estornado</option>
+                    <option value="cancel">cancelado</option>
+                    <option value="import">importado</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>De</label>
+                  <input type="date" id="hist-de" />
+                </div>
+                <div class="field">
+                  <label>Até</label>
+                  <input type="date" id="hist-ate" />
+                </div>
+                <div class="field">
+                  <label>&nbsp;</label>
+                  <button class="btn btn-secondary" onclick="DMPAY_HIST.reload()"><i data-lucide="refresh-cw"></i> Atualizar</button>
+                </div>
+              </div>
+
+              <div class="hist-stats" id="hist-stats">Carregando...</div>
+
+              <div class="hist-wrap">
+                <table class="hist-table">
+                  <thead>
+                    <tr>
+                      <th style="width:170px">Quando</th>
+                      <th style="width:180px">Quem</th>
+                      <th style="width:100px">Ação</th>
+                      <th style="width:140px">Entidade</th>
+                      <th>Detalhe</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hist-tbody">
+                    <tr><td colspan="5" class="hist-empty"><i data-lucide="loader"></i><div>Carregando histórico...</div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="hist-meta">Mostra as últimas 500 alterações. Registros mais antigos ficam no banco e são consultáveis por SQL pelo admin.</div>
+            </div>
+          </div>
+
         </div>
       </div>
     </main>
@@ -883,5 +989,6 @@
   </script>
   <script src="js/configuracoes-bancos.js" defer></script>
   <script src="js/configuracoes-empresa.js" defer></script>
+  <script src="js/configuracoes-historico.js" defer></script>
 </body>
 </html>
