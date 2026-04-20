@@ -77,7 +77,8 @@ window._FORN_render = function() {
     rows = rows.filter(function(f) {
       var nm = (f.s.legal_name || f.s.trade_name || '').toLowerCase();
       var cn = (f.s.cnpj||'').replace(/\D/g,'');
-      return nm.indexOf(q) !== -1 || cn.indexOf(q.replace(/\D/g,'')) !== -1;
+      var qNum = q.replace(/\D/g,'');
+      return nm.indexOf(q) !== -1 || (qNum.length > 0 && cn.indexOf(qNum) !== -1);
     });
   }
 

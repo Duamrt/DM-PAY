@@ -99,7 +99,8 @@
         const cnpj = (i.suppliers?.cnpj || '').replace(/\D/g, '');
         const nf   = (i.nf_number || '').toLowerCase();
         const key  = (i.nfe_key  || '').toLowerCase();
-        return forn.includes(q) || cnpj.includes(q.replace(/\D/g,'')) || nf.includes(q) || key.includes(q);
+        const qNum = q.replace(/\D/g,'');
+        return forn.includes(q) || (qNum.length > 0 && cnpj.includes(qNum)) || nf.includes(q) || key.includes(q);
       });
     }
     if (FILTRO !== 'all') list = list.filter(i => i.status === FILTRO);
