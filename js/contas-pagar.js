@@ -8,6 +8,7 @@
   let FILTRO = 'open';   // open | today | overdue | week | paid
   let BUSCA = '';
   let SUPPLIERS_CACHE = null;
+  let CATEGORIES_CACHE = {}; // id -> {name, color}
 
   // ==================== UTILS ====================
   function fmtBRL(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -51,15 +52,57 @@
   // ==================== CARREGAR ====================
   async function loadPayables() {
     const COMPANY_ID = window.DMPAY_COMPANY.id;
-    const { data, error } = await sb
-      .from('payables')
-      .select(`*, suppliers(legal_name, trade_name, cnpj), expense_categories(name, color)`)
-      .eq('company_id', COMPANY_ID)
-      .order('due_date', { ascending: true })
-      .limit(500);
-    if (error) { console.error('loadPayables', error); return []; }
-    PAYABLES = data;
-    return data;
+    // Query simples (sem embed de expense_categories — join ambíguo podia travar).
+    // Pegamos abertas + pagas dos últimos 3 meses pra KPI "pago no mês" bater.
+    const janela = new Date(HOJE); janela.setMonth(janela.getMonth() - 3);
+    const janelaISO = janela.toISOString().slice(0,10);
+    const [abertasR, pagasR] = await Promise.all([
+      sb.from('payables')
+        .select('*, suppliers(legal_name, trade_name, cnpj)')
+        .eq('company_id', COMPANY_ID)
+        .in('status', ['open'])
+        .order('due_date', { ascending: true })
+        .limit(2000),
+      sb.from('payables')
+        .select('*, suppliers(legal_name, trade_name, cnpj)')
+        .eq('company_id', COMPANY_ID)
+        .eq('status', 'paid')
+        .gte('paid_at', janelaISO)
+        .order('paid_at', { ascending: false })
+        .limit(1000)
+    ]);
+    if (abertasR.error || pagasR.error) {
+      const err = abertasR.error || pagasR.error;
+      console.error('loadPayables', err);
+      showLoadError(err.message || 'Erro ao carregar');
+      return [];
+    }
+    PAYABLES = [...(abertasR.data || []), ...(pagasR.data || [])];
+    // Carrega categorias à parte e injeta nos payables
+    try {
+      const cats = await sb.from('expense_categories')
+        .select('id, name, color')
+        .eq('company_id', COMPANY_ID);
+      CATEGORIES_CACHE = {};
+      (cats.data || []).forEach(c => CATEGORIES_CACHE[c.id] = c);
+      PAYABLES.forEach(p => { p.expense_categories = p.category_id ? CATEGORIES_CACHE[p.category_id] : null; });
+    } catch (e) {
+      console.warn('categorias não carregaram, seguindo sem', e);
+    }
+    return PAYABLES;
+  }
+
+  function showLoadError(msg) {
+    const tbody = document.getElementById('tbody');
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="9" style="padding:60px 20px;text-align:center;color:var(--danger)">
+        <i data-lucide="alert-triangle" style="width:32px;height:32px"></i>
+        <div style="margin-top:12px;font-size:14px"><b>Falha ao carregar contas a pagar</b></div>
+        <div style="margin-top:6px;font-size:12px;color:var(--text-muted)">${msg}</div>
+        <div style="margin-top:12px;font-size:11.5px;color:var(--text-soft)">Atualize a página ou contate o admin.</div>
+      </td></tr>`;
+      if (window.lucide) lucide.createIcons();
+    }
   }
 
   async function loadSuppliers(force) {
