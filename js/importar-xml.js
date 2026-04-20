@@ -196,7 +196,7 @@
       if (invRes.error) {
         if (invRes.error.code === '23505') {
           if (window.DMPAY_UI) {
-            await window.DMPAY_UI.alert({ title: 'NF-e já importada', desc: 'Esta NF-e já está no Histórico NF-e. Consulte lá para ver parcelas e status.' });
+            await window.DMPAY_UI.confirm({ title: 'NF-e já importada', desc: 'Esta NF-e já está no Histórico NF-e. Consulte lá para ver parcelas e status.', okLabel: 'Ver Histórico', cancelLabel: 'Fechar' });
           } else {
             alert('Esta NF-e já está no Histórico NF-e.');
           }

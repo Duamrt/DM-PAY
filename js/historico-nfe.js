@@ -4,6 +4,7 @@
   let FILTRO = 'all';
   let MES = '';
   let BUSCA = '';
+  let DATA = ''; // filtro por created_at (data de importação)
 
   const STATUS_LABEL = {
     imported:        'Importada',
@@ -56,10 +57,8 @@
         const [y, m] = ym.split('-');
         return `<option value="${ym}">${MESES[+m - 1]} / ${y}</option>`;
       }).join('');
-    const now = new Date();
-    const cur = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    if (seen.has(cur)) sel.value = cur;
-    MES = sel.value;
+    sel.value = '';
+    MES = '';
   }
 
   async function load() {
@@ -67,7 +66,7 @@
 
     const COMPANY_ID = window.DMPAY_COMPANY.id;
     const tbody = document.getElementById('nfTable');
-    tbody.innerHTML = `<tr><td colspan="8" style="padding:48px 16px;text-align:center;color:var(--text-muted)">Carregando…</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="padding:48px 16px;text-align:center;color:var(--text-muted)">Carregando…</td></tr>`;
 
     const { data, error } = await window.sb
       .from('invoices')
@@ -78,7 +77,7 @@
       .limit(2000);
 
     if (error) {
-      tbody.innerHTML = `<tr><td colspan="8" style="padding:48px 16px;text-align:center;color:var(--danger)">Erro: ${esc(error.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="padding:48px 16px;text-align:center;color:var(--danger)">Erro: ${esc(error.message)}</td></tr>`;
       return;
     }
 
@@ -104,10 +103,11 @@
       });
     }
     if (FILTRO !== 'all') list = list.filter(i => i.status === FILTRO);
-    if (MES) list = list.filter(i => i.issue_date?.startsWith(MES));
+    if (MES)  list = list.filter(i => i.issue_date?.startsWith(MES));
+    if (DATA) list = list.filter(i => (i.created_at || '').startsWith(DATA));
 
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="padding:48px 16px;text-align:center;color:var(--text-muted)">
+      tbody.innerHTML = `<tr><td colspan="9" style="padding:48px 16px;text-align:center;color:var(--text-muted)">
         <div style="font-size:28px;margin-bottom:8px">—</div>
         <div style="font-size:14px">${INVOICES.length ? 'Nenhuma NF-e nesse filtro' : 'Nenhuma NF-e importada ainda'}</div>
       </td></tr>`;
@@ -117,10 +117,11 @@
 
     tbody.innerHTML = list.map(i => {
       const forn = i.suppliers?.legal_name || i.suppliers?.trade_name || 'Sem fornecedor';
-      const fornShort = forn.length > 42 ? forn.slice(0, 39) + '…' : forn;
+      const fornShort = forn.length > 36 ? forn.slice(0, 33) + '…' : forn;
       const st = i.status || 'imported';
       const cls = STATUS_CLS[st] || 'chip-muted';
       const lbl = STATUS_LABEL[st] || st;
+      const importada = brDate(i.created_at);
       return `
         <tr data-id="${i.id}" onclick="window.DMPAY_HISTNF.openDetail('${i.id}')">
           <td><div style="display:flex;align-items:center;gap:8px">
@@ -131,6 +132,7 @@
           </div></td>
           <td class="mono">${esc(i.nf_number || '—')}${i.series ? '/' + esc(i.series) : ''}</td>
           <td>${brDate(i.issue_date)}</td>
+          <td style="font-size:12px;color:var(--text-muted)">${importada}</td>
           <td class="ctr">—</td>
           <td class="num">${fmtBRL(i.total)}</td>
           <td class="ctr"><span class="chip ${cls}">${lbl}</span></td>
@@ -309,7 +311,12 @@
     render();
   }
 
-  window.DMPAY_HISTNF = { load, filterStatus, filterMes, filterBusca, openDetail, closeDrawer, editParcela };
+  function filterData(val) {
+    DATA = (val || '').trim();
+    render();
+  }
+
+  window.DMPAY_HISTNF = { load, filterStatus, filterMes, filterBusca, filterData, openDetail, closeDrawer, editParcela };
   window.filterStatus = filterStatus;
   window.closeDrawer = closeDrawer;
 
