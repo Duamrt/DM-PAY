@@ -4,40 +4,30 @@
 
 (function () {
 
-  // ── Estado do módulo (escopo do IIFE, não do run — assim listeners ficam vivos)
+  // ── Estado do módulo (escopo do IIFE)
   let allForns = [];
   let filtro   = 'todos';  // 'todos' | 'recorrentes' | 'sem-compra'
   let tipo     = 'todos';  // 'todos' | 'com-nfe' | 'sem-nfe'
   let busca    = '';
-  let _render  = null;     // referência para renderTable (set em run())
+  let _render  = null;     // set em run() depois que os dados carregam
 
-  // ── Listeners criados 1 vez no DOMContentLoaded (independente do auth)
-  document.addEventListener('DOMContentLoaded', () => {
+  // ── Funções globais chamadas pelos atributos oninput/onchange/onclick do HTML
+  window._FORN_busca = function(val) {
+    busca = (val || '').trim();
+    if (_render) _render();
+  };
+  window._FORN_tipo = function(val) {
+    tipo = val || 'todos';
+    if (_render) _render();
+  };
+  window._FORN_chip = function(el, idx) {
+    document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filtro = idx === 0 ? 'todos' : idx === 1 ? 'recorrentes' : 'sem-compra';
+    if (_render) _render();
+  };
 
-    // Busca
-    document.querySelector('.search input')?.addEventListener('input', e => {
-      busca = e.target.value.trim();
-      if (_render) _render();
-    });
-
-    // Chips
-    document.querySelectorAll('.status-chip').forEach((chip, i) => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.status-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        filtro = i === 0 ? 'todos' : i === 1 ? 'recorrentes' : 'sem-compra';
-        if (_render) _render();
-      });
-    });
-
-    // Dropdown de tipo
-    document.querySelector('.filter-select')?.addEventListener('change', e => {
-      tipo = e.target.value;
-      if (_render) _render();
-    });
-
-    init(0);
-  });
+  document.addEventListener('DOMContentLoaded', () => init(0));
 
   // ── Aguarda DMPAY_COMPANY ficar disponível (auth-guard pode ser async)
   function init(tries) {
