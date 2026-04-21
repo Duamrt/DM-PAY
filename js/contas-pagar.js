@@ -570,7 +570,7 @@ if (!document.getElementById('dmp-modal-css')) {
     .dmp-field input,.dmp-field select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface,#fff);color:var(--text-primary,#111);font-family:inherit;font-size:14px;outline:none}
     .dmp-field input:focus,.dmp-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
     .dmp-field .mono{font-family:'Geist Mono',monospace;letter-spacing:.02em}
-    .nf-badge{font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#60a5fa;letter-spacing:.03em}
+    .nf-badge{font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:var(--text-primary,#111);letter-spacing:.03em}
     .dmp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .dmp-hint{font-size:11.5px;color:var(--text-soft,#9CA3AF);margin-top:5px;line-height:1.5}
   `;
