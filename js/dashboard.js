@@ -33,7 +33,7 @@
     const heroP = document.querySelector('.hero p');
     if (heroP) {
       const dia = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-      const planoTxt = isPlatformAdmin ? 'modo administrador DM Stack' : (company.plan === 'trial' ? `trial até ${new Date(company.trial_until).toLocaleDateString('pt-BR')}` : 'plano ' + company.plan);
+      const planoTxt = isPlatformAdmin ? '🛡 visão global · todos os tenants' : (company.plan === 'trial' ? `trial até ${new Date(company.trial_until).toLocaleDateString('pt-BR')}` : 'plano ' + company.plan);
       heroP.innerHTML = `<span class="dot-success"></span> <b>${dia}</b> · <b>${empresaNome}</b> · ${planoTxt}`;
     }
 
@@ -45,15 +45,14 @@
     const inicio30 = new Date(HOJE); inicio30.setDate(inicio30.getDate() - 30);
     const inicio30iso = inicio30.toISOString().slice(0,10);
 
+    // Platform admin: remove filtro de company_id — RLS is_platform_admin() retorna todos os tenants
+    function qPay(q){ return isPlatformAdmin ? q : q.eq('company_id', COMPANY_ID); }
+
     const [pagsR, recsR, salesR, sangR] = await Promise.all([
-      sb.from('payables').select('id, amount, due_date, paid_at, status, description, suppliers(legal_name)')
-        .eq('company_id', COMPANY_ID).limit(2000),
-      sb.from('receivables').select('id, amount, due_date, received_at, status')
-        .eq('company_id', COMPANY_ID).limit(20000),
-      sb.from('daily_sales').select('sale_date, payment_method, amount')
-        .eq('company_id', COMPANY_ID).gte('sale_date', inicio30iso).limit(2000),
-      sb.from('cash_withdrawals').select('withdrawal_date, amount')
-        .eq('company_id', COMPANY_ID).gte('withdrawal_date', inicio30iso).limit(500)
+      qPay(sb.from('payables').select('id, amount, due_date, paid_at, status, description, suppliers(legal_name)')).limit(2000),
+      qPay(sb.from('receivables').select('id, amount, due_date, received_at, status')).limit(20000),
+      qPay(sb.from('daily_sales').select('sale_date, payment_method, amount').gte('sale_date', inicio30iso)).limit(2000),
+      qPay(sb.from('cash_withdrawals').select('withdrawal_date, amount').gte('withdrawal_date', inicio30iso)).limit(500)
     ]);
     const PAGS = pagsR.data || [];
     const RECS = recsR.data || [];
