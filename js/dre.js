@@ -214,6 +214,12 @@
     const dgerTotal = aluguel + internet;
     const despOp    = dvTotal + dadmTotal + dgerTotal;
 
+    // Despesas Financeiras (não usa 'taxa'/'tarifa' — já estão em maqTaxas)
+    const dfJuros   = sumCats('juros', 'multa');
+    const dfAntecip = sumCats('antecip');
+    const dfIof     = sumCats('iof');
+    const despFin   = dfJuros + dfAntecip + dfIof;
+
     function setDesp(idVal, idPct, v) {
       if (v > 0) {
         set(idVal, fmt(v), 1); setClass(idVal,'cas-val minus');
@@ -229,20 +235,24 @@
     setDesp('v-dger','p-dger', dgerTotal);
     setDesp('v-aluguel',null, aluguel);
     setDesp('v-internet',null, internet);
+    setDesp('v-df','p-df', despFin);
+    setDesp('v-juros',null, dfJuros);
+    setDesp('v-antecip',null, dfAntecip);
 
     const ebitV = (cmv > 0 ? lb : rl) - despOp;
-    if (despOp > 0 || cmv > 0) {
+    if (despOp > 0 || cmv > 0 || despFin > 0) {
       set('v-ebit', fmt(ebitV), 1);
       setClass('v-ebit','cas-val ' + (ebitV >= 0 ? 'total' : 'minus'));
       set('p-ebit', pctS(ebitV,rl), 1);
 
-      const irpjV   = ebitV > 0 ? ebitV * IRPJ : 0;
-      const irpjAdV = ebitV > IRPJ_AD_BASE ? (ebitV - IRPJ_AD_BASE) * 0.10 : 0;
-      const csllV   = ebitV > 0 ? ebitV * CSLL : 0;
-      const ll      = ebitV - irpjV - irpjAdV - csllV;
+      const ebtV    = ebitV - despFin;
+      const irpjV   = ebtV > 0 ? ebtV * IRPJ : 0;
+      const irpjAdV = ebtV > IRPJ_AD_BASE ? (ebtV - IRPJ_AD_BASE) * 0.10 : 0;
+      const csllV   = ebtV > 0 ? ebtV * CSLL : 0;
+      const ll      = ebtV - irpjV - irpjAdV - csllV;
 
-      set('v-ebt', fmt(ebitV), 1); setClass('v-ebt','cas-val total');
-      set('p-ebt', pctS(ebitV,rl), 1);
+      set('v-ebt', fmt(ebtV), 1); setClass('v-ebt','cas-val total');
+      set('p-ebt', pctS(ebtV,rl), 1);
       set('v-irpj',   fmt(irpjV),   1);
       set('v-irpjad', fmt(irpjAdV), 1);
       set('v-csll',   fmt(csllV),   1);
