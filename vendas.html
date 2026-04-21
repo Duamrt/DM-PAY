@@ -241,7 +241,7 @@
     .hm-legend-box{width:12px;height:12px;border-radius:3px}
     .hm-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
     .hm-dow{font-size:10px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;text-align:center;padding:4px 0}
-    .hm-cell{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;padding:6px 7px;cursor:pointer;transition:.15s;border:1px solid transparent;position:relative;min-height:64px}
+    .hm-cell{aspect-ratio:1;border-radius:7px;display:flex;flex-direction:column;padding:5px 6px;cursor:pointer;transition:.15s;border:1px solid transparent;position:relative;min-height:44px}
     .hm-cell:hover{transform:scale(1.06);border-color:var(--text);z-index:5}
     .hm-cell.empty{background:transparent;cursor:default}
     .hm-cell.empty:hover{transform:none;border-color:transparent}
@@ -251,6 +251,29 @@
     .hm-num{font-family:'Geist Mono',monospace;font-weight:700;font-size:12px;letter-spacing:-.01em}
     .hm-val{font-size:9.5px;font-family:'Geist Mono',monospace;font-weight:600;margin-top:auto;line-height:1.1}
 
+    /* Por Caixa */
+    .caixas-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;margin-bottom:18px;overflow:hidden}
+    .caixas-head{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px}
+    .caixas-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em}
+    .caixas-date-nav{display:flex;align-items:center;gap:8px}
+    .caixas-date-nav button{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;cursor:pointer;color:var(--text);font-size:12px}
+    .caixas-date-nav button:hover{background:var(--bg-soft)}
+    .caixas-date-label{font-size:12px;font-weight:600;min-width:80px;text-align:center;color:var(--text)}
+    .pdv-row{padding:12px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:.12s}
+    .pdv-row:hover{background:var(--bg-soft)}
+    .pdv-row-head{display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center}
+    .pdv-badge{width:22px;height:22px;border-radius:6px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent)}
+    .pdv-nome{font-size:13px;font-weight:600}
+    .pdv-cupons{font-size:11px;color:var(--text-muted);text-align:right}
+    .pdv-total{font-size:13px;font-weight:700;font-family:'Geist Mono',monospace;text-align:right;min-width:100px}
+    .pdv-ops{padding:8px 20px 4px 50px;display:none}
+    .pdv-ops.open{display:block}
+    .pdv-op-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;padding:6px 0;border-bottom:1px dashed var(--border);font-size:12px}
+    .pdv-op-row:last-child{border:none}
+    .pdv-op-nome{color:var(--text-soft)}
+    .pdv-op-cupons{color:var(--text-muted);text-align:right}
+    .pdv-op-val{font-family:'Geist Mono',monospace;font-weight:600;text-align:right}
+    .caixas-empty{padding:24px 20px;text-align:center;color:var(--text-muted);font-size:13px}
     /* Tabela lançamentos */
     .records-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
     .records-head{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-wrap:wrap}
@@ -626,6 +649,19 @@
           <div class="hm-dow">Sáb</div>
         </div>
         <div class="hm-grid" id="hmGrid" style="margin-top:4px"></div>
+      </div>
+
+      <!-- Por Caixa -->
+      <div class="caixas-card" id="caixasCard">
+        <div class="caixas-head">
+          <h3>Por Caixa</h3>
+          <div class="caixas-date-nav">
+            <button onclick="DMPAY_CAIXAS.navDia(-1)">&#8592;</button>
+            <span class="caixas-date-label" id="caixasDateLabel">—</span>
+            <button onclick="DMPAY_CAIXAS.navDia(+1)">&#8594;</button>
+          </div>
+        </div>
+        <div id="caixasBody"><div class="caixas-empty">Carregando…</div></div>
       </div>
 
       <!-- Tabela lançamentos -->

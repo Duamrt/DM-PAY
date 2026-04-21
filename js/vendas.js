@@ -547,3 +547,86 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
+
+// === Por Caixa ===
+window.DMPAY_CAIXAS = (() => {
+  let _data = null; // YYYY-MM-DD
+  const fmtD = iso => { const [y,m,d] = iso.split('-'); return `${d}/${m}`; };
+  const fmt  = v => 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  async function carregar(iso) {
+    _data = iso;
+    const label = document.getElementById('caixasDateLabel');
+    if (label) label.textContent = fmtD(iso);
+    const body = document.getElementById('caixasBody');
+    if (!body) return;
+    body.innerHTML = '<div class="caixas-empty">Carregando…</div>';
+
+    const sb = window.sb;
+    const companyId = window.DMPAY_COMPANY && window.DMPAY_COMPANY.id;
+    if (!sb || !companyId) { body.innerHTML = '<div class="caixas-empty">Sem conexão.</div>'; return; }
+
+    const { data, error } = await sb
+      .from('register_sessions')
+      .select('pdv_id,pdv_nome,operador_id,operador_nome,total_vendas,total_cupons')
+      .eq('company_id', companyId)
+      .eq('session_date', iso)
+      .order('pdv_id');
+
+    if (error || !data || data.length === 0) {
+      body.innerHTML = '<div class="caixas-empty">Nenhum dado de caixa para este dia.</div>';
+      return;
+    }
+
+    // Agrupa por PDV
+    const pdvs = {};
+    data.forEach(r => {
+      if (!pdvs[r.pdv_id]) pdvs[r.pdv_id] = { nome: r.pdv_nome || `PDV ${r.pdv_id}`, total: 0, cupons: 0, ops: [] };
+      pdvs[r.pdv_id].total  += Number(r.total_vendas);
+      pdvs[r.pdv_id].cupons += Number(r.total_cupons);
+      pdvs[r.pdv_id].ops.push({ nome: r.operador_nome || `Op #${r.operador_id}`, total: Number(r.total_vendas), cupons: Number(r.total_cupons) });
+    });
+
+    body.innerHTML = Object.entries(pdvs).map(([pdvId, p], i) => `
+      <div class="pdv-row" onclick="DMPAY_CAIXAS.toggle('ops-${pdvId}')">
+        <div class="pdv-row-head">
+          <div class="pdv-badge">${i+1}</div>
+          <div class="pdv-nome">${p.nome}</div>
+          <div class="pdv-cupons">${p.cupons} cupons</div>
+          <div class="pdv-total">${fmt(p.total)}</div>
+        </div>
+      </div>
+      <div class="pdv-ops" id="ops-${pdvId}">
+        ${p.ops.sort((a,b) => b.total - a.total).map(op => `
+          <div class="pdv-op-row">
+            <div class="pdv-op-nome">${op.nome}</div>
+            <div class="pdv-op-cupons">${op.cupons} cupons</div>
+            <div class="pdv-op-val">${fmt(op.total)}</div>
+          </div>
+        `).join('')}
+      </div>
+    `).join('');
+  }
+
+  function toggle(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('open');
+  }
+
+  function navDia(delta) {
+    if (!_data) return;
+    const [y,m,d] = _data.split('-').map(Number);
+    const dt = new Date(y, m-1, d + delta);
+    const iso = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+    carregar(iso);
+  }
+
+  // Inicializa com hoje quando a página carregar
+  document.addEventListener('DOMContentLoaded', () => {
+    const hoje = new Date();
+    const iso = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
+    setTimeout(() => carregar(iso), 800);
+  });
+
+  return { carregar, toggle, navDia };
+})();
