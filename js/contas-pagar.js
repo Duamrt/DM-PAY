@@ -60,13 +60,13 @@
     const janelaISO = janela.toISOString().slice(0,10);
     const [abertasR, pagasR] = await Promise.all([
       sb.from('payables')
-        .select('*, suppliers(legal_name, trade_name, cnpj)')
+        .select('*, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
         .eq('company_id', COMPANY_ID)
         .in('status', ['open'])
         .order('due_date', { ascending: true })
         .limit(2000),
       sb.from('payables')
-        .select('*, suppliers(legal_name, trade_name, cnpj)')
+        .select('*, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
         .eq('company_id', COMPANY_ID)
         .eq('status', 'paid')
         .gte('paid_at', janelaISO)
@@ -168,7 +168,7 @@
         <tr data-id="${p.id}" onclick="DMPAY_CP.openDrawer('${p.id}')">
           <td><span class="check" data-row="${p.id}" onclick="event.stopPropagation()"></span></td>
           <td><div class="supplier"><span class="supplier-avatar tone-${tone(sup)}">${iniciais(sup)}</span><span class="supplier-name">${supShort}</span></div></td>
-          <td class="mono">${p.invoice_id ? '—' : (p.notes ? p.notes.slice(0,12) : '—')}</td>
+          <td class="mono">${p.invoices?.nf_number || (p.description?.match(/^NF\s+(\S+)/i)?.[1]) || '—'}</td>
           <td class="date">${brDate(p.created_at)}</td>
           <td class="date">${brDate(p.due_date)}</td>
           <td>${cat}</td>

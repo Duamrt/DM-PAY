@@ -186,7 +186,7 @@ window.DMPAY_EXPORT = (() => {
       const sup    = p.suppliers?.trade_name || p.suppliers?.legal_name || '—';
       const cat    = p.expense_categories?.name || '—';
       const emissao = brDate(p.created_at);
-      const nf      = extrairNF(p.description);
+      const nf      = p.invoices?.nf_number || extrairNF(p.description);
       const band    = i % 2 === 0 ? CINZA_CLR : BRANCO;
 
       const row = ws.addRow([
