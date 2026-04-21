@@ -225,6 +225,22 @@
   async function colarCodigo(id) {
     const p = PAYABLES.find(x => x.id === id); if (!p) return;
     if (!window.DMPAY_UI) { alert('UI não carregada'); return; }
+    // Adiciona auto-submit quando leitor de código digitar 44 ou 47 dígitos
+    requestAnimationFrame(() => {
+      const ta = document.querySelector('#dmp-f-0');
+      if (!ta) return;
+      const trySubmit = () => {
+        const d = ta.value.replace(/\D/g, '');
+        if (d.length === 44 || d.length === 47) {
+          setTimeout(() => {
+            const btn = document.querySelector('.dmp-btn-primary[data-act="ok"]');
+            if (btn) btn.click();
+          }, 120);
+        }
+      };
+      ta.addEventListener('input', trySubmit);
+      ta.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); trySubmit(); } });
+    });
     const r = await window.DMPAY_UI.open({
       title: 'Código de barras do boleto',
       desc: `${p.suppliers?.legal_name || p.description || ''} · ${fmtBRLfull(p.amount)}`,
