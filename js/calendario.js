@@ -325,7 +325,6 @@
     const ov = document.getElementById('barcodeOverlay');
     ov.style.display = 'flex';
   }
-  }
 
   window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago, colarCodigo: colarCodigo, copiarCodigo: copiarCodigo, ampliarBarcode: ampliarBarcode };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
