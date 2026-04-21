@@ -320,14 +320,14 @@
     else barcode44 = digits.substr(0,44);
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boleto</title>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;font-family:sans-serif}
-h2{font-size:16px;color:#111;margin-bottom:4px;text-align:center}.val{font-size:22px;font-weight:700;color:#ef4444;margin-bottom:24px}
-svg{width:100%;height:auto}.line{margin-top:20px;font-size:12px;color:#555;word-break:break-all;text-align:center}
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px 0;font-family:sans-serif;overflow-x:hidden}
+.info{padding:0 20px 16px;text-align:center}h2{font-size:15px;color:#333;margin-bottom:3px}.val{font-size:24px;font-weight:700;color:#ef4444}
+canvas{max-width:100%;display:block}.line{padding:16px 20px 0;font-size:11px;color:#777;word-break:break-all;text-align:center}
 </style></head><body>
-<h2>${supplier}</h2><div class="val">${amount}</div>
-<svg id="bc"></svg>
+<div class="info"><h2>${supplier}</h2><div class="val">${amount}</div></div>
+<canvas id="bc"></canvas>
 <div class="line">${line}</div>
-<script>JsBarcode('#bc','${barcode44}',{format:'ITF',width:3,height:120,displayValue:false,margin:30,background:'#fff',lineColor:'#000'});<\/script>
+<script>JsBarcode('#bc','${barcode44}',{format:'ITF',width:4,height:160,displayValue:false,margin:40,background:'#ffffff',lineColor:'#000000'});<\/script>
 </body></html>`;
     const w = window.open('', '_blank');
     if (w) { w.document.write(html); w.document.close(); }
