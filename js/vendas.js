@@ -499,7 +499,9 @@
       const notas = (s.notes || '').replace(/\r?\n/g, ' ').split('|').map(x=>x.trim()).filter(Boolean);
       const resumo = notas.length ? notas.join(' · ') : 'sem descrição';
       const isNumerico = /^\d+$/.test((s.operator || '').trim());
-      const nomeOp = isNumerico ? 'Retirada de caixa' : (s.operator || 'Retirada de caixa');
+      const nomeOp = isNumerico
+        ? `Operador #${s.operator}`
+        : (s.operator || 'Retirada de caixa');
       const sufixo = notas.length ? ` — ${notas.length} item${notas.length !== 1 ? 's' : ''}` : '';
       return {
         nome: nomeOp + sufixo,
