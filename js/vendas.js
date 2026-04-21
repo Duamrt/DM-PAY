@@ -579,14 +579,21 @@ window.DMPAY_CAIXAS = (() => {
       return;
     }
 
-    // Agrupa por PDV
+    // Agrupa por PDV, depois por operador — evita duplicatas de sessão
     const pdvs = {};
     data.forEach(r => {
-      if (!pdvs[r.pdv_id]) pdvs[r.pdv_id] = { nome: r.pdv_nome || `PDV ${r.pdv_id}`, total: 0, cupons: 0, ops: [] };
+      if (!pdvs[r.pdv_id]) pdvs[r.pdv_id] = { nome: r.pdv_nome || `PDV ${r.pdv_id}`, total: 0, cupons: 0, ops: {} };
+      const opKey = r.operador_id || r.operador_nome || 'desconhecido';
+      if (!pdvs[r.pdv_id].ops[opKey]) {
+        pdvs[r.pdv_id].ops[opKey] = { nome: r.operador_nome || `Op #${r.operador_id}`, total: 0, cupons: 0 };
+      }
+      pdvs[r.pdv_id].ops[opKey].total  += Number(r.total_vendas);
+      pdvs[r.pdv_id].ops[opKey].cupons += Number(r.total_cupons);
       pdvs[r.pdv_id].total  += Number(r.total_vendas);
       pdvs[r.pdv_id].cupons += Number(r.total_cupons);
-      pdvs[r.pdv_id].ops.push({ nome: r.operador_nome || `Op #${r.operador_id}`, total: Number(r.total_vendas), cupons: Number(r.total_cupons) });
     });
+    // Converte ops de objeto para array
+    Object.values(pdvs).forEach(p => { p.ops = Object.values(p.ops); });
 
     body.innerHTML = Object.entries(pdvs).map(([pdvId, p], i) => `
       <div class="pdv-row" onclick="DMPAY_CAIXAS.toggle('ops-${pdvId}')">
