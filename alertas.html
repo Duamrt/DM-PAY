@@ -291,6 +291,15 @@
         </div>
       </div>
 
+      <!-- Banner homologação -->
+      <div style="display:flex;align-items:center;gap:12px;background:var(--warn-soft);border:1px solid var(--warn);border-radius:10px;padding:12px 16px;margin-bottom:18px">
+        <i data-lucide="construction" style="width:16px;height:16px;color:var(--warn);flex-shrink:0"></i>
+        <div style="flex:1;font-size:13px;color:var(--warn)">
+          <b>Módulo em homologação.</b> Os alertas serão disparados automaticamente assim que o envio via WhatsApp estiver configurado.
+        </div>
+        <a href="configuracoes.html" style="padding:6px 12px;background:var(--warn);color:white;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap">Configurar WhatsApp</a>
+      </div>
+
       <div class="alert-layout">
         <div>
           <!-- Filtros -->
@@ -304,9 +313,18 @@
 
           <!-- Lista -->
           <div class="alerts-list" id="alerts-list">
-            <div style="padding:48px 16px;text-align:center;color:var(--text-muted)">
-              <div style="font-size:28px;margin-bottom:8px">—</div>
-              <div style="font-size:14px">Em construção</div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:32px 24px;text-align:center">
+              <div style="width:48px;height:48px;border-radius:12px;background:var(--accent-soft);display:grid;place-items:center;margin:0 auto 14px">
+                <i data-lucide="bell" style="width:22px;height:22px;color:var(--accent)"></i>
+              </div>
+              <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text)">Alertas automáticos em breve</div>
+              <div style="font-size:13px;color:var(--text-muted);max-width:380px;margin:0 auto 20px;line-height:1.6">
+                O sistema está preparado para monitorar boletos, saldo, margens e fornecedores.<br>
+                Configure o número do WhatsApp para ativar os alertas automáticos.
+              </div>
+              <a href="configuracoes.html" class="btn btn-primary" style="display:inline-flex;text-decoration:none">
+                <i data-lucide="settings"></i> Configurar agora
+              </a>
             </div>
           </div>
         </div>
@@ -465,6 +483,23 @@
         c.style.display = (sev === 'all' || c.dataset.sev === sev) ? '' : 'none';
       });
     }
+
+    // Toggles de regra — feedback visual (em homologação)
+    document.querySelectorAll('.rule-row .toggle input').forEach(chk => {
+      chk.addEventListener('change', () => {
+        const toast = document.createElement('div');
+        toast.textContent = 'Configuração salva quando o módulo entrar em produção';
+        Object.assign(toast.style, {
+          position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+          background:'var(--text)', color:'var(--bg)', padding:'10px 18px',
+          borderRadius:'8px', fontSize:'12px', zIndex:9999, opacity:'0',
+          transition:'opacity .2s', whiteSpace:'nowrap'
+        });
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.style.opacity = '1');
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 250); }, 2500);
+      });
+    });
 
     // Dismiss individual alert
     document.querySelectorAll('.alert-dismiss').forEach(btn => {
