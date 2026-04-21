@@ -395,16 +395,8 @@
             <button id="btnCopyLine" style="flex-shrink:0;padding:8px 14px;background:var(--accent);color:white;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px"><i data-lucide="copy"></i> Copiar</button>
           </div>
         </div>
-        <details style="margin-bottom:4px">
-          <summary style="font-size:12px;color:var(--text-muted);cursor:pointer;padding:4px 0;user-select:none">Ver código de barras</summary>
-          <div style="margin-top:12px">
-            <div class="barcode-box" style="cursor:pointer" onclick="DMPAY_CAL.ampliarBarcode()" title="Ampliar"><svg id="barcodeSvg"></svg></div>
-            <div style="text-align:center;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px">
-              <span style="font-size:11px;color:var(--text-muted)">Clique no código para ampliar</span>
-              <button onclick="DMPAY_CAL.ampliarBarcode()" style="padding:4px 10px;font-size:11px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:5px;cursor:pointer;font-weight:600">⛶ Ampliar</button>
-            </div>
-          </div>
-        </details>
+        <div class="barcode-box" style="cursor:pointer;margin-bottom:6px" onclick="DMPAY_CAL.ampliarBarcode()" title="Clique para ampliar"><svg id="barcodeSvg"></svg></div>
+        <div style="text-align:center;font-size:11px;color:var(--text-muted)">Clique no código para ampliar em tela cheia</div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="document.getElementById('payModal').classList.remove('open')">Fechar</button>
@@ -414,12 +406,12 @@
   </div>
 
   <!-- Overlay fullscreen barcode -->
-  <div id="barcodeOverlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:24px" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:#fff;border-radius:14px;padding:28px 24px 20px;width:100%;max-width:680px;position:relative">
-      <button onclick="document.getElementById('barcodeOverlay').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:#666;line-height:1">✕</button>
-      <div id="barcodeOverlayInfo" style="text-align:center;margin-bottom:16px"></div>
-      <div style="background:#fff;padding:16px;border-radius:8px;overflow-x:auto;-webkit-overflow-scrolling:touch">
-        <svg id="barcodeSvgBig" style="display:block;height:auto"></svg>
+  <div id="barcodeOverlay" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);align-items:center;justify-content:center;padding:16px" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:#fff;border-radius:14px;padding:20px 20px 16px;width:96vw;max-width:960px;position:relative">
+      <button onclick="document.getElementById('barcodeOverlay').style.display='none'" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;cursor:pointer;color:#999;line-height:1">✕</button>
+      <div id="barcodeOverlayInfo" style="text-align:center;margin-bottom:14px"></div>
+      <div style="background:#fff;padding:12px 0;border-radius:8px">
+        <svg id="barcodeSvgBig" style="display:block;width:100%;height:auto"></svg>
       </div>
     </div>
   </div>
