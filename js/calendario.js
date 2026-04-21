@@ -320,14 +320,18 @@
     else barcode44 = digits.substr(0,44);
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boleto</title>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:16px 0;font-family:sans-serif;overflow-x:hidden}
-.info{padding:0 20px 16px;text-align:center}h2{font-size:15px;color:#333;margin-bottom:3px}.val{font-size:24px;font-weight:700;color:#ef4444}
-canvas{max-width:100%;display:block}.line{padding:16px 20px 0;font-size:11px;color:#777;word-break:break-all;text-align:center}
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;font-family:sans-serif;padding:20px 0}
+.info{padding:0 24px 20px;text-align:center}h2{font-size:15px;color:#333;margin-bottom:4px}.val{font-size:26px;font-weight:700;color:#ef4444}
+.bc-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 4px}
+svg{display:block;height:auto}
+.line{padding:16px 24px 0;font-size:12px;color:#666;word-break:break-all;text-align:center;line-height:1.6}
+.copy-btn{display:block;margin:14px auto 0;padding:10px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
 </style></head><body>
 <div class="info"><h2>${supplier}</h2><div class="val">${amount}</div></div>
-<canvas id="bc"></canvas>
+<div class="bc-wrap"><svg id="bc"></svg></div>
 <div class="line">${line}</div>
-<script>JsBarcode('#bc','${barcode44}',{format:'ITF',width:4,height:160,displayValue:false,margin:40,background:'#ffffff',lineColor:'#000000'});<\/script>
+<button class="copy-btn" onclick="navigator.clipboard.writeText('${line.replace(/'/g,"\\'")}').then(()=>{this.textContent='Copiado!';setTimeout(()=>this.textContent='Copiar linha digitável',2000)}).catch(()=>this.textContent='Copie acima')">Copiar linha digitável</button>
+<script>try{JsBarcode('#bc','${barcode44}',{format:'ITF',width:3,height:120,displayValue:false,margin:30,background:'#ffffff',lineColor:'#000000'})}catch(e){document.querySelector('.bc-wrap').innerHTML='<p style="padding:20px;color:#999;text-align:center">Use a linha digitável abaixo</p>'}<\/script>
 </body></html>`;
     const w = window.open('', '_blank');
     if (w) { w.document.write(html); w.document.close(); }

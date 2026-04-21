@@ -388,21 +388,23 @@
         </div>
       </div>
       <div class="modal-body">
-        <div class="barcode-box">
-          <svg id="barcodeSvg"></svg>
+        <div id="payLineWrap" style="background:var(--bg-soft);border:2px solid var(--accent);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Linha digitável — cole no app do banco</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span id="payLineText" style="flex:1;font-family:'Geist Mono',monospace;font-size:12px;color:var(--text);font-weight:500;word-break:break-all;line-height:1.6">—</span>
+            <button id="btnCopyLine" style="flex-shrink:0;padding:8px 14px;background:var(--accent);color:white;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px"><i data-lucide="copy"></i> Copiar</button>
+          </div>
         </div>
-        <div class="barcode-hint">
-          <i data-lucide="smartphone"></i>
-          <span><b>Aponte o celular</b> pro código acima ou copie a linha digitável abaixo.</span>
-        </div>
-        <div class="line-wrap">
-          <span class="line-text" id="payLineText">34191.79001 01043.510047 91020.150008 6 89860000428250</span>
-          <button class="btn" id="btnCopyLine" title="Copiar linha digitável"><i data-lucide="copy"></i> Copiar</button>
-        </div>
+        <details style="margin-bottom:4px">
+          <summary style="font-size:12px;color:var(--text-muted);cursor:pointer;padding:4px 0;user-select:none">Ver código de barras</summary>
+          <div style="margin-top:12px">
+            <div class="barcode-box"><svg id="barcodeSvg"></svg></div>
+            <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px">Scanner de tela pode ser instável — prefira copiar o código acima</div>
+          </div>
+        </details>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="document.getElementById('payModal').classList.remove('open')">Fechar</button>
-        <button class="btn" id="btnFullscreen" onclick="DMPAY_CAL.abrirBarcodeFullscreen()"><i data-lucide="maximize-2"></i> Tela cheia</button>
         <button class="btn primary" id="btnMarkPaid"><i data-lucide="check-circle-2"></i> Marcar como pago</button>
       </div>
     </div>
