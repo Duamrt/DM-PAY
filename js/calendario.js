@@ -308,7 +308,32 @@
     await load(); render();
   }
 
-  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago, colarCodigo: colarCodigo, copiarCodigo: copiarCodigo };
+  function abrirBarcodeFullscreen() {
+    const line = document.getElementById('payLineText')?.textContent?.trim();
+    const supplier = document.getElementById('paySupplier')?.textContent?.trim() || '';
+    const amount = document.getElementById('payAmount')?.textContent?.trim() || '';
+    if (!line) return;
+    const digits = line.replace(/\D/g,'');
+    let barcode44;
+    if (digits.length === 44) barcode44 = digits;
+    else if (digits.length === 47) barcode44 = digits.substr(0,4)+digits.substr(32,1)+digits.substr(33,14)+digits.substr(4,5)+digits.substr(10,10)+digits.substr(21,10);
+    else barcode44 = digits.substr(0,44);
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boleto</title>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;font-family:sans-serif}
+h2{font-size:16px;color:#111;margin-bottom:4px;text-align:center}.val{font-size:22px;font-weight:700;color:#ef4444;margin-bottom:24px}
+svg{width:100%;height:auto}.line{margin-top:20px;font-size:12px;color:#555;word-break:break-all;text-align:center}
+</style></head><body>
+<h2>${supplier}</h2><div class="val">${amount}</div>
+<svg id="bc"></svg>
+<div class="line">${line}</div>
+<script>JsBarcode('#bc','${barcode44}',{format:'ITF',width:3,height:120,displayValue:false,margin:30,background:'#fff',lineColor:'#000'});<\/script>
+</body></html>`;
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); }
+  }
+
+  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago, colarCodigo: colarCodigo, copiarCodigo: copiarCodigo, abrirBarcodeFullscreen: abrirBarcodeFullscreen };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
