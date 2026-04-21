@@ -202,7 +202,7 @@
       ).reduce((s,[,v]) => s+v, 0);
     }
 
-    const folha     = sumCats('folha','salário','salario','funcionário','funcionario','trabalhista','holerite');
+    const folha     = sumCats('folha','salário','salario','funcionário','funcionario','trabalhista','holerite','inss','fgts','encargo','guia das','simples nacional');
     const maqTaxas  = sumCats('maquininha','cielo','stone','rede','getnet','taxa','tarifa');
     const prolabore = sumCats('pro-labore','pró-labore','prolabore','sócio','socio','retirada');
     const contador  = sumCats('contador','contabilidade','software','sistema');
