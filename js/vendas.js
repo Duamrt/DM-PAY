@@ -142,6 +142,7 @@
     if (!iso || !_COMPANY_ID) return;
     renderFormasPagamento(iso);
     await carregarFechamentoDia(_COMPANY_ID, iso, _porDia[iso] || 0);
+    if (window.DMPAY_CAIXAS) window.DMPAY_CAIXAS.carregar(iso);
     // destaca cell do heatmap
     document.querySelectorAll('.hm-cell.selected').forEach(c => c.classList.remove('selected'));
     const cell = document.querySelector(`.hm-cell[data-iso="${iso}"]`);
