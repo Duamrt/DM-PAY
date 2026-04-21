@@ -161,14 +161,15 @@
     tbody.innerHTML = list.map(p => {
       const st = statusOf(p);
       const b = BADGE[st.s];
-      const sup = p.suppliers?.legal_name || p.description || 'Sem fornecedor';
+      const _descSup = p.description?.replace(/^NF\s+\S+\s*/i, '') || '';
+      const sup = p.suppliers?.legal_name || _descSup || 'Sem fornecedor';
       const supShort = sup.length > 36 ? sup.slice(0,33)+'…' : sup;
       const cat = p.expense_categories?.name || '—';
       return `
         <tr data-id="${p.id}" onclick="DMPAY_CP.openDrawer('${p.id}')">
           <td><span class="check" data-row="${p.id}" onclick="event.stopPropagation()"></span></td>
           <td><div class="supplier"><span class="supplier-avatar tone-${tone(sup)}">${iniciais(sup)}</span><span class="supplier-name">${supShort}</span></div></td>
-          <td class="mono">${p.invoices?.nf_number || (p.description?.match(/^NF\s+(\S+)/i)?.[1]) || '—'}</td>
+          <td><span class="nf-badge">${p.invoices?.nf_number || (p.description?.match(/^NF\s+(\S+)/i)?.[1]) || '—'}</span></td>
           <td class="date">${brDate(p.created_at)}</td>
           <td class="date">${brDate(p.due_date)}</td>
           <td>${cat}</td>
@@ -569,6 +570,7 @@ if (!document.getElementById('dmp-modal-css')) {
     .dmp-field input,.dmp-field select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface,#fff);color:var(--text-primary,#111);font-family:inherit;font-size:14px;outline:none}
     .dmp-field input:focus,.dmp-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
     .dmp-field .mono{font-family:'Geist Mono',monospace;letter-spacing:.02em}
+    .nf-badge{font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:#60a5fa;letter-spacing:.03em}
     .dmp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .dmp-hint{font-size:11.5px;color:var(--text-soft,#9CA3AF);margin-top:5px;line-height:1.5}
   `;
