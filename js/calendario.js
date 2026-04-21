@@ -174,7 +174,7 @@
             <div style="display:flex;gap:6px">
               ${!isPago && !temBoleto ? `<button onclick="DMPAY_CAL.colarCodigo('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn);border-radius:6px;cursor:pointer;font-weight:600">📋 Colar código</button>` : ''}
               ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.copiarCodigo('${p.id}', this)" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:6px;cursor:pointer;font-weight:600">📋 Copiar código</button>` : ''}
-              ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.pagar('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Pagar com QR</button>` : ''}
+              ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.pagar('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Ver boleto</button>` : ''}
               ${!isPago ? `<button onclick="DMPAY_CAL.marcarPago('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--success);border:1px solid var(--success);border-radius:6px;cursor:pointer;font-weight:600">✓ Marcar pago</button>` : ''}
             </div>
           </div>
@@ -205,7 +205,7 @@
       if (digits.length === 44) barcode44 = digits;
       else if (digits.length === 47) barcode44 = digits.substr(0,4) + digits.substr(32,1) + digits.substr(33,14) + digits.substr(4,5) + digits.substr(10,10) + digits.substr(21,10);
       else barcode44 = digits.substr(0,44);
-      JsBarcode('#payBarcode', barcode44, { format:'ITF', width:1.6, height:70, displayValue:false, margin:0, background:'#fff', lineColor:'#000' });
+      JsBarcode('#barcodeSvg', barcode44, { format:'ITF', width:1.6, height:70, displayValue:false, margin:0, background:'#fff', lineColor:'#000' });
     } catch(e) { console.warn('barcode:', e); }
     modal.classList.add('open');
   }
