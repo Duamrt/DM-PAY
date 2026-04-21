@@ -6,7 +6,7 @@
   function fmtBRL(v){ return 'R$ ' + Math.round(Number(v||0)).toLocaleString('pt-BR'); }
   function fmtBRLfull(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function brDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('T')[0].split('-'); return `${d}/${m}/${y}`; }
-  function diffDays(iso){ if(!iso) return 0; const d = new Date(iso); d.setHours(0,0,0,0); return Math.round((d-HOJE)/86400000); }
+  function diffDays(iso){ if(!iso) return 0; const [y,m,d]=String(iso).slice(0,10).split('-').map(Number); return Math.round((new Date(y,m-1,d)-HOJE)/86400000); }
   // Regra fim de semana: boleto só vira "atrasado" depois do próximo dia útil
   function isOverdue(iso){ return window.DMPAY_DIAUTIL ? window.DMPAY_DIAUTIL.atrasado(iso) : diffDays(iso) < 0; }
   function diasAtraso(iso){

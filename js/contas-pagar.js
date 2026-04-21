@@ -16,8 +16,8 @@
   function isoToday(){ return new Date().toISOString().split('T')[0]; }
   function diffDays(iso) {
     if (!iso) return 0;
-    const d = new Date(iso); d.setHours(0,0,0,0);
-    return Math.round((d - HOJE) / 86400000);
+    const [y,m,d] = String(iso).slice(0,10).split('-').map(Number);
+    return Math.round((new Date(y, m-1, d) - HOJE) / 86400000);
   }
   function iniciais(nome){
     const w = (nome||'?').replace(/[^\wÀ-ÿ ]/g,'').trim().split(/\s+/);

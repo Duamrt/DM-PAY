@@ -10,7 +10,7 @@
   function fmtBRL(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function brDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('T')[0].split('-'); return `${d}/${m}/${y}`; }
   function isoToday(){ return new Date().toISOString().split('T')[0]; }
-  function diffDays(iso){ if(!iso) return 0; const d = new Date(iso); d.setHours(0,0,0,0); return Math.round((d - HOJE)/86400000); }
+  function diffDays(iso){ if(!iso) return 0; const [y,m,d]=String(iso).slice(0,10).split('-').map(Number); return Math.round((new Date(y,m-1,d)-HOJE)/86400000); }
   function iniciais(n){ const w = (n||'?').trim().split(/\s+/); return ((w[0]||'')[0]+(w[1]||'')[0]||(w[0]||'??').slice(0,2)).toUpperCase(); }
   function tone(n){ let h=0; const s=n||''; for (let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0; const cores=['#DC2626','#D97706','#7C3AED','#2563EB','#EA580C','#0891B2','#10B981','#4B5563']; return cores[Math.abs(h)%cores.length]; }
 
