@@ -160,7 +160,9 @@
   async function save() {
     if (!PARSED) return;
     const COMPANY_ID = window.DMPAY_COMPANY.id;
-    const btn = document.getElementById('btn-save-nfe'); btn.disabled = true; btn.textContent = 'Salvando...';
+    const btn = document.getElementById('btn-save-nfe');
+    const original = btn.innerHTML;
+    btn.disabled = true; btn.textContent = 'Salvando...';
 
     try {
       // 1. Upsert fornecedor por CNPJ

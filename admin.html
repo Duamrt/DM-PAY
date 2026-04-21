@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%237C3AED%27/><text x=%2716%27 y=%2722%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2718%27>A</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Torre de Comando · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/admin.js" defer></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#7C3AED; --accent-hover:#6D28D9; --accent-soft:#EDE9FE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#A78BFA; --accent-hover:#C4B5FD; --accent-soft:rgba(167,139,250,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+
+    main{padding:24px 28px 80px}
+
+    /* Hero */
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px;flex-wrap:wrap}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px}
+    .hero p b{color:var(--text)}
+    .admin-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--accent-soft);color:var(--accent);border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+    .admin-badge svg{width:11px;height:11px}
+
+    /* KPI grid */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;transition:.15s}
+    .kpi:hover{border-color:var(--border-strong);box-shadow:var(--shadow-lg)}
+    .kpi-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .kpi-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+    .kpi-icon svg{width:16px;height:16px}
+    .kpi-icon.success{background:var(--success-soft);color:var(--success)}
+    .kpi-icon.warn{background:var(--warn-soft);color:var(--warn)}
+    .kpi-icon.neutral{background:var(--bg-hover);color:var(--text-muted)}
+    .kpi-label{font-size:11.5px;font-weight:500;color:var(--text-muted)}
+    .kpi-value{font-size:26px;font-weight:600;letter-spacing:-.02em;font-family:'Geist',sans-serif;margin-bottom:4px}
+    .kpi-sub{font-size:12px;color:var(--text-soft)}
+
+    /* Card padrão */
+    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:18px}
+    .card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-soft)}
+    .card-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .card-head h3 svg{width:15px;height:15px;color:var(--text-muted)}
+    .card-head .sub{font-size:12px;color:var(--text-soft)}
+
+    /* Tabela de tenants */
+    .tenant-table{width:100%;border-collapse:collapse}
+    .tenant-table th{padding:10px 18px;font-size:11.5px;font-weight:600;color:var(--text-muted);text-align:left;border-bottom:1px solid var(--border);background:var(--bg-soft);letter-spacing:.02em;text-transform:uppercase}
+    .tenant-table td{padding:14px 18px;border-bottom:1px solid var(--border);vertical-align:middle}
+    .tenant-row:last-child td{border-bottom:none}
+    .tenant-row:hover td{background:var(--bg-hover)}
+
+    @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:840px){body{grid-template-columns:1fr}.sidebar{display:none}}
+  </style>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/theme.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">D</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Admin</div>
+    <a class="nav-item active" href="admin.html"><i data-lucide="shield"></i> Torre de Comando</a>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar</a>
+    <a class="nav-item" href="contas-a-receber.html"><i data-lucide="hand-coins"></i> Contas a receber</a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <i data-lucide="shield" style="width:14px;height:14px;color:var(--accent)"></i>
+        <b>Torre de Comando</b>
+        <span style="color:var(--border-strong)">·</span>
+        <span>Visão global — todos os tenants</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <div class="avatar">D</div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <div class="hero">
+        <div>
+          <h1>
+            <i data-lucide="shield" style="color:var(--accent)"></i>
+            Torre de Comando
+          </h1>
+          <p>Monitoramento em tempo real · <b id="hero-date">—</b></p>
+        </div>
+        <span class="admin-badge"><i data-lucide="lock"></i> DM Stack · Platform Admin</span>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-head">
+            <div class="kpi-icon success"><i data-lucide="trending-up"></i></div>
+            <span class="kpi-label">Faturamento Hoje</span>
+          </div>
+          <div class="kpi-value" id="kpi-faturamento">—</div>
+          <div class="kpi-sub">todas as empresas · hoje</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-head">
+            <div class="kpi-icon"><i data-lucide="activity"></i></div>
+            <span class="kpi-label">Saúde do Sync</span>
+          </div>
+          <div class="kpi-value" id="kpi-saude">—</div>
+          <div class="kpi-sub">tenants sincronizados (≤ 26h)</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-head">
+            <div class="kpi-icon warn"><i data-lucide="alert-triangle"></i></div>
+            <span class="kpi-label">Ações Sensíveis 24h</span>
+          </div>
+          <div class="kpi-value" id="kpi-sensivel">—</div>
+          <div class="kpi-sub">deletes + estornos em todos os tenants</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-head">
+            <div class="kpi-icon neutral"><i data-lucide="building-2"></i></div>
+            <span class="kpi-label">Tenants Ativos</span>
+          </div>
+          <div class="kpi-value" id="kpi-tenants">—</div>
+          <div class="kpi-sub">empresas na plataforma</div>
+        </div>
+      </div>
+
+      <!-- Tabela tenants -->
+      <div class="card">
+        <div class="card-head">
+          <h3><i data-lucide="building-2"></i> Empresas</h3>
+          <span class="sub" id="tenant-count">carregando…</span>
+        </div>
+        <table class="tenant-table">
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>Plano</th>
+              <th>Status</th>
+              <th>Sincronização</th>
+              <th>Faturamento hoje</th>
+              <th style="text-align:center">Ações sens.</th>
+            </tr>
+          </thead>
+          <tbody id="tenants-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">
+              <i data-lucide="loader" style="width:14px;height:14px;display:inline;margin-right:6px"></i>
+              Carregando…
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // data no hero
+    document.getElementById('hero-date').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+    });
+    // atualiza contagem após render
+    document.addEventListener('DOMContentLoaded', function () {
+      const obs = new MutationObserver(function () {
+        const rows = document.querySelectorAll('#tenants-tbody .tenant-row');
+        const el = document.getElementById('tenant-count');
+        if (el && rows.length) el.textContent = rows.length + ' empresa' + (rows.length > 1 ? 's' : '');
+      });
+      obs.observe(document.getElementById('tenants-tbody'), { childList: true });
+    });
+  </script>
+</body>
+</html>

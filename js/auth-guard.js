@@ -48,6 +48,9 @@
       <div class="dmp-usermenu-email">${session.user.email}</div>
       <div class="dmp-usermenu-comp">empresa: <b>${session.company?.trade_name || session.company?.legal_name || '—'}</b></div>
     </div>
+    ${isPlatformAdmin ? `<button class="dmp-usermenu-item" onclick="location.href='admin.html'" style="color:var(--accent,#7C3AED)">
+      <i data-lucide="shield"></i> Torre de Comando
+    </button>` : ''}
     <button class="dmp-usermenu-item" onclick="location.href='configuracoes.html'">
       <i data-lucide="settings"></i> Configurações
     </button>
