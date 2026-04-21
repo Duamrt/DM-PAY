@@ -205,7 +205,7 @@
       if (digits.length === 44) barcode44 = digits;
       else if (digits.length === 47) barcode44 = digits.substr(0,4) + digits.substr(32,1) + digits.substr(33,14) + digits.substr(4,5) + digits.substr(10,10) + digits.substr(21,10);
       else barcode44 = digits.substr(0,44);
-      JsBarcode('#barcodeSvg', barcode44, { format:'ITF', width:1.6, height:70, displayValue:false, margin:0, background:'#fff', lineColor:'#000' });
+      JsBarcode('#barcodeSvg', barcode44, { format:'ITF', width:2.2, height:80, displayValue:false, margin:20, background:'#fff', lineColor:'#000' });
     } catch(e) { console.warn('barcode:', e); }
     modal.classList.add('open');
   }
