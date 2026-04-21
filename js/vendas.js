@@ -498,8 +498,11 @@
     const sangRows = (sangs || []).map(s => {
       const notas = (s.notes || '').replace(/\r?\n/g, ' ').split('|').map(x=>x.trim()).filter(Boolean);
       const resumo = notas.length ? notas.join(' · ') : 'sem descrição';
+      const isNumerico = /^\d+$/.test((s.operator || '').trim());
+      const nomeOp = isNumerico ? 'Retirada de caixa' : (s.operator || 'Retirada de caixa');
+      const sufixo = notas.length ? ` — ${notas.length} item${notas.length !== 1 ? 's' : ''}` : '';
       return {
-        nome: s.operator ? `Caixa ${s.operator} — ${notas.length} item${notas.length!==1?'s':''}` : 'Retirada de caixa',
+        nome: nomeOp + sufixo,
         meta: resumo.slice(0, 110),
         valor: Number(s.amount || 0)
       };

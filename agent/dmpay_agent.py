@@ -242,9 +242,23 @@ def job_daily_sales(cfg, cn, company_id, days, dry_run):
 
 
 def job_cash_withdrawals(cfg, cn, company_id, days, dry_run):
-    """MOV_CAIXA.MOV_TIPO='D' agregado por dia/operador."""
+    """MOV_CAIXA.MOV_TIPO='D' agregado por dia/operador. Tenta puxar nome do funcionário."""
     cutoff = datetime.now() - timedelta(days=days)
-    sql = """
+    # Tenta JOIN com tabela de funcionários; cai pra código numérico se não existir
+    sql_com_nome = """
+        SELECT
+            CONVERT(date, mc.MOV_DATA) AS dia,
+            ISNULL(f.FUN_NOME, CONVERT(varchar(50), mc.MOV_FUNCIONARIO)) AS operador,
+            SUM(mc.MOV_VALOR) AS total,
+            STRING_AGG(CONVERT(varchar(MAX), ISNULL(mc.MOV_OBS, '')), ' | ') AS notas
+        FROM MOV_CAIXA mc WITH (NOLOCK)
+        LEFT JOIN FUNCIONARIOS f WITH (NOLOCK) ON f.FUN_CODIGO = mc.MOV_FUNCIONARIO
+        WHERE mc.MOV_TIPO = 'D'
+          AND mc.MOV_DATA >= ?
+          AND mc.MOV_STATUS <> 'C'
+        GROUP BY CONVERT(date, mc.MOV_DATA), mc.MOV_FUNCIONARIO, f.FUN_NOME
+    """
+    sql_fallback = """
         SELECT
             CONVERT(date, MOV_DATA) AS dia,
             ISNULL(CONVERT(varchar(50), MOV_FUNCIONARIO), '') AS operador,
@@ -256,7 +270,12 @@ def job_cash_withdrawals(cfg, cn, company_id, days, dry_run):
           AND MOV_STATUS <> 'C'
         GROUP BY CONVERT(date, MOV_DATA), MOV_FUNCIONARIO
     """
-    rows = cn.cursor().execute(sql, cutoff).fetchall()
+    try:
+        rows = cn.cursor().execute(sql_com_nome, cutoff).fetchall()
+        LOG.info("cash_withdrawals: nome do funcionário obtido via FUNCIONARIOS")
+    except Exception as e:
+        LOG.warning("cash_withdrawals: JOIN FUNCIONARIOS falhou (%s), usando código numérico", e)
+        rows = cn.cursor().execute(sql_fallback, cutoff).fetchall()
     payload = []
     for dia, operador, total, notas in rows:
         payload.append({
