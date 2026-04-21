@@ -48,9 +48,17 @@
     // Platform admin: remove filtro de company_id — RLS is_platform_admin() retorna todos os tenants
     function qPay(q){ return isPlatformAdmin ? q : q.eq('company_id', COMPANY_ID); }
 
+    // Receivables: apenas open/overdue (received não é usado no dashboard),
+    // com lookback de 2 anos pra capturar inadimplência antiga sem trazer tudo
+    const inicio2y = new Date(HOJE); inicio2y.setFullYear(inicio2y.getFullYear() - 2);
+    const inicio2yISO = inicio2y.toISOString().slice(0, 10);
+
     const [pagsR, recsR, salesR, sangR] = await Promise.all([
       qPay(sb.from('payables').select('id, amount, due_date, paid_at, status, description, suppliers(legal_name)')).limit(2000),
-      qPay(sb.from('receivables').select('id, amount, due_date, received_at, status')).limit(20000),
+      qPay(sb.from('receivables').select('id, amount, due_date, status')
+        .in('status', ['open', 'overdue'])
+        .gte('due_date', inicio2yISO)
+      ).limit(5000),
       qPay(sb.from('daily_sales').select('sale_date, payment_method, amount').gte('sale_date', inicio30iso)).limit(2000),
       qPay(sb.from('cash_withdrawals').select('withdrawal_date, amount').gte('withdrawal_date', inicio30iso)).limit(500)
     ]);

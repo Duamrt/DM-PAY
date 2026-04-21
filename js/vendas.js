@@ -185,15 +185,25 @@
     if (periodoEl) periodoEl.textContent = `${MESES[MES]} / ${String(ANO).slice(2)}`;
 
     const inicioMes = `${ANO}-${String(MES_NUM).padStart(2,'0')}-01`;
-    const inicioAnoPassado = `${ANO-1}-01-01`;
+    const fimMes = `${ANO}-${String(MES_NUM).padStart(2,'0')}-${String(diasNoMes(ANO, MES)).padStart(2,'0')}`;
+    const inicioMesPassadoComp = `${ANO-1}-${String(MES_NUM).padStart(2,'0')}-01`;
+    const fimMesPassadoComp = `${ANO-1}-${String(MES_NUM).padStart(2,'0')}-${String(diasNoMes(ANO-1, MES)).padStart(2,'0')}`;
 
-    // Pega vendas do mês atual + ano passado inteiro (pro comparativo)
-    const { data: sales, error } = await sb.from('daily_sales')
-      .select('sale_date, payment_method, amount')
-      .eq('company_id', COMPANY_ID)
-      .gte('sale_date', inicioAnoPassado)
-      .limit(10000);
+    // 2 queries cirúrgicas: mês atual + mesmo mês do ano anterior (para o comparativo do gráfico)
+    // Antes: 1 query com ano inteiro (.limit 10000). Agora: ~60 registros cada.
+    const [salesAtualR, salesPassadoR] = await Promise.all([
+      sb.from('daily_sales').select('sale_date, payment_method, amount')
+        .eq('company_id', COMPANY_ID)
+        .gte('sale_date', inicioMes).lte('sale_date', fimMes)
+        .limit(1500),
+      sb.from('daily_sales').select('sale_date, payment_method, amount')
+        .eq('company_id', COMPANY_ID)
+        .gte('sale_date', inicioMesPassadoComp).lte('sale_date', fimMesPassadoComp)
+        .limit(1500)
+    ]);
+    const error = salesAtualR.error || salesPassadoR.error;
     if (error) { console.error('vendas sales error', error); return; }
+    const sales = [...(salesAtualR.data || []), ...(salesPassadoR.data || [])];
 
     if (!sales || sales.length === 0) return; // mantém mock
 
@@ -211,15 +221,12 @@
     _diasOrdenados = Object.keys(porDia).sort();
 
     // === KPIs ===
-    const fimMes = `${ANO}-${String(MES_NUM).padStart(2,'0')}-${String(diasNoMes(ANO, MES)).padStart(2,'0')}`;
+    // fimMes, inicioMesPassadoComp, fimMesPassadoComp já declarados acima (reutilizados da query)
     const mesAtual = Object.keys(porDia).filter(d => d >= inicioMes && d <= fimMes);
     const totalMes = mesAtual.reduce((s,d) => s + porDia[d], 0);
     const diasComVenda = mesAtual.length;
 
-    // Mês anterior do ano passado (mesmo mês)
-    const inicioMesPassado = `${ANO-1}-${String(MES_NUM).padStart(2,'0')}-01`;
-    const fimMesPassado = `${ANO-1}-${String(MES_NUM).padStart(2,'0')}-${String(diasNoMes(ANO-1, MES)).padStart(2,'0')}`;
-    const mesAnoPassado = Object.keys(porDia).filter(d => d >= inicioMesPassado && d <= fimMesPassado);
+    const mesAnoPassado = Object.keys(porDia).filter(d => d >= inicioMesPassadoComp && d <= fimMesPassadoComp);
     const totalMesPassado = mesAnoPassado.reduce((s,d) => s + porDia[d], 0);
     const deltaPct = totalMesPassado > 0 ? ((totalMes/totalMesPassado - 1) * 100).toFixed(1) : 0;
 
@@ -364,9 +371,7 @@
     // === Chart mês atual × mês ano passado ===
     const canvas = document.getElementById('salesChart');
     if (canvas && typeof Chart !== 'undefined') {
-      // Destroy existing chart
       const existing = Chart.getChart(canvas);
-      if (existing) existing.destroy();
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
       const textColor = isDark ? '#9CA3AF' : '#6B7280';
       const gridColor = isDark ? '#222832' : '#E5E7EB';
@@ -383,7 +388,14 @@
         dAtual.push(porDia[isoA] || null);
         dPassado.push(porDia[isoP] || null);
       }
-      new Chart(canvas, {
+
+      // Reutiliza instância existente em vez de destroy+recreate (evita lag na navegação de mês)
+      if (existing) {
+        existing.data.labels = labels;
+        existing.data.datasets[0].data = dPassado;
+        existing.data.datasets[1].data = dAtual;
+        existing.update('none');
+      } else new Chart(canvas, {
         type:'line',
         data:{
           labels,

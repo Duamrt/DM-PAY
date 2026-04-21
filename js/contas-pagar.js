@@ -23,10 +23,12 @@
     const w = (nome||'?').replace(/[^\wÀ-ÿ ]/g,'').trim().split(/\s+/);
     return ((w[0]||'')[0] + (w[1]||'')[0] || (w[0]||'??').slice(0,2)).toUpperCase();
   }
+  const _toneCache = {};
   function tone(nome){
+    if (_toneCache[nome] !== undefined) return _toneCache[nome];
     let h = 0; const s = nome||'';
     for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) | 0;
-    return (Math.abs(h) % 5) + 1;
+    return (_toneCache[nome] = (Math.abs(h) % 5) + 1);
   }
   function statusOf(p) {
     if (p.status === 'paid') return { s:'paid', overdue:0 };
