@@ -308,7 +308,7 @@
     await load(); render();
   }
 
-  function abrirBarcodeFullscreen() {
+  function ampliarBarcode() {
     const line = document.getElementById('payLineText')?.textContent?.trim();
     const supplier = document.getElementById('paySupplier')?.textContent?.trim() || '';
     const amount = document.getElementById('payAmount')?.textContent?.trim() || '';
@@ -318,26 +318,16 @@
     if (digits.length === 44) barcode44 = digits;
     else if (digits.length === 47) barcode44 = digits.substr(0,4)+digits.substr(32,1)+digits.substr(33,14)+digits.substr(4,5)+digits.substr(10,10)+digits.substr(21,10);
     else barcode44 = digits.substr(0,44);
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boleto</title>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;font-family:sans-serif;padding:20px 0}
-.info{padding:0 24px 20px;text-align:center}h2{font-size:15px;color:#333;margin-bottom:4px}.val{font-size:26px;font-weight:700;color:#ef4444}
-.bc-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 24px 4px}
-svg{display:block;height:auto}
-.line{padding:16px 24px 0;font-size:12px;color:#666;word-break:break-all;text-align:center;line-height:1.6}
-.copy-btn{display:block;margin:14px auto 0;padding:10px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
-</style></head><body>
-<div class="info"><h2>${supplier}</h2><div class="val">${amount}</div></div>
-<div class="bc-wrap"><svg id="bc"></svg></div>
-<div class="line">${line}</div>
-<button class="copy-btn" onclick="navigator.clipboard.writeText('${line.replace(/'/g,"\\'")}').then(()=>{this.textContent='Copiado!';setTimeout(()=>this.textContent='Copiar linha digitável',2000)}).catch(()=>this.textContent='Copie acima')">Copiar linha digitável</button>
-<script>try{JsBarcode('#bc','${barcode44}',{format:'ITF',width:3,height:120,displayValue:false,margin:30,background:'#ffffff',lineColor:'#000000'})}catch(e){document.querySelector('.bc-wrap').innerHTML='<p style="padding:20px;color:#999;text-align:center">Use a linha digitável abaixo</p>'}<\/script>
-</body></html>`;
-    const w = window.open('', '_blank');
-    if (w) { w.document.write(html); w.document.close(); }
+    document.getElementById('barcodeOverlayInfo').innerHTML = `<div style="font-weight:600;font-size:14px">${supplier}</div><div style="font-size:20px;font-weight:700;color:#ef4444">${amount}</div>`;
+    try {
+      JsBarcode('#barcodeSvgBig', barcode44, { format:'ITF', width:2, height:80, displayValue:false, margin:20, background:'#fff', lineColor:'#000' });
+    } catch(e) { console.warn('barcode ampliar:', e); }
+    const ov = document.getElementById('barcodeOverlay');
+    ov.style.display = 'flex';
+  }
   }
 
-  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago, colarCodigo: colarCodigo, copiarCodigo: copiarCodigo, abrirBarcodeFullscreen: abrirBarcodeFullscreen };
+  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago, colarCodigo: colarCodigo, copiarCodigo: copiarCodigo, ampliarBarcode: ampliarBarcode };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
