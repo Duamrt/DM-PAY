@@ -16,7 +16,7 @@ Deno.serve(async(req)=>{
   const {data:u}=await sb.auth.getUser(jwt);
   if(!u?.user)return json({error:"unauthorized"},401);
   const b=await req.json().catch(()=>({}));
-  const {company_id,plan,valor,ciclo="MONTHLY",forma_pagamento="UNDEFINED"}=b;
+  const {company_id,plan,valor,ciclo="MONTHLY"}=b;const forma_pagamento="UNDEFINED";
   if(!company_id||!plan||!valor)return json({error:"missing_fields"},400);
   const {data:perfil}=await sb.from("profiles").select("company_id,role").eq("id",u.user.id).single();
   const isAdmin=perfil?.company_id===PLATFORM_ID&&perfil?.role==="dono";

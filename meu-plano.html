@@ -227,21 +227,10 @@
           </div>
         </div>
 
-        <p class="section-title">Como quer pagar?</p>
-        <div class="forma-grid">
-          <button class="forma-btn sel" id="forma-BOLETO" onclick="selecionarForma('BOLETO')">
-            <i data-lucide="barcode"></i> Boleto bancário
-          </button>
-          <button class="forma-btn" id="forma-CREDIT_CARD" onclick="selecionarForma('CREDIT_CARD')">
-            <i data-lucide="credit-card"></i> Cartão de crédito
-          </button>
-          <button class="forma-btn" id="forma-PIX" onclick="selecionarForma('PIX')">
-            <i data-lucide="qr-code"></i> PIX
-          </button>
-        </div>
+        <div class="alert info" style="margin-bottom:16px"><i data-lucide="info"></i><span>Você escolhe a forma de pagamento (PIX, Boleto ou Cartão) na próxima tela, gerada pelo Asaas.</span></div>
 
         <button class="btn btn-primary" id="btnAssinar" onclick="assinar()" disabled>
-          <i data-lucide="zap"></i> Assinar agora
+          <i data-lucide="zap"></i> Assinar e escolher forma de pagamento
         </button>
       </div>
     </main>
@@ -250,7 +239,7 @@
   <div id="toast"></div>
 
   <script>
-  var _planoSel = null, _valorSel = 0, _formaSel = 'BOLETO';
+  var _planoSel = null, _valorSel = 0;
   var _assinatura = null, _company = null;
 
   async function init() {
@@ -350,12 +339,6 @@
     document.getElementById('btnAssinar').disabled = false;
   }
 
-  function selecionarForma(forma) {
-    _formaSel = forma;
-    document.querySelectorAll('.forma-btn').forEach(function(b){ b.classList.remove('sel'); });
-    document.getElementById('forma-' + forma).classList.add('sel');
-  }
-
   async function assinar() {
     if (!_planoSel) return toast('Selecione um plano.');
     const btn = document.getElementById('btnAssinar');
@@ -366,7 +349,7 @@
       const res = await fetch(DMPAY_CONFIG.SUPABASE_URL + '/functions/v1/asaas-criar-assinatura', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
-        body: JSON.stringify({ company_id: _company.id, plan: _planoSel, valor: _valorSel, forma_pagamento: _formaSel })
+        body: JSON.stringify({ company_id: _company.id, plan: _planoSel, valor: _valorSel, forma_pagamento: 'UNDEFINED' })
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.message || d.error || 'Erro desconhecido');
