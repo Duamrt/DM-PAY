@@ -348,7 +348,7 @@
       const jwt = sess.data?.session?.access_token;
       const res = await fetch(DMPAY_CONFIG.SUPABASE_URL + '/functions/v1/asaas-criar-assinatura', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt, 'apikey': DMPAY_CONFIG.SUPABASE_ANON_KEY },
         body: JSON.stringify({ company_id: _company.id, plan: _planoSel, valor: _valorSel, forma_pagamento: 'UNDEFINED' })
       });
       const d = await res.json();
@@ -377,7 +377,7 @@
       const jwt = sess.data?.session?.access_token;
       const res = await fetch(DMPAY_CONFIG.SUPABASE_URL + '/functions/v1/asaas-gerenciar-assinatura', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt, 'apikey': DMPAY_CONFIG.SUPABASE_ANON_KEY },
         body: JSON.stringify({ action: 'proxima_cobranca', assinatura_id: _assinatura.id })
       });
       const d = await res.json();
@@ -400,7 +400,7 @@
       const jwt = sess.data?.session?.access_token;
       const res = await fetch(DMPAY_CONFIG.SUPABASE_URL + '/functions/v1/asaas-gerenciar-assinatura', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt, 'apikey': DMPAY_CONFIG.SUPABASE_ANON_KEY },
         body: JSON.stringify({ action: 'proxima_cobranca', assinatura_id: _assinatura.id })
       });
       const d = await res.json();
@@ -423,7 +423,7 @@
       const jwt = sess.data?.session?.access_token;
       const res = await fetch(DMPAY_CONFIG.SUPABASE_URL + '/functions/v1/asaas-gerenciar-assinatura', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt, 'apikey': DMPAY_CONFIG.SUPABASE_ANON_KEY },
         body: JSON.stringify({ action: 'cancelar', assinatura_id: _assinatura.id })
       });
       const d = await res.json();
