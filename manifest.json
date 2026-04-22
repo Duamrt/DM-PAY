@@ -1,0 +1,23 @@
+{
+  "name": "DM Pay",
+  "short_name": "DM Pay",
+  "description": "Gestão financeira do Mercadinho",
+  "start_url": "/DM-PAY/mobile.html",
+  "scope": "/DM-PAY/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1117",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%236366f1'/><text x='96' y='130' text-anchor='middle' fill='white' font-family='Arial' font-weight='700' font-size='100'>D</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%236366f1'/><text x='256' y='350' text-anchor='middle' fill='white' font-family='Arial' font-weight='700' font-size='280'>D</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
