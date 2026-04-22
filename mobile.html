@@ -232,8 +232,10 @@ body > div[style*="position:fixed"],body > div[style*="position: fixed"]{display
     <div class="sum-box"><div class="sum-label">Total</div><div class="sum-val c-success num" id="svTotal">—</div></div>
     <div class="sum-box"><div class="sum-label">Cupons</div><div class="sum-val num" id="svCupons">—</div></div>
   </div>
-  <div class="section-title">Por forma de pagamento</div>
+  <div class="section-title">Formas de pagamento</div>
   <div id="svFormas"><div class="empty">Carregando…</div></div>
+  <div class="section-title">Sangrias</div>
+  <div id="svSangrias"><div class="empty">Carregando…</div></div>
   <div class="section-title">Fechamento por caixa</div>
   <div id="svCaixas"><div class="empty">Carregando…</div></div>
 </div>
@@ -333,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => document.querySelectorAll('body > div').forEach(d => { if(d.style.position==='fixed')d.style.display='none'; }), 500);
 });
 
-waitAuth(() => Promise.all([loadVendas(), loadCaixas(), loadReceber(), loadRecebido(), loadPagar(), loadFiado()]));
+waitAuth(() => Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado()]));
 
 /* ── VENDAS ── */
 async function loadVendas() {
@@ -367,6 +369,9 @@ async function loadCaixas() {
   renderVendas();
 }
 
+const FORMA_LABEL = {dinheiro:'Dinheiro',pix:'PIX',credito:'Cartão Crédito',debito:'Cartão Débito',a_prazo:'A Prazo',troco:'Troco',fiado:'Fiado'};
+function nomeForma(k){return FORMA_LABEL[k]||(k.charAt(0).toUpperCase()+k.slice(1).replace(/_/g,' '));}
+
 function renderVendas() {
   if (!DATA.vendas || !DATA.pdvs) return;
   const total = DATA.vendas.reduce((s,r)=>s+Number(r.amount||0),0);
@@ -375,14 +380,19 @@ function renderVendas() {
   // formas de pagamento
   const grupos = {};
   DATA.vendas.forEach(r => { const k=r.payment_method||'Outro'; grupos[k]=(grupos[k]||0)+Number(r.amount||0); });
-  const entradasForma = Object.entries(grupos).sort((a,b)=>b[1]-a[1]);
-  document.getElementById('svFormas').innerHTML = entradasForma.length === 0
+  // separar positivos dos negativos (troco)
+  const positivos = Object.entries(grupos).filter(([,v])=>v>=0).sort((a,b)=>b[1]-a[1]);
+  const negativos = Object.entries(grupos).filter(([,v])=>v<0);
+  const todasFormas = [...positivos,...negativos];
+  document.getElementById('svFormas').innerHTML = todasFormas.length === 0
     ? '<div class="empty">Sem vendas registradas hoje.</div>'
-    : `<div class="list-card">${entradasForma.map(([k,v])=>`
-        <div class="list-item">
-          <div class="li-name">${k}</div>
-          <div class="li-val c-success">${fmt(v)}</div>
-        </div>`).join('')}</div>`;
+    : `<div class="list-card">${todasFormas.map(([k,v])=>{
+        const isNeg = v < 0 || k==='troco';
+        return `<div class="list-item">
+          <div class="li-name">${nomeForma(k)}</div>
+          <div class="li-val ${isNeg?'c-danger':'c-success'}">${fmt(v)}</div>
+        </div>`;
+      }).join('')}</div>`;
   // caixas
   const pdvEntries = Object.entries(DATA.pdvs);
   document.getElementById('svCaixas').innerHTML = pdvEntries.length === 0
@@ -433,6 +443,32 @@ async function loadRecebido() {
   document.getElementById('kvRecebido').textContent = fmt(total);
   document.getElementById('kvRecebidoSub').textContent = `${DATA.recebido.length} recebimentos este mês`;
   document.getElementById('srRecebido').textContent = fmt(total);
+}
+
+/* ── SANGRIA ── */
+async function loadSangria() {
+  const { data } = await sb.from('cash_withdrawals')
+    .select('amount,operator,notes,withdrawal_date')
+    .eq('company_id', CID)
+    .eq('withdrawal_date', hoje());
+  DATA.sangrias = data || [];
+  const total = DATA.sangrias.reduce((s,r)=>s+Number(r.amount||0),0);
+  const el = document.getElementById('svSangrias');
+  if (!el) return;
+  if (!DATA.sangrias.length) { el.innerHTML='<div class="empty">Nenhuma sangria hoje.</div>'; return; }
+  el.innerHTML = `<div class="list-card">${DATA.sangrias.map(r=>`
+    <div class="list-item">
+      <div>
+        <div class="li-name" style="color:var(--danger)">${r.operator||'Operador'}</div>
+        <div class="li-sub">${r.notes||'Retirada de caixa'}</div>
+      </div>
+      <div class="li-val c-danger">−${fmt(r.amount)}</div>
+    </div>`).join('')}
+    <div class="list-item" style="border-top:1px solid var(--border-strong)">
+      <div class="li-name" style="font-weight:700">Total sangrias</div>
+      <div class="li-val c-danger">−${fmt(total)}</div>
+    </div>
+  </div>`;
 }
 
 /* ── FIADO ── */
