@@ -254,9 +254,8 @@
   var _assinatura = null, _company = null;
 
   async function init() {
-    await DMPAY.waitReady();
-    const sess = await DMPAY.getSession();
-    if (!sess) { location.replace('login.html'); return; }
+    const sess = await DMPAY.requireAuth();
+    if (!sess) return;
     _company = sess.company;
     await carregarPlano();
     lucide.createIcons();
