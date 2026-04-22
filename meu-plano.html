@@ -289,7 +289,9 @@
     }[status] || status;
 
     let alertHtml = '';
-    if (status === 'trial') {
+    if (a?.status === 'pendente') {
+      alertHtml = `<div class="alert warn"><i data-lucide="clock"></i><span>Assinatura criada — <b>pagamento pendente</b>. Clique em "Pagar agora" para concluir. O acesso só é liberado após a confirmação.</span></div>`;
+    } else if (status === 'trial') {
       alertHtml = `<div class="alert info"><i data-lucide="info"></i><span>Você está no período gratuito. <b>${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''}</b> restante${diasRestantes !== 1 ? 's' : ''}. Assine agora para não perder o acesso.</span></div>`;
     } else if (status === 'atrasada') {
       alertHtml = `<div class="alert warn"><i data-lucide="alert-triangle"></i><span>Pagamento em atraso. Regularize para evitar bloqueio do acesso (tolerância de 7 dias).</span></div>`;
@@ -302,32 +304,35 @@
         <div class="card">
           <div class="card-head">
             <span class="card-label">Plano atual</span>
-            <span class="badge ${badgeClass}">${badgeLabel}</span>
+            <span class="badge ${a?.status === 'pendente' ? 'atrasada' : badgeClass}">${a?.status === 'pendente' ? 'Aguardando pagamento' : badgeLabel}</span>
           </div>
           <div class="plan-name">${{trial:'Trial',essencial:'Essencial',pro:'Pro',rede:'Rede',admin:'Admin'}[plano] || plano}</div>
           ${a ? `<div class="plan-valor">R$ ${Number(a.valor).toFixed(2).replace('.',',')} / mês</div>` : ''}
-          ${a?.proximo_vencimento ? `<div class="plan-venc"><i data-lucide="calendar"></i> Próximo vencimento: <b>${fmtData(a.proximo_vencimento)}</b></div>` : ''}
+          ${a?.proximo_vencimento ? `<div class="plan-venc"><i data-lucide="calendar"></i> Vencimento: <b>${fmtData(a.proximo_vencimento)}</b></div>` : ''}
           ${status === 'trial' && trial_ate ? `<div class="plan-venc"><i data-lucide="clock"></i> Trial expira em: <b>${fmtData(trial_ate.toISOString().slice(0,10))}</b></div>` : ''}
+          ${a?.status === 'pendente' ? `<div class="actions" style="margin-top:16px"><button class="btn btn-primary" onclick="pagarAgora()"><i data-lucide="external-link"></i> Pagar agora</button><button class="btn btn-danger" onclick="cancelarAssinatura()" style="margin-left:8px"><i data-lucide="x"></i> Cancelar</button></div>` : ''}
         </div>
-        ${a ? `
+        ${a && a.status !== 'pendente' ? `
         <div class="card">
           <div class="card-head"><span class="card-label">Pagamento</span></div>
           <div class="info-row"><span class="info-label">Método</span><span class="info-val">${fmtForma(a.forma_pagamento)}</span></div>
           ${a.cartao_bandeira ? `<div class="info-row"><span class="info-label">Cartão</span><span class="info-val">${a.cartao_bandeira} ···· ${a.cartao_ultimos_digitos || '****'}</span></div>` : ''}
           ${a.ultimo_pagamento_em ? `<div class="info-row"><span class="info-label">Último pagamento</span><span class="info-val">${fmtData(a.ultimo_pagamento_em.slice(0,10))}</span></div>` : ''}
           <div class="actions">
-            ${a.status !== 'cancelada' ? `<button class="btn btn-outline" onclick="trocarCartao()"><i data-lucide="credit-card"></i> Trocar forma de pagamento</button>` : ''}
-            ${a.status !== 'cancelada' ? `<button class="btn btn-danger" onclick="cancelarAssinatura()"><i data-lucide="x"></i> Cancelar assinatura</button>` : ''}
+            <button class="btn btn-outline" onclick="trocarCartao()"><i data-lucide="credit-card"></i> Trocar forma de pagamento</button>
+            <button class="btn btn-danger" onclick="cancelarAssinatura()"><i data-lucide="x"></i> Cancelar assinatura</button>
           </div>
         </div>` : ''}
       </div>`;
 
     el.innerHTML = alertHtml + cardAtualHtml;
 
-    // Mostra painel de assinatura se não tem plano ativo ou se está suspenso/cancelado
+    // Mostra painel de novo plano só se não tem assinatura OU está suspenso/cancelado/trial
     if (!a || a.status === 'cancelada' || a.status === 'suspensa' || status === 'trial') {
       document.getElementById('planosSection').style.display = '';
       if (plano && plano !== 'trial') marcarPlanoAtual(plano);
+    } else {
+      document.getElementById('planosSection').style.display = 'none';
     }
     lucide.createIcons();
   }
@@ -399,6 +404,29 @@
       toast('Erro: ' + e.message, true);
     } finally {
       btn.disabled = false; btn.innerHTML = '<i data-lucide="credit-card"></i> Trocar forma de pagamento';
+      lucide.createIcons();
+    }
+  }
+
+  async function pagarAgora() {
+    if (!_assinatura) return;
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = 'Buscando link...';
+    try {
+      const sess = await sb.auth.getSession();
+      const jwt = sess.data?.session?.access_token;
+      const res = await fetch(DMPAY_CONFIG.SUPABASE_URL + '/functions/v1/asaas-gerenciar-assinatura', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+        body: JSON.stringify({ action: 'proxima_cobranca', assinatura_id: _assinatura.id })
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.message || 'Erro ao buscar link de pagamento');
+      window.open(d.invoice_url, '_blank');
+    } catch(e) {
+      toast('Erro: ' + e.message, true);
+    } finally {
+      btn.disabled = false; btn.innerHTML = '<i data-lucide="external-link"></i> Pagar agora';
       lucide.createIcons();
     }
   }
