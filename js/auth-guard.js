@@ -54,6 +54,9 @@
     <button class="dmp-usermenu-item" onclick="location.href='configuracoes.html'">
       <i data-lucide="settings"></i> Configurações
     </button>
+    <button class="dmp-usermenu-item" onclick="location.href='meu-plano.html'">
+      <i data-lucide="credit-card"></i> Meu Plano
+    </button>
     <button class="dmp-usermenu-item" onclick="location.href='equipe.html'">
       <i data-lucide="users"></i> Equipe
     </button>
