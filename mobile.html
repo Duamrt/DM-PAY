@@ -13,7 +13,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="dmpay-version.js"></script>
-<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+// Se a página continuar invisível em 5s, redireciona pro login
+setTimeout(()=>{if(document.documentElement.style.visibility==='hidden')location.href='login.html?redirect=mobile.html';},5000);
+</script>
 <style>
 :root[data-theme="dark"] {
   --bg-base:#0A0B0D; --bg-surface:#111316; --bg-elevated:#17191D; --bg-hover:#1C1E23;
@@ -515,22 +518,48 @@ function filtrarReceber(f, chipEl) {
   }
   if (busca) lista = lista.filter(r => (r.customers?.name||'').toLowerCase().includes(busca));
   if (!lista.length) { document.getElementById('srLista').innerHTML='<div class="empty">Nenhum registro encontrado.</div>'; return; }
-  document.getElementById('srLista').innerHTML = `<div class="list-card">${lista.map(r => {
-    if (modoRecebido) {
-      return `<div class="list-item">
+
+  if (modoRecebido) {
+    // lista simples para recebidos
+    document.getElementById('srLista').innerHTML = `<div class="list-card">${lista.map(r=>`
+      <div class="list-item">
         <div><div class="li-name">${r.customers?.name||'Cliente'}</div><div class="li-sub">${fmtData(r.received_at?.substring(0,10))} <span class="badge badge-received">Recebido</span></div></div>
         <div><div class="li-val c-success">${fmt(r.amount)}</div></div>
-      </div>`;
-    }
-    const hj2 = hoje();
-    const atrasado = r.status==='overdue'||(r.status==='open'&&r.due_date<hj2);
-    const venceHoje = r.due_date===hj2;
-    const badge = atrasado ? 'badge-overdue">Atrasado' : venceHoje ? 'badge-today">Hoje' : 'badge-open">Em aberto';
-    return `<div class="list-item">
-      <div><div class="li-name">${r.customers?.name||'Cliente'}</div><div class="li-sub">${fmtData(r.due_date)} <span class="badge ${badge}</span></div></div>
-      <div><div class="li-val ${atrasado?'c-danger':'c-warning'}">${fmt(r.amount)}</div></div>
+      </div>`).join('')}</div>`;
+    return;
+  }
+
+  // Agrupa por cliente — mostra total da dívida + títulos expandíveis
+  const hj2 = hoje();
+  const porCliente = {};
+  lista.forEach(r => {
+    const id = r.customers?.name || r.customer_id || 'Sem nome';
+    if (!porCliente[id]) porCliente[id] = { nome: id, total: 0, atrasado: 0, titulos: [] };
+    const at = r.status==='overdue'||(r.status==='open'&&r.due_date<hj2);
+    porCliente[id].total += Number(r.amount||0);
+    if (at) porCliente[id].atrasado += Number(r.amount||0);
+    porCliente[id].titulos.push(r);
+  });
+  const clientes = Object.values(porCliente).sort((a,b)=>b.atrasado-a.atrasado||b.total-a.total);
+  document.getElementById('srLista').innerHTML = clientes.map((c,i)=>{
+    const temAtrasado = c.atrasado > 0;
+    const titulos = c.titulos.map(r=>{
+      const at = r.status==='overdue'||(r.status==='open'&&r.due_date<hj2);
+      const vh = r.due_date===hj2;
+      const badge = at?'badge-overdue">Atrasado':vh?'badge-today">Hoje':'badge-open">Em aberto';
+      return `<div class="op-row"><span class="op-nome">${fmtData(r.due_date)} <span class="badge ${badge}</span></span><span class="op-val ${at?'c-danger':'c-warning'}">${fmt(r.amount)}</span></div>`;
+    }).join('');
+    return `<div class="pdv-card">
+      <div class="pdv-head" onclick="togglePdv('cli-${i}')">
+        <div>
+          <div class="pdv-nome">${c.nome}</div>
+          <div class="pdv-cupons">${c.titulos.length} título${c.titulos.length>1?'s':''}${temAtrasado?' · <span style="color:var(--danger)">'+fmt(c.atrasado)+' atrasado</span>':''}</div>
+        </div>
+        <div class="pdv-total" style="color:${temAtrasado?'var(--danger)':'var(--warning)'}">${fmt(c.total)}</div>
+      </div>
+      <div class="pdv-ops" id="cli-${i}">${titulos}</div>
     </div>`;
-  }).join('')}</div>`;
+  }).join('');
 }
 
 /* ── PAGAR ── */

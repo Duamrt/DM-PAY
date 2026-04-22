@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#6366F1"/>
+    </linearGradient>
+    <clipPath id="r">
+      <rect width="512" height="512" rx="110" ry="110"/>
+    </clipPath>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#g)"/>
+  <g clip-path="url(#r)">
+    <!-- D letter -->
+    <text x="256" y="360" text-anchor="middle" fill="white"
+      font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+      font-weight="800" font-size="300" letter-spacing="-10">D</text>
+    <!-- M subtle below -->
+    <text x="256" y="460" text-anchor="middle" fill="rgba(255,255,255,0.35)"
+      font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+      font-weight="700" font-size="90" letter-spacing="20">PAY</text>
+  </g>
+</svg>
