@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>DM Pay · Mobile</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0f1117;--card:#1a1d27;--border:#2a2d3a;
+    --text:#e8eaf0;--muted:#8890a4;
+    --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+    --accent:#6366f1;
+  }
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:80px}
+
+  /* HEADER */
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  .hdr-logo{font-size:17px;font-weight:700;color:var(--accent)}
+  .hdr-date{font-size:12px;color:var(--muted)}
+  .hdr-out{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer}
+
+  /* CARDS TOPO */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:opacity .15s;-webkit-tap-highlight-color:transparent}
+  .card:active{opacity:.7}
+  .card-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .card-value{font-size:22px;font-weight:700}
+  .card-sub{font-size:11px;color:var(--muted);margin-top:4px}
+  .c-green{color:var(--green)}
+  .c-red{color:var(--red)}
+  .c-yellow{color:var(--yellow)}
+  .c-blue{color:var(--blue)}
+
+  /* CARD FULL WIDTH */
+  .card-full{grid-column:1/-1}
+
+  /* SEÇÃO CAIXAS */
+  .section{padding:0 16px 16px}
+  .section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+  .caixa-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px}
+  .caixa-head{display:flex;justify-content:space-between;align-items:center}
+  .caixa-nome{font-size:14px;font-weight:600}
+  .caixa-total{font-size:16px;font-weight:700;color:var(--green)}
+  .caixa-sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .caixa-ops{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:none}
+  .caixa-ops.open{display:block}
+  .op-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--muted)}
+  .op-row span:last-child{color:var(--text)}
+
+  /* BOTTOM SHEET */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:none;opacity:0;transition:opacity .25s}
+  .overlay.open{display:block;opacity:1}
+  .sheet{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-radius:20px 20px 0 0;z-index:51;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.4,1);max-height:80vh;display:flex;flex-direction:column}
+  .sheet.open{transform:translateY(0)}
+  .sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0}
+  .sheet-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .sheet-title{font-size:16px;font-weight:700}
+  .sheet-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px}
+  .sheet-body{overflow-y:auto;flex:1;padding:0 16px 20px}
+
+  /* LISTAS NO SHEET */
+  .item-row{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border)}
+  .item-row:last-child{border-bottom:none}
+  .item-name{font-size:14px;font-weight:500;flex:1;padding-right:12px}
+  .item-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .item-val{font-size:14px;font-weight:700;white-space:nowrap}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+  .badge-open{background:#1e3a5f;color:#60a5fa}
+  .badge-overdue{background:#3b1010;color:#f87171}
+  .badge-received{background:#0f2e1a;color:#4ade80}
+  .badge-today{background:#2d1b00;color:#fbbf24}
+
+  /* RESUMO DO SHEET */
+  .sheet-summary{display:flex;gap:10px;padding:14px 0 8px}
+  .sum-box{flex:1;background:var(--bg);border-radius:10px;padding:12px;text-align:center}
+  .sum-box-label{font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase}
+  .sum-box-val{font-size:16px;font-weight:700}
+
+  /* EMPTY STATE */
+  .empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14px}
+
+  /* LOADING */
+  .loading{text-align:center;color:var(--muted);padding:40px 20px;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-logo">DM Pay</div>
+    <div class="hdr-date" id="hdrDate">–</div>
+  </div>
+  <button class="hdr-out" onclick="sair()">Sair</button>
+</div>
+
+<!-- CARDS RESUMO -->
+<div class="cards">
+  <div class="card" onclick="abrirSheet('vendas')">
+    <div class="card-label">Vendas Hoje</div>
+    <div class="card-value c-green" id="cardVendas">–</div>
+    <div class="card-sub" id="cardVendasSub">carregando…</div>
+  </div>
+  <div class="card" onclick="abrirSheet('caixas')">
+    <div class="card-label">Caixas Abertos</div>
+    <div class="card-value c-blue" id="cardCaixas">–</div>
+    <div class="card-sub" id="cardCaixasSub">ver por PDV</div>
+  </div>
+  <div class="card" onclick="abrirSheet('receber')">
+    <div class="card-label">A Receber</div>
+    <div class="card-value c-yellow" id="cardReceber">–</div>
+    <div class="card-sub" id="cardReceberSub">carregando…</div>
+  </div>
+  <div class="card" onclick="abrirSheet('pagar')">
+    <div class="card-label">A Pagar</div>
+    <div class="card-value c-red" id="cardPagar">–</div>
+    <div class="card-sub" id="cardPagarSub">carregando…</div>
+  </div>
+  <div class="card card-full" onclick="abrirSheet('recebido')">
+    <div class="card-label">Recebido (Faturado)</div>
+    <div class="card-value c-green" id="cardRecebido">–</div>
+    <div class="card-sub" id="cardRecebidoSub">mês atual · ver detalhes</div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="fecharSheet()"></div>
+
+<!-- SHEET: VENDAS -->
+<div class="sheet" id="sheetVendas">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div class="sheet-title">Vendas Hoje</div>
+    <button class="sheet-close" onclick="fecharSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-summary">
+      <div class="sum-box"><div class="sum-box-label">Total</div><div class="sum-box-val c-green" id="svTotal">–</div></div>
+      <div class="sum-box"><div class="sum-box-label">Cupons</div><div class="sum-box-val" id="svCupons">–</div></div>
+    </div>
+    <div id="svBody"><div class="loading">Carregando…</div></div>
+  </div>
+</div>
+
+<!-- SHEET: CAIXAS -->
+<div class="sheet" id="sheetCaixas">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div class="sheet-title">Fechamento por Caixa</div>
+    <button class="sheet-close" onclick="fecharSheet()">✕</button>
+  </div>
+  <div class="sheet-body" id="cxBody"><div class="loading">Carregando…</div></div>
+</div>
+
+<!-- SHEET: A RECEBER -->
+<div class="sheet" id="sheetReceber">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div class="sheet-title">Contas a Receber</div>
+    <button class="sheet-close" onclick="fecharSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-summary">
+      <div class="sum-box"><div class="sum-box-label">Em aberto</div><div class="sum-box-val c-yellow" id="srAberto">–</div></div>
+      <div class="sum-box"><div class="sum-box-label">Atrasado</div><div class="sum-box-val c-red" id="srAtrasado">–</div></div>
+    </div>
+    <div id="srBody"><div class="loading">Carregando…</div></div>
+  </div>
+</div>
+
+<!-- SHEET: A PAGAR -->
+<div class="sheet" id="sheetPagar">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div class="sheet-title">Contas a Pagar</div>
+    <button class="sheet-close" onclick="fecharSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-summary">
+      <div class="sum-box"><div class="sum-box-label">Em aberto</div><div class="sum-box-val c-red" id="spAberto">–</div></div>
+      <div class="sum-box"><div class="sum-box-label">Vence hoje</div><div class="sum-box-val c-yellow" id="spHoje">–</div></div>
+    </div>
+    <div id="spBody"><div class="loading">Carregando…</div></div>
+  </div>
+</div>
+
+<!-- SHEET: RECEBIDO FATURADO -->
+<div class="sheet" id="sheetRecebido">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hdr">
+    <div class="sheet-title">Recebido — Faturado</div>
+    <button class="sheet-close" onclick="fecharSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-summary">
+      <div class="sum-box"><div class="sum-box-label">Mês atual</div><div class="sum-box-val c-green" id="sfMes">–</div></div>
+      <div class="sum-box"><div class="sum-box-label">Qtd. títulos</div><div class="sum-box-val" id="sfQtd">–</div></div>
+    </div>
+    <div id="sfBody"><div class="loading">Carregando…</div></div>
+  </div>
+</div>
+
+<script src="js/supabase.js"></script>
+<script src="js/auth-guard.js"></script>
+<script>
+const R = v => v == null ? '–' : 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2});
+const isoToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const labelDate = () => new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
+
+let COMPANY_ID = null;
+let DATA = { vendas: null, caixas: null, receber: null, pagar: null, recebido: null };
+
+document.getElementById('hdrDate').textContent = labelDate();
+
+/* ── AUTH ── */
+function waitAuth(cb, tries=0) {
+  if (window.DMPAY_COMPANY && window.DMPAY_COMPANY.id) {
+    COMPANY_ID = window.DMPAY_COMPANY.id;
+    cb();
+  } else if (tries < 40) {
+    setTimeout(() => waitAuth(cb, tries+1), 250);
+  }
+}
+
+waitAuth(carregarTudo);
+
+async function carregarTudo() {
+  await Promise.all([carregarVendas(), carregarCaixas(), carregarReceber(), carregarPagar(), carregarRecebido()]);
+}
+
+/* ── VENDAS (daily_sales) ── */
+async function carregarVendas() {
+  const hoje = isoToday();
+  const { data } = await sb.from('daily_sales')
+    .select('payment_method, amount')
+    .eq('company_id', COMPANY_ID)
+    .eq('sale_date', hoje);
+
+  DATA.vendas = data || [];
+  const total = DATA.vendas.reduce((s,r) => s + Number(r.amount||0), 0);
+  document.getElementById('cardVendas').textContent = R(total);
+  document.getElementById('cardVendasSub').textContent = DATA.vendas.length + ' registros';
+}
+
+/* ── CAIXAS (register_sessions) ── */
+async function carregarCaixas() {
+  const hoje = isoToday();
+  const { data } = await sb.from('register_sessions')
+    .select('pdv_id,pdv_nome,operador_id,operador_nome,total_vendas,total_cupons')
+    .eq('company_id', COMPANY_ID)
+    .eq('session_date', hoje)
+    .order('pdv_id');
+
+  DATA.caixas = data || [];
+  // agrupar por PDV
+  const pdvs = {};
+  DATA.caixas.forEach(r => {
+    if (!pdvs[r.pdv_id]) pdvs[r.pdv_id] = { nome: r.pdv_nome || `PDV ${r.pdv_id}`, total: 0, cupons: 0, ops: {} };
+    const opKey = r.operador_id || r.operador_nome || '?';
+    if (!pdvs[r.pdv_id].ops[opKey]) pdvs[r.pdv_id].ops[opKey] = { nome: r.operador_nome || `Op #${r.operador_id}`, total: 0, cupons: 0 };
+    pdvs[r.pdv_id].ops[opKey].total  += Number(r.total_vendas||0);
+    pdvs[r.pdv_id].ops[opKey].cupons += Number(r.total_cupons||0);
+    pdvs[r.pdv_id].total  += Number(r.total_vendas||0);
+    pdvs[r.pdv_id].cupons += Number(r.total_cupons||0);
+  });
+  DATA.pdvs = pdvs;
+  const qtd = Object.keys(pdvs).length;
+  document.getElementById('cardCaixas').textContent = qtd;
+  document.getElementById('cardCaixasSub').textContent = qtd === 0 ? 'nenhum aberto' : `${qtd} PDV${qtd>1?'s':''} hoje`;
+}
+
+/* ── RECEBER ── */
+async function carregarReceber() {
+  const { data } = await sb.from('receivables')
+    .select('id, amount, due_date, status, customers(name)')
+    .eq('company_id', COMPANY_ID)
+    .in('status', ['open','overdue'])
+    .order('due_date');
+
+  DATA.receber = data || [];
+  const hoje = isoToday();
+  const totalAberto = DATA.receber.filter(r => r.status==='open' && r.due_date >= hoje).reduce((s,r) => s+Number(r.amount||0),0);
+  const totalAtrasado = DATA.receber.filter(r => r.status==='overdue' || (r.status==='open' && r.due_date < hoje)).reduce((s,r) => s+Number(r.amount||0),0);
+  document.getElementById('cardReceber').textContent = R(totalAberto + totalAtrasado);
+  document.getElementById('cardReceberSub').textContent = `${DATA.receber.length} títulos · ${DATA.receber.filter(r=>r.status==='overdue'||r.due_date<hoje).length} atrasado(s)`;
+}
+
+/* ── PAGAR ── */
+async function carregarPagar() {
+  const { data } = await sb.from('payables')
+    .select('id, amount, due_date, status, description, suppliers(trade_name, legal_name)')
+    .eq('company_id', COMPANY_ID)
+    .eq('status', 'open')
+    .order('due_date');
+
+  DATA.pagar = data || [];
+  const hoje = isoToday();
+  const totalAberto = DATA.pagar.reduce((s,r) => s+Number(r.amount||0),0);
+  const venceHoje = DATA.pagar.filter(r => r.due_date === hoje).reduce((s,r) => s+Number(r.amount||0),0);
+  document.getElementById('cardPagar').textContent = R(totalAberto);
+  document.getElementById('cardPagarSub').textContent = `${DATA.pagar.length} títulos em aberto`;
+  document.getElementById('spAberto').textContent = R(totalAberto);
+  document.getElementById('spHoje').textContent = R(venceHoje);
+}
+
+/* ── RECEBIDO FATURADO ── */
+async function carregarRecebido() {
+  const hoje = isoToday();
+  const [y, m] = hoje.split('-');
+  const inicioMes = `${y}-${m}-01`;
+  const fimMes = `${y}-${m}-${new Date(+y, +m, 0).getDate()}`;
+
+  const { data } = await sb.from('receivables')
+    .select('id, amount, received_at, customers(name)')
+    .eq('company_id', COMPANY_ID)
+    .eq('status', 'received')
+    .gte('received_at', inicioMes)
+    .lte('received_at', fimMes + 'T23:59:59')
+    .order('received_at', { ascending: false });
+
+  DATA.recebido = data || [];
+  const total = DATA.recebido.reduce((s,r) => s+Number(r.amount||0),0);
+  document.getElementById('cardRecebido').textContent = R(total);
+  document.getElementById('cardRecebidoSub').textContent = `mês atual · ${DATA.recebido.length} recebimentos`;
+  document.getElementById('sfMes').textContent = R(total);
+  document.getElementById('sfQtd').textContent = DATA.recebido.length;
+}
+
+/* ── SHEETS ── */
+let sheetAtual = null;
+
+function abrirSheet(tipo) {
+  fecharSheet();
+  const mapa = {
+    vendas: 'sheetVendas',
+    caixas: 'sheetCaixas',
+    receber: 'sheetReceber',
+    pagar: 'sheetPagar',
+    recebido: 'sheetRecebido',
+  };
+  const id = mapa[tipo];
+  sheetAtual = id;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById(id).classList.add('open');
+  renderSheet(tipo);
+}
+
+function fecharSheet() {
+  if (sheetAtual) document.getElementById(sheetAtual).classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  sheetAtual = null;
+}
+
+function renderSheet(tipo) {
+  const hoje = isoToday();
+
+  if (tipo === 'vendas') {
+    const d = DATA.vendas || [];
+    // agrupar por forma de pagamento
+    const grupos = {};
+    d.forEach(r => {
+      const k = r.payment_method || 'Outro';
+      if (!grupos[k]) grupos[k] = 0;
+      grupos[k] += Number(r.amount||0);
+    });
+    const totalVendas = d.reduce((s,r)=>s+Number(r.amount||0),0);
+    const totalCupons = d.length;
+    document.getElementById('svTotal').textContent = R(totalVendas);
+    document.getElementById('svCupons').textContent = totalCupons;
+    document.getElementById('svBody').innerHTML = Object.entries(grupos).length === 0
+      ? '<div class="empty">Sem vendas registradas hoje.</div>'
+      : Object.entries(grupos).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `
+        <div class="item-row">
+          <div class="item-name">${k}</div>
+          <div class="item-val c-green">${R(v)}</div>
+        </div>`).join('');
+  }
+
+  if (tipo === 'caixas') {
+    const pdvs = DATA.pdvs || {};
+    const keys = Object.keys(pdvs);
+    document.getElementById('cxBody').innerHTML = keys.length === 0
+      ? '<div class="empty">Nenhum caixa aberto hoje.</div>'
+      : keys.map((pdvId, i) => {
+          const p = pdvs[pdvId];
+          const ops = Object.values(p.ops);
+          return `<div class="caixa-row">
+            <div class="caixa-head" onclick="toggleOps('ops-${i}')">
+              <div>
+                <div class="caixa-nome">${p.nome}</div>
+                <div class="caixa-sub">${p.cupons} cupons</div>
+              </div>
+              <div class="caixa-total">${R(p.total)}</div>
+            </div>
+            ${ops.length > 0 ? `<div class="caixa-ops" id="ops-${i}">
+              ${ops.map(op => `<div class="op-row"><span>${op.nome}</span><span>${R(op.total)}</span></div>`).join('')}
+            </div>` : ''}
+          </div>`;
+        }).join('');
+  }
+
+  if (tipo === 'receber') {
+    const d = DATA.receber || [];
+    const totalAberto = d.filter(r=>r.status==='open'&&r.due_date>=hoje).reduce((s,r)=>s+Number(r.amount||0),0);
+    const totalAtrasado = d.filter(r=>r.status==='overdue'||(r.status==='open'&&r.due_date<hoje)).reduce((s,r)=>s+Number(r.amount||0),0);
+    document.getElementById('srAberto').textContent = R(totalAberto);
+    document.getElementById('srAtrasado').textContent = R(totalAtrasado);
+    document.getElementById('srBody').innerHTML = d.length === 0
+      ? '<div class="empty">Nenhuma conta a receber.</div>'
+      : d.map(r => {
+          const atrasado = r.status==='overdue' || (r.status==='open' && r.due_date < hoje);
+          const badge = atrasado ? '<span class="badge badge-overdue">Atrasado</span>' : '<span class="badge badge-open">Aberto</span>';
+          const nome = r.customers?.name || 'Cliente';
+          return `<div class="item-row">
+            <div><div class="item-name">${nome}</div><div class="item-sub">${formatDate(r.due_date)} · ${badge}</div></div>
+            <div class="item-val ${atrasado?'c-red':'c-yellow'}">${R(r.amount)}</div>
+          </div>`;
+        }).join('');
+  }
+
+  if (tipo === 'pagar') {
+    const d = DATA.pagar || [];
+    document.getElementById('spBody').innerHTML = d.length === 0
+      ? '<div class="empty">Nenhuma conta a pagar.</div>'
+      : d.map(r => {
+          const venceHoje = r.due_date === hoje;
+          const atrasado = r.due_date < hoje;
+          const badge = atrasado ? '<span class="badge badge-overdue">Atrasado</span>'
+                      : venceHoje ? '<span class="badge badge-today">Vence hoje</span>'
+                      : '<span class="badge badge-open">Em aberto</span>';
+          const nome = r.suppliers?.trade_name || r.suppliers?.legal_name || r.description || 'Fornecedor';
+          return `<div class="item-row">
+            <div><div class="item-name">${nome}</div><div class="item-sub">${formatDate(r.due_date)} · ${badge}</div></div>
+            <div class="item-val c-red">${R(r.amount)}</div>
+          </div>`;
+        }).join('');
+  }
+
+  if (tipo === 'recebido') {
+    const d = DATA.recebido || [];
+    document.getElementById('sfBody').innerHTML = d.length === 0
+      ? '<div class="empty">Nenhum recebimento este mês.</div>'
+      : d.map(r => {
+          const dt = r.received_at ? r.received_at.substring(0,10) : '–';
+          const nome = r.customers?.name || 'Cliente';
+          return `<div class="item-row">
+            <div><div class="item-name">${nome}</div><div class="item-sub">${formatDate(dt)} <span class="badge badge-received">Recebido</span></div></div>
+            <div class="item-val c-green">${R(r.amount)}</div>
+          </div>`;
+        }).join('');
+  }
+}
+
+function toggleOps(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+function formatDate(iso) {
+  if (!iso) return '–';
+  const [y,m,d] = iso.substring(0,10).split('-');
+  return `${d}/${m}/${y}`;
+}
+
+async function sair() {
+  await sb.auth.signOut();
+  location.href = 'login.html';
+}
+</script>
+</body>
+</html>
