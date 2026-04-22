@@ -26,19 +26,23 @@
   --shadow-md:0 2px 6px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;height:-webkit-fill-available}
 html{font-size:15px}
 body{
   font-family:'Geist',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   background:var(--bg-base);color:var(--text-primary);
-  -webkit-font-smoothing:antialiased;min-height:100vh;
-  padding-bottom:72px;
+  -webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;overflow:hidden;
 }
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 
+/* esconde badge de versão flutuante no mobile */
+body > div[style*="position:fixed"],body > div[style*="position: fixed"]{display:none!important}
+
 /* HEADER */
 .app-header{
-  position:sticky;top:0;z-index:20;
+  flex-shrink:0;
   background:var(--bg-surface);border-bottom:1px solid var(--border);
   padding:14px 16px;
   display:flex;align-items:center;justify-content:space-between;
@@ -53,9 +57,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .brand-name span{color:var(--accent)}
 .hdr-date{font-size:12px;color:var(--text-muted)}
 
+/* SCROLL AREA */
+.content-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
 /* BOTTOM NAV */
 .bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;z-index:30;
+  flex-shrink:0;
   background:var(--bg-surface);border-top:1px solid var(--border);
   display:flex;
   padding-bottom:env(safe-area-inset-bottom);
@@ -182,6 +189,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   <div class="hdr-date" id="hdrDate"></div>
 </header>
 
+<div class="content-area">
 <!-- VIEW: RESUMO -->
 <div class="view active" id="viewResumo">
   <div class="kpi-grid">
@@ -204,6 +212,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       <div class="kpi-label">A pagar</div>
       <div class="kpi-value c-danger num" id="kvPagar">—</div>
       <div class="kpi-sub" id="kvPagarSub">carregando…</div>
+    </div>
+    <div class="kpi-card full" style="border-color:var(--success);background:var(--success-soft)" onclick="irPara('viewReceber')">
+      <div class="kpi-label" style="color:var(--success)">⚡ Fiado recebido hoje</div>
+      <div class="kpi-value c-success num" id="kvFiado">—</div>
+      <div class="kpi-sub" id="kvFiadoSub">carregando…</div>
     </div>
     <div class="kpi-card full" onclick="irPara('viewReceber')">
       <div class="kpi-label">Recebido (faturado) — mês atual</div>
@@ -236,6 +249,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     <div class="sum-label">Total recebido (faturado)</div>
     <div class="sum-val c-success num" id="srRecebido">—</div>
   </div>
+  <div style="position:relative;margin-bottom:10px">
+    <input id="srBusca" type="search" placeholder="Buscar cliente…" autocomplete="off"
+      style="width:100%;padding:10px 14px 10px 36px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;color:var(--text-primary);font-family:inherit;font-size:14px;outline:none;-webkit-appearance:none"
+      oninput="filtrarReceber(filtroReceber)">
+    <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text-muted);fill:none;stroke-width:2;pointer-events:none" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <div id="srSugestoes" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;margin-top:4px;z-index:10;max-height:180px;overflow-y:auto"></div>
+  </div>
   <div class="filter-chips">
     <div class="chip active" onclick="filtrarReceber('todos',this)">Todos</div>
     <div class="chip" onclick="filtrarReceber('atrasado',this)">Atrasados</div>
@@ -259,6 +279,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   </div>
   <div id="spLista"><div class="empty">Carregando…</div></div>
 </div>
+
+</div><!-- /content-area -->
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
@@ -306,7 +328,12 @@ function waitAuth(cb, t=0) {
   if (window.DMPAY_COMPANY?.id) { CID = window.DMPAY_COMPANY.id; cb(); }
   else if (t < 40) setTimeout(() => waitAuth(cb, t+1), 250);
 }
-waitAuth(() => Promise.all([loadVendas(), loadCaixas(), loadReceber(), loadRecebido(), loadPagar()]));
+// esconder badge de versão flutuante
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => document.querySelectorAll('body > div').forEach(d => { if(d.style.position==='fixed')d.style.display='none'; }), 500);
+});
+
+waitAuth(() => Promise.all([loadVendas(), loadCaixas(), loadReceber(), loadRecebido(), loadPagar(), loadFiado()]));
 
 /* ── VENDAS ── */
 async function loadVendas() {
@@ -335,8 +362,8 @@ async function loadCaixas() {
   });
   DATA.pdvs = pdvs;
   const qtd = Object.keys(pdvs).length;
-  document.getElementById('kvCaixas').textContent = qtd;
-  document.getElementById('kvCaixasSub').textContent = qtd === 0 ? 'nenhum aberto' : `${qtd} PDV${qtd>1?'s':''} hoje`;
+  const elC = document.getElementById('kvCaixas'); if(elC) elC.textContent = qtd;
+  const elS = document.getElementById('kvCaixasSub'); if(elS) elS.textContent = qtd===0?'nenhum aberto':`${qtd} PDV${qtd>1?'s':''} hoje`;
   renderVendas();
 }
 
@@ -408,6 +435,26 @@ async function loadRecebido() {
   document.getElementById('srRecebido').textContent = fmt(total);
 }
 
+/* ── FIADO ── */
+async function loadFiado() {
+  const hj = hoje();
+  const inicio = hj + 'T00:00:00';
+  const fim    = hj + 'T23:59:59';
+  const { data } = await sb.from('receivables')
+    .select('id,amount,received_at,customers(name)')
+    .eq('company_id', CID)
+    .gte('received_at', inicio)
+    .lte('received_at', fim)
+    .not('received_at','is',null);
+  DATA.fiado = data || [];
+  const total = DATA.fiado.reduce((s,r)=>s+Number(r.amount||0),0);
+  const el = document.getElementById('kvFiado'); if(el) el.textContent = fmt(total);
+  const els = document.getElementById('kvFiadoSub');
+  if(els) els.textContent = DATA.fiado.length === 0
+    ? 'Nenhum cliente quitou fiado hoje'
+    : `${DATA.fiado.length} cliente${DATA.fiado.length>1?'s':''} quitaram hoje`;
+}
+
 let filtroReceber = 'todos';
 function filtrarReceber(f, chipEl) {
   filtroReceber = f;
@@ -416,6 +463,7 @@ function filtrarReceber(f, chipEl) {
     chipEl.classList.add('active');
   }
   const hj = hoje();
+  const busca = (document.getElementById('srBusca')?.value||'').toLowerCase().trim();
   let lista = [];
   let modoRecebido = false;
   if (f === 'recebido') {
@@ -429,6 +477,7 @@ function filtrarReceber(f, chipEl) {
       return true;
     });
   }
+  if (busca) lista = lista.filter(r => (r.customers?.name||'').toLowerCase().includes(busca));
   if (!lista.length) { document.getElementById('srLista').innerHTML='<div class="empty">Nenhum registro encontrado.</div>'; return; }
   document.getElementById('srLista').innerHTML = `<div class="list-card">${lista.map(r => {
     if (modoRecebido) {
