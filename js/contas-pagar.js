@@ -390,12 +390,36 @@
            <button class="btn btn-primary btn-sm" onclick="DMPAY_CP.markPaid('${p.id}')"><i data-lucide="check-circle-2"></i> Marcar como pago</button>`;
     }
     document.getElementById('drawerOverlay').classList.add('open');
-    document.getElementById('drawer').classList.add('open');
+    const _drawerEl = document.getElementById('drawer');
+    _drawerEl.classList.add('open');
     lucide.createIcons();
+    // Focus trap
+    const _prevFocus = document.activeElement;
+    setTimeout(function() {
+      const first = _drawerEl.querySelector('button:not([disabled]),[tabindex="0"]');
+      if (first) first.focus();
+    }, 60);
+    function _trapFn(e) {
+      if (e.key !== 'Tab') return;
+      const foc = Array.from(_drawerEl.querySelectorAll('button:not([disabled]),[href],[tabindex]:not([tabindex="-1"])'));
+      if (!foc.length) return;
+      const first = foc[0], last = foc[foc.length-1];
+      if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+        e.preventDefault(); (e.shiftKey ? last : first).focus();
+      }
+    }
+    _drawerEl.addEventListener('keydown', _trapFn);
+    _drawerEl._trap = { fn: _trapFn, prev: _prevFocus };
   }
   function closeDrawer() {
     document.getElementById('drawerOverlay')?.classList.remove('open');
-    document.getElementById('drawer')?.classList.remove('open');
+    const drawer = document.getElementById('drawer');
+    drawer?.classList.remove('open');
+    if (drawer?._trap) {
+      drawer.removeEventListener('keydown', drawer._trap.fn);
+      if (drawer._trap.prev) drawer._trap.prev.focus();
+      delete drawer._trap;
+    }
   }
 
   async function markPaid(id) {

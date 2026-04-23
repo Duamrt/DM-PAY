@@ -18,6 +18,9 @@
         item.replaceChild(sp, node);
       }
     });
+    // aria-label permanente para leitores de tela no estado recolhido
+    var lbl = item.querySelector('.nav-label');
+    if (lbl) item.setAttribute('aria-label', lbl.textContent.trim());
   });
 
   // ── Skip link (acessibilidade: pula sidebar com teclado) ─────────────
@@ -124,4 +127,13 @@
 
   apply(collapsed);
   btn.addEventListener('click', function() { apply(!collapsed); });
+
+  // ── aria-pressed no botão de tema ─────────────────────────────────────
+  function syncThemePressed() {
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var themeBtn = document.querySelector('[aria-label="Alternar tema"]');
+    if (themeBtn) themeBtn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+  }
+  new MutationObserver(syncThemePressed).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  document.addEventListener('DOMContentLoaded', syncThemePressed);
 })();

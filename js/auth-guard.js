@@ -28,7 +28,7 @@
       const _banner = document.createElement('div');
       _banner.id = 'view-as-banner';
       _banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10002;background:#1e3a5f;border-bottom:2px solid #2d5a8e;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#93c5fd;font-family:inherit';
-      _banner.innerHTML = `<span>👁 <b style="color:#bfdbfe">${_vaCo.trade_name || _vaCo.legal_name}</b> — modo suporte ativo</span><button onclick="sessionStorage.removeItem('dmpay-view-as');location.href='admin.html'" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">← Torre de Comando</button>`;
+      _banner.innerHTML = `<span><span aria-hidden="true">👁</span> <b style="color:#bfdbfe">${_vaCo.trade_name || _vaCo.legal_name}</b> — modo suporte ativo</span><button onclick="sessionStorage.removeItem('dmpay-view-as');location.href='admin.html'" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">← Torre de Comando</button>`;
       document.body.prepend(_banner);
       // Empurra conteúdo pra não ficar atrás do banner
       document.body.style.paddingTop = '38px';
@@ -78,7 +78,7 @@
     <div class="dmp-usermenu-head">
       <div class="dmp-usermenu-name">${session.profile.name || '—'}${isPlatformAdmin ? '<span class="dmp-pa-badge">master</span>' : ''}</div>
       <div class="dmp-usermenu-email">${session.user.email}</div>
-      <div class="dmp-usermenu-comp">${_va ? '👁 suporte: ' : 'empresa: '}<b>${displayCompany?.trade_name || displayCompany?.legal_name || '—'}</b></div>
+      <div class="dmp-usermenu-comp">${_va ? '<span aria-hidden="true">👁</span> suporte: ' : 'empresa: '}<b>${displayCompany?.trade_name || displayCompany?.legal_name || '—'}</b></div>
     </div>
     ${isPlatformAdmin ? `<button class="dmp-usermenu-item" onclick="sessionStorage.removeItem('dmpay-view-as');location.href='admin.html'" style="color:var(--accent,#7C3AED)">
       <i data-lucide="shield"></i> Torre de Comando
