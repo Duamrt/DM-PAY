@@ -21,8 +21,19 @@
     const profile = window.DMPAY_PROFILE;
     const company = window.DMPAY_COMPANY;
     const isPlatformAdmin = company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
+
+    // View-as: platform admin vendo dashboard de um tenant específico
+    const _viewAsRaw = sessionStorage.getItem('dmpay-view-as');
+    const _viewAs = _viewAsRaw ? JSON.parse(_viewAsRaw) : null;
+    const isViewAs = isPlatformAdmin && _viewAs && _viewAs.id;
+
+    if (isViewAs) {
+      const banner = document.getElementById('view-as-banner');
+      if (banner) { banner.style.display = 'flex'; document.getElementById('view-as-name').textContent = _viewAs.name; }
+    }
+
     const firstName = (profile.name || profile.email || '').split(' ')[0];
-    const empresaNome = company.trade_name || company.legal_name || 'sua empresa';
+    const empresaNome = isViewAs ? _viewAs.name : (company.trade_name || company.legal_name || 'sua empresa');
 
     // === HERO ===
     const h = new Date().getHours();
@@ -46,7 +57,9 @@
     const inicio30iso = inicio30.toISOString().slice(0,10);
 
     // Platform admin: remove filtro de company_id — RLS is_platform_admin() retorna todos os tenants
-    function qPay(q){ return isPlatformAdmin ? q : q.eq('company_id', COMPANY_ID); }
+    // Se estiver em view-as, filtra pelo tenant selecionado
+    const EFFECTIVE_COMPANY_ID = isViewAs ? _viewAs.id : COMPANY_ID;
+    function qPay(q){ return (isPlatformAdmin && !isViewAs) ? q : q.eq('company_id', EFFECTIVE_COMPANY_ID); }
 
     // Receivables: apenas open/overdue (received não é usado no dashboard),
     // com lookback de 2 anos pra capturar inadimplência antiga sem trazer tudo

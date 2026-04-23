@@ -182,7 +182,8 @@
     DMPAY.ready().then(async function() {
       const s = await DMPAY.session();
       if (s.user && s.profile) {
-        location.replace(s.company && s.company.cnpj ? 'dashboard.html' : 'wizard.html');
+        const _isPa = s.company && s.company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
+        location.replace(_isPa ? 'admin.html' : s.company && s.company.cnpj ? 'dashboard.html' : 'wizard.html');
       }
     });
 
@@ -194,7 +195,8 @@
         const fd = new FormData(e.target);
         await DMPAY.signIn(fd.get('email'), fd.get('password'));
         const s = await DMPAY.session(true);
-        location.replace(s.company && s.company.cnpj ? DMPAY.postLoginRedirect() : 'wizard.html');
+        const _isPa2 = s.company && s.company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
+        location.replace(_isPa2 ? 'admin.html' : s.company && s.company.cnpj ? DMPAY.postLoginRedirect() : 'wizard.html');
       } catch (err) {
         showAlert(err.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : err.message);
         btn.disabled = false;

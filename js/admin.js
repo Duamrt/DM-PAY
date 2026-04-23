@@ -213,6 +213,15 @@ function unblockCompany() {
   showToast('Empresa desbloqueada — clique Salvar para confirmar');
 }
 
+function viewAsTenant() {
+  if (!_drawerCompany) return;
+  sessionStorage.setItem('dmpay-view-as', JSON.stringify({
+    id: _drawerCompany.id,
+    name: _drawerCompany.trade_name || _drawerCompany.legal_name
+  }));
+  location.href = 'dashboard.html';
+}
+
 async function saveCompany() {
   if (!_drawerCompany) return;
   const plan = document.getElementById('d-plan').value;
