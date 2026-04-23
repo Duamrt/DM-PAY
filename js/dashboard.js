@@ -285,9 +285,11 @@
     });
   }
 
-  function editSaldo() {
-    const v = prompt('Saldo bancário inicial (R$):', localStorage.getItem('dmpay-saldo-' + window.DMPAY_COMPANY.id) || '0');
-    if (v === null) return;
+  async function editSaldo() {
+    const atual = (() => { try { const r = localStorage.getItem('dmpay-saldo-' + window.DMPAY_COMPANY.id); return r ? (JSON.parse(r).v ?? r) : '0'; } catch(_) { return '0'; } })();
+    const res = await DMPAY_UI.open({ title: 'Saldo bancário inicial', fields: [{ key: 'v', label: 'Valor (R$)', type: 'number', value: atual, placeholder: '0.00' }], submitLabel: 'Salvar', cancelLabel: 'Cancelar' });
+    if (!res) return;
+    const v = res.v;
     const n = parseFloat(String(v).replace(',','.'));
     if (isNaN(n)) return;
     localStorage.setItem('dmpay-saldo-' + window.DMPAY_COMPANY.id, JSON.stringify({ v: n, exp: Date.now() + 30*24*60*60*1000 }));

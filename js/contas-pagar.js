@@ -305,15 +305,16 @@
     const due = document.getElementById('cp-due').value;
     const method = document.getElementById('cp-method').value;
     const line = (document.getElementById('cp-line').value||'').replace(/\D/g,'');
-    if (!desc) { alert('Descrição obrigatória'); return; }
-    if (!valStr || +valStr <= 0) { alert('Valor obrigatório'); return; }
-    if (!due) { alert('Vencimento obrigatório'); return; }
+    const _ui = window.DMPAY_UI;
+    if (!desc) { await _ui.alert({ title: 'Descrição obrigatória' }); return; }
+    if (!valStr || +valStr <= 0) { await _ui.alert({ title: 'Valor obrigatório' }); return; }
+    if (!due) { await _ui.alert({ title: 'Vencimento obrigatório' }); return; }
     if (method === 'boleto' && line && ![44,47,48].includes(line.length)) {
-      alert('Linha digitável inválida (precisa ter 44, 47 ou 48 dígitos)'); return;
+      await _ui.alert({ title: 'Linha digitável inválida', desc: 'Precisa ter 44, 47 ou 48 dígitos.' }); return;
     }
     const btn = document.getElementById('cp-save'); btn.disabled = true;
     if (method === 'boleto' && !line) {
-      alert('Boleto exige linha digitável. Cole o código de 44/47/48 dígitos, ou mude a forma de pagamento.');
+      await _ui.alert({ title: 'Boleto exige linha digitável', desc: 'Cole o código de 44/47/48 dígitos, ou mude a forma de pagamento.' });
       btn.disabled = false; return;
     }
     try {
@@ -343,7 +344,7 @@
       } else if (code === '23505') {
         msg = 'Registro duplicado.';
       }
-      alert('Erro: ' + msg);
+      await DMPAY_UI.alert({ title: 'Erro ao criar', desc: msg, danger: true });
       btn.disabled = false;
     }
   }
@@ -426,7 +427,7 @@
     const before = PAYABLES.find(x => x.id === id) || null;
     const paid_at = new Date().toISOString();
     const { error } = await sb.from('payables').update({ status:'paid', paid_at }).eq('id', id);
-    if (error) { alert('Erro: '+error.message); return; }
+    if (error) { await DMPAY_UI.alert({ title: 'Erro', desc: error.message, danger: true }); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.pay('payable', id,
       before ? { status: before.status, paid_at: before.paid_at } : null,
       { status: 'paid', paid_at });
@@ -436,7 +437,7 @@
   async function markOpen(id) {
     const before = PAYABLES.find(x => x.id === id) || null;
     const { error } = await sb.from('payables').update({ status:'open', paid_at: null }).eq('id', id);
-    if (error) { alert('Erro: '+error.message); return; }
+    if (error) { await DMPAY_UI.alert({ title: 'Erro', desc: error.message, danger: true }); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.estorno('payable', id,
       before ? { status: before.status, paid_at: before.paid_at } : null,
       { status: 'open', paid_at: null });
@@ -444,10 +445,11 @@
     await loadPayables(); render();
   }
   async function removePayable(id) {
-    if (!confirm('Excluir essa conta?')) return;
+    const ok = await DMPAY_UI.confirm({ title: 'Excluir essa conta?', danger: true, okLabel: 'Excluir', cancelLabel: 'Cancelar' });
+    if (!ok) return;
     const before = PAYABLES.find(x => x.id === id) || null;
     const { error } = await sb.from('payables').delete().eq('id', id);
-    if (error) { alert('Erro: '+error.message); return; }
+    if (error) { await DMPAY_UI.alert({ title: 'Erro ao excluir', desc: error.message, danger: true }); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.delete('payable', id, before);
     closeDrawer();
     await loadPayables(); render();
@@ -535,7 +537,7 @@
     const notes        = (vals.notes || '').trim() || null;
 
     const { error } = await sb.from('payables').update({ amount, due_date, payment_method, boleto_line, notes }).eq('id', id);
-    if (error) { alert('Erro ao salvar: ' + error.message); return; }
+    if (error) { await DMPAY_UI.alert({ title: 'Erro ao salvar', desc: error.message, danger: true }); return; }
 
     if (window.DMPAY_AUDIT) {
       window.DMPAY_AUDIT.update('payable', id,
@@ -581,28 +583,3 @@
   }, 100);
 })();
 
-// CSS dos modais (injeta uma vez)
-if (!document.getElementById('dmp-modal-css')) {
-  const s = document.createElement('style');
-  s.id = 'dmp-modal-css';
-  s.textContent = `
-    .dmp-modal-back{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
-    .dmp-modal{background:var(--bg-surface,#fff);border-radius:14px;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-    .dmp-modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-    .dmp-modal-head h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
-    .dmp-modal-head button{background:transparent;border:none;cursor:pointer;color:var(--text-muted);padding:6px;border-radius:6px}
-    .dmp-modal-head button:hover{background:var(--bg-elevated);color:var(--text-primary)}
-    .dmp-modal-head svg{width:18px;height:18px}
-    .dmp-modal-body{padding:22px;overflow-y:auto;flex:1}
-    .dmp-modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
-    .dmp-field{margin-bottom:14px}
-    .dmp-field label{display:block;font-size:12.5px;font-weight:500;color:var(--text-muted);margin-bottom:6px}
-    .dmp-field input,.dmp-field select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface,#fff);color:var(--text-primary,#111);font-family:inherit;font-size:14px;outline:none}
-    .dmp-field input:focus,.dmp-field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-    .dmp-field .mono{font-family:'Geist Mono',monospace;letter-spacing:.02em}
-    .nf-badge{font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:var(--text-primary,#111);letter-spacing:.03em}
-    .dmp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .dmp-hint{font-size:11.5px;color:var(--text-soft,#9CA3AF);margin-top:5px;line-height:1.5}
-  `;
-  document.head.appendChild(s);
-}

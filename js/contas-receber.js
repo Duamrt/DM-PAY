@@ -479,10 +479,11 @@
     closeDrawer(); await load(); render();
   }
   async function remove(id) {
-    if (!confirm('Excluir essa conta a receber?')) return;
+    const ok = await DMPAY_UI.confirm({ title: 'Excluir conta a receber?', danger: true, okLabel: 'Excluir', cancelLabel: 'Cancelar' });
+    if (!ok) return;
     const before = RECVS.find(x => x.id === id) || null;
     const { error } = await sb.from('receivables').delete().eq('id', id);
-    if (error) { alert(error.message); return; }
+    if (error) { await DMPAY_UI.alert({ title: 'Erro', desc: error.message, danger: true }); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.delete('receivable', id, before);
     closeDrawer(); await load(); render();
   }

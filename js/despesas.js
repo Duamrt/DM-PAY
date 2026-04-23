@@ -197,9 +197,10 @@
   }
 
   async function desativar(id) {
-    if (!confirm('Desativar essa despesa fixa? Ela para de aparecer na lista mas fica no histórico.')) return;
+    const ok = await DMPAY_UI.confirm({ title: 'Desativar despesa?', desc: 'Ela para de aparecer na lista mas fica no histórico.', okLabel: 'Desativar', cancelLabel: 'Cancelar' });
+    if (!ok) return;
     const { error } = await sb.from('fixed_expenses').update({ active: false }).eq('id', id);
-    if (error) { alert(error.message); return; }
+    if (error) { await DMPAY_UI.alert({ title: 'Erro', desc: error.message, danger: true }); return; }
     await load(); render();
   }
 

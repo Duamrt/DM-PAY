@@ -192,7 +192,7 @@
         total_discount: PARSED.total_discount,
         total_freight: PARSED.total_freight,
         nfe_key: PARSED.nfeKey,
-        xml_raw: PARSED,
+        xml_raw: (() => { const s = JSON.stringify(PARSED); return s.length > 500_000 ? { _truncated: true, nfeKey: PARSED.nfeKey, total: PARSED.total_value } : PARSED; })(),
         status: PARSED.parcelas.length > 0 ? 'linked' : 'awaiting_boleto'
       }).select().single();
       if (invRes.error) {

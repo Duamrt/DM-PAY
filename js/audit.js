@@ -10,7 +10,10 @@
   async function fetchIp() {
     if (IP_CACHE !== null) return IP_CACHE;
     try {
-      var r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+      var ctrl = new AbortController();
+      var tid = setTimeout(function() { ctrl.abort(); }, 3000);
+      var r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store', signal: ctrl.signal });
+      clearTimeout(tid);
       if (!r.ok) throw new Error('ipify ' + r.status);
       var j = await r.json();
       IP_CACHE = j.ip || '';

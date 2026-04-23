@@ -1,6 +1,5 @@
 // DM Pay · versao atual
-window.DMPAY_VERSION = 'v04231704';
-console.log('%cDM Pay ' + window.DMPAY_VERSION, 'background:#2563EB;color:white;padding:4px 8px;border-radius:4px;font-weight:600;font-family:monospace');
+window.DMPAY_VERSION = 'v04231710';
 (function() {
   var el = document.createElement('div');
   el.id = 'dmpay-version-badge';

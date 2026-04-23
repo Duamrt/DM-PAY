@@ -65,6 +65,13 @@ window.DMPAY = (function() {
     return s;
   }
 
+  // Invalida cache quando Supabase renova o token silenciosamente
+  window.addEventListener('dmpay-sb-ready', function() {
+    sb.auth.onAuthStateChange(function(event) {
+      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') _session = null;
+    });
+  }, { once: true });
+
   async function signIn(email, senha) {
     await ready();
     const { data, error } = await sb.auth.signInWithPassword({ email: email, password: senha });

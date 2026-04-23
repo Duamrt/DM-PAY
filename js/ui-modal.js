@@ -81,7 +81,7 @@
             <div class="dmp-err" id="dmp-err"></div>
           </div>
           <div class="dmp-modal-foot">
-            <button class="dmp-btn dmp-btn-ghost" data-act="cancel">${cancelLabel||'Cancelar'}</button>
+            ${cancelLabel !== false ? `<button class="dmp-btn dmp-btn-ghost" data-act="cancel">${cancelLabel||'Cancelar'}</button>` : ''}
             <button class="dmp-btn ${danger?'dmp-btn-danger':'dmp-btn-primary'}" data-act="ok">${submitLabel||'Confirmar'}</button>
           </div>
         </div>`;
@@ -125,5 +125,9 @@
     return r !== null;
   }
 
-  window.DMPAY_UI = { open, confirm: confirmar };
+  async function alertar({ title, desc, danger, okLabel } = {}) {
+    await open({ title, desc, fields: [], submitLabel: okLabel || 'OK', cancelLabel: false, danger });
+  }
+
+  window.DMPAY_UI = { open, confirm: confirmar, alert: alertar };
 })();
