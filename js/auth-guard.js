@@ -27,7 +27,7 @@
       // Banner topo em todas as páginas
       const _banner = document.createElement('div');
       _banner.id = 'view-as-banner';
-      _banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#1e3a5f;border-bottom:2px solid #2d5a8e;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#93c5fd;font-family:inherit';
+      _banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10002;background:#1e3a5f;border-bottom:2px solid #2d5a8e;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#93c5fd;font-family:inherit';
       _banner.innerHTML = `<span>👁 <b style="color:#bfdbfe">${_vaCo.trade_name || _vaCo.legal_name}</b> — modo suporte ativo</span><button onclick="sessionStorage.removeItem('dmpay-view-as');location.href='admin.html'" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">← Torre de Comando</button>`;
       document.body.prepend(_banner);
       // Empurra conteúdo pra não ficar atrás do banner
@@ -108,6 +108,37 @@
       menu.classList.remove('open');
     }
   });
+
+  // ── SIDEBAR COLLAPSE TOGGLE ──────────────────────────────────────────
+  (function() {
+    // CSS para estado colapsado
+    const sidebarCss = document.createElement('style');
+    sidebarCss.textContent = `
+      body.sb-collapsed { grid-template-columns: 0px 1fr !important; }
+      body.sb-collapsed .sidebar { overflow: hidden; min-width: 0; padding: 0; border-right: none; }
+      #dmp-sb-toggle { position:fixed; top:14px; left:14px; z-index:500; width:28px; height:28px; border-radius:6px; border:1px solid var(--border,#374151); background:var(--bg-soft,#1a1d24); color:var(--text-muted,#9ca3af); cursor:pointer; display:grid; place-items:center; transition:.15s; font-size:0; padding:0; }
+      #dmp-sb-toggle:hover { background:var(--bg-hover,#23272f); color:var(--text,#fff); }
+      body.sb-collapsed #dmp-sb-toggle { left:8px; background:var(--bg-card,#161b28); border-color:var(--accent,#7C3AED); color:var(--accent,#7C3AED); }
+      @media(max-width:600px){ #dmp-sb-toggle { display:none; } }
+    `;
+    document.head.appendChild(sidebarCss);
+
+    // Restaura estado salvo
+    if (localStorage.getItem('dmpay-sb-collapsed') === '1') {
+      document.body.classList.add('sb-collapsed');
+    }
+
+    // Botão toggle — injeta no body após DOMContentLoaded (já estamos nele)
+    const btn = document.createElement('button');
+    btn.id = 'dmp-sb-toggle';
+    btn.title = 'Recolher/abrir menu';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>';
+    btn.onclick = function() {
+      const collapsed = document.body.classList.toggle('sb-collapsed');
+      localStorage.setItem('dmpay-sb-collapsed', collapsed ? '1' : '0');
+    };
+    document.body.appendChild(btn);
+  })();
 
   if (window.lucide) lucide.createIcons();
   html.style.visibility = '';

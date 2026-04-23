@@ -129,7 +129,10 @@
             ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;background:var(--warn-soft);color:var(--warn)">${acoesSens}</span>`
             : '<span style="color:var(--text-soft);font-size:12px">—</span>'}
         </td>
-        <td><button class="btn-gerenciar" onclick="openDrawer(${JSON.stringify(c).replace(/"/g,'&quot;')})">Gerenciar</button></td>
+        <td style="display:flex;gap:6px;align-items:center">
+          <button class="btn-gerenciar" onclick="openDrawer(${JSON.stringify(c).replace(/"/g,'&quot;')})">Gerenciar</button>
+          <button class="btn-gerenciar" style="background:var(--accent-soft);color:var(--accent);border-color:var(--accent)" onclick="(function(){sessionStorage.setItem('dmpay-view-as',JSON.stringify({id:'${c.id}',name:'${(c.trade_name||c.legal_name||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}'}));location.href='dashboard.html'})()">Entrar →</button>
+        </td>
       </tr>`;
     }).join('');
   }
