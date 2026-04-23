@@ -1,6 +1,11 @@
 .env
 .env.local
 .env.*.local
+*.ini
+agent/config.ini
+agent/*.key
+*.pem
+*.p12
 node_modules/
 .DS_Store
 *.log

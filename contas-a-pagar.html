@@ -342,7 +342,7 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
         </div>
         <div class="hero-actions">
           <button class="btn btn-ghost" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="sliders-horizontal" class="icon"></i>Filtros avançados</button>
-          <button class="btn btn-secondary" id="btnExportarCP" onclick="DMPAY_EXPORT.contasPagar(window._CP_PAYABLES||[])"><i data-lucide="download" class="icon"></i>Exportar</button>
+          <button class="btn btn-secondary" id="btnExportarCP" onclick="DMPAY_EXPORT.contasPagar(DMPAY_CP.getPayables())"><i data-lucide="download" class="icon"></i>Exportar</button>
           <button class="btn btn-secondary" onclick="window.location.href='importar-xml.html'"><i data-lucide="upload" class="icon"></i>Importar XML</button>
           <button class="btn btn-primary" onclick="window.DMPAY_CP && DMPAY_CP.openCreate()"><i data-lucide="plus" class="icon"></i>Nova conta</button>
         </div>
@@ -436,7 +436,7 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
   <span class="count"><strong id="selCount">0</strong> selecionados</span>
   <div class="actions">
     <button class="btn btn-primary btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="check-circle-2" class="icon"></i>Marcar como pago</button>
-    <button class="btn btn-secondary btn-sm" onclick="DMPAY_EXPORT.contasPagar(window._CP_PAYABLES||[])"><i data-lucide="download" class="icon"></i>Exportar</button>
+    <button class="btn btn-secondary btn-sm" onclick="DMPAY_EXPORT.contasPagar(DMPAY_CP.getPayables())"><i data-lucide="download" class="icon"></i>Exportar</button>
     <button class="btn btn-secondary btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="tag" class="icon"></i>Mudar categoria</button>
     <button class="btn btn-ghost btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="trash-2" class="icon"></i>Excluir</button>
   </div>

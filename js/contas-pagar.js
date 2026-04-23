@@ -80,7 +80,6 @@
       return [];
     }
     PAYABLES = [...(abertasR.data || []), ...(pagasR.data || [])];
-    window._CP_PAYABLES = PAYABLES;
     // Carrega categorias à parte e injeta nos payables
     try {
       const cats = await sb.from('expense_categories')
@@ -112,6 +111,7 @@
     if (SUPPLIERS_CACHE && !force) return SUPPLIERS_CACHE;
     const { data } = await sb.from('suppliers')
       .select('id, legal_name, trade_name, cnpj')
+      .eq('company_id', window.DMPAY_COMPANY?.id)
       .order('legal_name')
       .limit(500);
     SUPPLIERS_CACHE = data || [];
@@ -152,7 +152,7 @@
           <div style="margin-top:12px;font-size:14px;color:var(--text-secondary)">Nenhuma conta encontrada${BUSCA ? ' pra essa busca' : ''}</div>
           <div style="margin-top:6px;font-size:12px;color:var(--text-muted)">Clique em <b>Nova conta</b> ou <b>Importar histórico</b></div>
         </td></tr>`;
-      lucide.createIcons();
+      window.lucide && lucide.createIcons();
       atualizaKPIs();
       atualizaChips(list.length);
       return;
@@ -551,6 +551,7 @@
 
   // Expoe API
   window.DMPAY_CP = {
+    getPayables: () => PAYABLES,
     openCreate: openCreate,
     closeCreate: closeCreate,
     saveNew: saveNew,

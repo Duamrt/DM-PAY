@@ -16,8 +16,11 @@
   }
   function ymThis(){ return HOJE.toISOString().slice(0,7); }
 
+  let _initTries = 0, _initDone = false;
   async function init() {
-    if (!window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
+    if (_initDone) return;
+    if (!window.DMPAY_COMPANY) { if (++_initTries < 50) setTimeout(init, 100); return; }
+    _initDone = true;
     const profile = window.DMPAY_PROFILE;
     const company = window.DMPAY_COMPANY;
     const isPlatformAdmin = company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
@@ -92,8 +95,13 @@
 
     // === KPIs REAIS ===
     // Saldo: salvo manual no localStorage (mesma chave do fluxo)
-    const saldoStr = localStorage.getItem('dmpay-saldo-' + COMPANY_ID);
-    const saldoInicial = saldoStr ? parseFloat(saldoStr) : 0;
+    const _saldoRaw = localStorage.getItem('dmpay-saldo-' + COMPANY_ID);
+    let saldoInicial = 0;
+    try {
+      const _sp = _saldoRaw ? JSON.parse(_saldoRaw) : null;
+      if (_sp && _sp.exp > Date.now()) saldoInicial = _sp.v;
+      else if (_sp) localStorage.removeItem('dmpay-saldo-' + COMPANY_ID);
+    } catch(_) { saldoInicial = parseFloat(_saldoRaw) || 0; } // compatibilidade valor antigo
 
     const opens = PAGS.filter(p => p.status === 'open');
     const totalOpen = opens.reduce((s,p) => s + Number(p.amount), 0);
@@ -282,7 +290,7 @@
     if (v === null) return;
     const n = parseFloat(String(v).replace(',','.'));
     if (isNaN(n)) return;
-    localStorage.setItem('dmpay-saldo-' + window.DMPAY_COMPANY.id, n);
+    localStorage.setItem('dmpay-saldo-' + window.DMPAY_COMPANY.id, JSON.stringify({ v: n, exp: Date.now() + 30*24*60*60*1000 }));
     location.reload();
   }
 
