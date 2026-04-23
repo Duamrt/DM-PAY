@@ -9,7 +9,7 @@
 
   window.DMPAY_USER    = session.user;
   window.DMPAY_PROFILE = session.profile;
-  window.DMPAY_COMPANY = session.company;
+  // DMPAY_COMPANY é setado UMA vez, após resolver view-as — evita race condition com páginas
 
   // ── VIEW-AS: platform admin navegando como tenant ──────────────────
   const _isPa = session.company && session.company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
@@ -20,7 +20,7 @@
     // Busca dados completos do tenant alvo
     const { data: _vaCo } = await sb.from('companies').select('*').eq('id', _va.id).maybeSingle();
     if (_vaCo) {
-      // Sobrescreve contexto — todas as páginas passam a ver este tenant
+      // Seta DMPAY_COMPANY como o tenant — páginas que aguardam esse valor verão Mercadinho direto
       window.DMPAY_COMPANY = _vaCo;
       window.DMPAY_VIEW_AS = true;
 
@@ -32,7 +32,14 @@
       document.body.prepend(_banner);
       // Empurra conteúdo pra não ficar atrás do banner
       document.body.style.paddingTop = '38px';
+    } else {
+      // view-as inválido — cai no contexto normal
+      window.DMPAY_COMPANY = session.company;
+      sessionStorage.removeItem('dmpay-view-as');
     }
+  } else {
+    // Usuário normal ou admin sem view-as ativo
+    window.DMPAY_COMPANY = session.company;
   }
 
   const initials = (session.profile.name || session.user.email || '?')
