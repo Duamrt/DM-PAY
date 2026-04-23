@@ -38,9 +38,9 @@
     '.dmp-col .sidebar-label{display:none!important;}',
     '.dmp-col .brand-name{display:none!important;}',
     '.dmp-col .nav-label{display:none!important;}',
-    '.dmp-col .nav-badge{display:none!important;}',
-    '.dmp-col .nav-item{justify-content:center!important;padding:10px 0!important;}',
-    '.dmp-col .brand{justify-content:center!important;}',
+    '.dmp-col .nav-badge,.dmp-col .badge-count,.dmp-col .soon-badge{display:none!important;}',
+    '.dmp-col .nav-item{justify-content:center!important;padding:10px 0!important;overflow:hidden;}',
+    '.dmp-col .brand,.dmp-col .brand-row{justify-content:center!important;}',
 
     /* botão toggle */
     '#dmp-col-btn{',
