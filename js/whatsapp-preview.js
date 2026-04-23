@@ -55,8 +55,8 @@
     if (flags.pagos_ontem) {
       queries.push(
         sb.from('payables').select('amount,description,suppliers(legal_name,trade_name)')
-          .eq('company_id',CID).neq('status','open')
-          .gte('updated_at',ontem+'T00:00:00').limit(50)
+          .eq('company_id',CID).eq('status','paid')
+          .eq('due_date',ontem).limit(50)
       );
     } else queries.push(Promise.resolve({data:[]}));
 
