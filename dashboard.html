@@ -16,7 +16,7 @@
     :root {
       --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
       --border:#E5E7EB; --border-strong:#D1D5DB;
-      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#6B7280;
       --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
       --success:#10B981; --success-soft:#D1FAE5;
       --warn:#D97706; --warn-soft:#FEF3C7;
@@ -260,7 +260,7 @@
       </div>
     </header>
 
-    <main>
+    <main id="main-content">
       <!-- Hero -->
       <div class="hero">
         <div>
@@ -392,7 +392,7 @@
               </div>
             </div>
             <div class="chart-wrap">
-              <canvas id="chart-entradas-saidas"></canvas>
+              <canvas id="chart-entradas-saidas" role="img" aria-label="Gráfico de entradas e saídas — carregando"></canvas>
             </div>
           </div>
         </div>

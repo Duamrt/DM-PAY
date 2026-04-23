@@ -258,6 +258,8 @@
       if (saldoEl) {
         saldoEl.textContent = (saldoP >= 0 ? '+' : '−') + 'R$ ' + Math.round(Math.abs(saldoP)) + 'k';
         saldoEl.style.color = saldoP >= 0 ? 'var(--success)' : 'var(--danger)';
+        const cvs = document.getElementById('chart-entradas-saidas');
+        if (cvs) cvs.setAttribute('aria-label', `Gráfico de entradas e saídas — Entradas R$ ${Math.round(totE)}k, Saídas R$ ${Math.round(totS)}k, Saldo ${(saldoP >= 0 ? '+' : '-')}R$ ${Math.round(Math.abs(saldoP))}k`);
       }
       // Re-renderiza o chart com os dados reais (substitui os mocks DATA_*)
       if (window.DATA_LABELS) {

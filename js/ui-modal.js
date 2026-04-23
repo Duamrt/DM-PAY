@@ -69,10 +69,11 @@
           ${f.hint ? `<div class="hint">${f.hint}</div>` : ''}
         </div>`).join('');
 
+      const _uid = Math.random().toString(36).slice(2,8);
       bg.innerHTML = `
-        <div class="dmp-modal" role="dialog">
+        <div class="dmp-modal" role="dialog" aria-modal="true" aria-labelledby="dmp-modal-title-${_uid}">
           <div class="dmp-modal-head">
-            <h3>${title||'Confirmação'}</h3>
+            <h3 id="dmp-modal-title-${_uid}">${title||'Confirmação'}</h3>
             ${desc ? `<p>${desc}</p>` : ''}
           </div>
           <div class="dmp-modal-body">

@@ -20,9 +20,39 @@
     });
   });
 
+  // ── Skip link (acessibilidade: pula sidebar com teclado) ─────────────
+  var mainEl = document.querySelector('main') || document.querySelector('.main');
+  if (mainEl && !mainEl.id) mainEl.id = 'main-content';
+  var skipLink = document.createElement('a');
+  skipLink.href = '#main-content';
+  skipLink.className = 'dmp-skip-link';
+  skipLink.textContent = 'Pular para o conteúdo';
+  document.body.insertBefore(skipLink, document.body.firstChild);
+
   // ── CSS ────────────────────────────────────────────────────────────────
   var style = document.createElement('style');
   style.textContent = [
+    /* skip link */
+    '.dmp-skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);',
+    '  background:var(--accent,#7C3AED);color:#fff;padding:8px 20px;',
+    '  border-radius:0 0 8px 8px;font-weight:600;font-size:13px;',
+    '  z-index:99999;text-decoration:none;transition:top .15s;}',
+    '.dmp-skip-link:focus-visible{top:0;}',
+
+    /* sr-only */
+    '.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}',
+
+    /* focus visible base — sem outline:none global */
+    ':focus-visible{outline:2px solid var(--accent,#7C3AED);outline-offset:2px;}',
+    '.dmp-btn:focus-visible,.dmp-field input:focus-visible,.dmp-field select:focus-visible,.dmp-field textarea:focus-visible{outline:none;}',
+
+    /* touch targets 44px em tablet e mobile */
+    '@media(max-width:1280px){',
+    '  .icon-btn,.pag-btn,.dmp-btn,.tab-group .tab{min-height:44px;min-width:44px;}',
+    '  .nav-item{min-height:44px;}',
+    '  #dmp-col-btn{min-height:44px;}',
+    '}',
+
     /* garante sidebar visível sempre, coluna */
     'body>.sidebar,div.app>.sidebar{display:flex!important;flex-direction:column!important;}',
 
