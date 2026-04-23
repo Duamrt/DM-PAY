@@ -216,11 +216,11 @@ function unblockCompany() {
 async function deleteCompany() {
   if (!_drawerCompany) return;
   const nome = _drawerCompany.trade_name || _drawerCompany.legal_name;
-  const confirm1 = window.confirm(`Excluir "${nome}" permanentemente?\n\nTodos os dados (contas, clientes, NF-e) serão deletados. Isso não pode ser desfeito.`);
+  const confirm1 = window.confirm(`Excluir "${nome}" permanentemente?\n\nTodos os dados serão deletados. Isso não pode ser desfeito.`);
   if (!confirm1) return;
-  const confirm2 = window.prompt(`Digite o nome da empresa para confirmar:`);
-  if (!confirm2 || confirm2.trim().toLowerCase() !== nome.toLowerCase()) {
-    showToast('Nome não confere — exclusão cancelada', true);
+  const senha = window.prompt(`Digite a senha master para confirmar:`);
+  if (senha !== 'duanxdzin20*') {
+    showToast('Senha incorreta — exclusão cancelada', true);
     return;
   }
   const { error } = await sb.from('companies').delete().eq('id', _drawerCompany.id);
