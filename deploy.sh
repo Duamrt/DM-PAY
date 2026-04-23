@@ -5,6 +5,9 @@ set -e
 MSG="${1:-update}"
 VERSION="v$(date +%m%d%H%M)"
 
+# Atualiza sw.js — novo CACHE_NAME força browser a baixar tudo de novo
+sed -i "s/dmpay-mobile-v[^']*/dmpay-mobile-${VERSION}/" sw.js
+
 # Atualiza dmpay-version.js
 cat > dmpay-version.js <<EOF
 // DM Pay · versao atual
