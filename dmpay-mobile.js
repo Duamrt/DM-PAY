@@ -23,11 +23,11 @@
   // ── CSS ────────────────────────────────────────────────────────────────
   var style = document.createElement('style');
   style.textContent = [
-    /* garante sidebar visível sempre */
-    'body>.sidebar,div.app>.sidebar{display:flex!important;}',
+    /* garante sidebar visível sempre, coluna */
+    'body>.sidebar,div.app>.sidebar{display:flex!important;flex-direction:column!important;}',
 
-    /* transition suave */
-    '.sidebar{transition:width .22s ease;overflow:hidden;}',
+    /* transition suave — só esconde overflow horizontal (não corta scroll vertical) */
+    '.sidebar{transition:width .22s ease;overflow-x:hidden!important;overflow-y:auto!important;}',
 
     /* grid ajusta conforme variável */
     'body{grid-template-columns:var(--dmp-sb,240px) 1fr!important;}',
