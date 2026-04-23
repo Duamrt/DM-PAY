@@ -5,7 +5,6 @@
   let FILTRO_CAT = 'all';
   let BUSCA = '';
 
-  function fmtBRL(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function catColor(name) {
     const map = { 'Geral':'#6B7280', 'Vendas':'#2563EB', 'Administrativa':'#7C3AED', 'Comercial':'#10B981', 'Financeira':'#D97706' };
     return map[name] || '#6B7280';

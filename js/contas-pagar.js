@@ -11,8 +11,6 @@
   let CATEGORIES_CACHE = {}; // id -> {name, color}
 
   // ==================== UTILS ====================
-  function fmtBRL(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-  function brDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('T')[0].split('-'); return `${d}/${m}/${y}`; }
   function isoToday(){ return new Date().toISOString().split('T')[0]; }
   function diffDays(iso) {
     if (!iso) return 0;
@@ -79,6 +77,8 @@
       showLoadError(err.message || 'Erro ao carregar');
       return [];
     }
+    warnIfTruncated(abertasR.data, 2000, 'payables open');
+    warnIfTruncated(pagasR.data,   1000, 'payables paid');
     PAYABLES = [...(abertasR.data || []), ...(pagasR.data || [])];
     // Carrega categorias à parte e injeta nos payables
     try {

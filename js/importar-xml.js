@@ -13,8 +13,6 @@
     const v = getText(parent, tag);
     return v ? parseFloat(v) : 0;
   }
-  function fmtBRL(v) { return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-  function brDate(iso) { if(!iso) return '—'; const [y,m,d]=iso.split('T')[0].split('-'); return `${d}/${m}/${y}`; }
   function fmtCNPJ(c) {
     if (!c) return '—';
     c = c.replace(/\D/g,'');

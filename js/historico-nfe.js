@@ -25,17 +25,9 @@
 
   const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-  function fmtBRL(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-  function brDate(iso) {
-    if (!iso) return '—';
-    const [y, m, d] = iso.toString().split('T')[0].split('-');
-    return `${d}/${m}/${y}`;
-  }
-  function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
+  const fmtBRL = window.fmtBRL;
+  const brDate = window.brDate;
+  const esc    = window.esc;
   function iniciais(nome) {
     const w = (nome || '?').replace(/[^\wÀ-ÿ ]/g, '').trim().split(/\s+/);
     return ((w[0] || '')[0] + (w[1] || '')[0] || (w[0] || '??').slice(0, 2)).toUpperCase();

@@ -66,6 +66,9 @@
       qPay(sb.from('daily_sales').select('sale_date, payment_method, amount').gte('sale_date', inicio30iso)).limit(2000),
       qPay(sb.from('cash_withdrawals').select('withdrawal_date, amount').gte('withdrawal_date', inicio30iso)).limit(500)
     ]);
+    warnIfTruncated(pagsR.data,  2000, 'dashboard payables');
+    warnIfTruncated(recsR.data,  5000, 'dashboard receivables');
+    warnIfTruncated(salesR.data, 2000, 'dashboard daily_sales');
     const PAGS = pagsR.data || [];
     const RECS = recsR.data || [];
     const SALES = salesR.data || [];
