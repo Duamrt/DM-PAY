@@ -7,9 +7,33 @@
   const session = await DMPAY.requireAuth();
   if (!session) return;
 
-  window.DMPAY_USER = session.user;
+  window.DMPAY_USER    = session.user;
   window.DMPAY_PROFILE = session.profile;
   window.DMPAY_COMPANY = session.company;
+
+  // ── VIEW-AS: platform admin navegando como tenant ──────────────────
+  const _isPa = session.company && session.company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
+  const _vaRaw = sessionStorage.getItem('dmpay-view-as');
+  const _va = _isPa && _vaRaw ? JSON.parse(_vaRaw) : null;
+
+  if (_va) {
+    // Busca dados completos do tenant alvo
+    const { data: _vaCo } = await sb.from('companies').select('*').eq('id', _va.id).maybeSingle();
+    if (_vaCo) {
+      // Sobrescreve contexto — todas as páginas passam a ver este tenant
+      window.DMPAY_COMPANY = _vaCo;
+      window.DMPAY_VIEW_AS = true;
+
+      // Banner topo em todas as páginas
+      const _banner = document.createElement('div');
+      _banner.id = 'view-as-banner';
+      _banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#1e3a5f;border-bottom:2px solid #2d5a8e;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#93c5fd;font-family:inherit';
+      _banner.innerHTML = `<span>👁 <b style="color:#bfdbfe">${_vaCo.trade_name || _vaCo.legal_name}</b> — modo suporte ativo</span><button onclick="sessionStorage.removeItem('dmpay-view-as');location.href='admin.html'" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">← Torre de Comando</button>`;
+      document.body.prepend(_banner);
+      // Empurra conteúdo pra não ficar atrás do banner
+      document.body.style.paddingTop = '38px';
+    }
+  }
 
   const initials = (session.profile.name || session.user.email || '?')
     .split(' ').map(function(p){return p[0];}).slice(0,2).join('').toUpperCase();
@@ -37,21 +61,22 @@
     document.head.appendChild(s);
   }
 
-  const isPlatformAdmin = session.company && session.company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
+  const isPlatformAdmin = _isPa;
+  const displayCompany = window.DMPAY_COMPANY; // já sobrescrito se view-as ativo
 
   // Cria dropdown
   const menu = document.createElement('div');
   menu.className = 'dmp-usermenu';
   menu.innerHTML = `
     <div class="dmp-usermenu-head">
-      <div class="dmp-usermenu-name">${session.profile.name || '—'}${isPlatformAdmin ? '<span class="dmp-pa-badge">admin</span>' : ''}</div>
+      <div class="dmp-usermenu-name">${session.profile.name || '—'}${isPlatformAdmin ? '<span class="dmp-pa-badge">master</span>' : ''}</div>
       <div class="dmp-usermenu-email">${session.user.email}</div>
-      <div class="dmp-usermenu-comp">empresa: <b>${session.company?.trade_name || session.company?.legal_name || '—'}</b></div>
+      <div class="dmp-usermenu-comp">${_va ? '👁 suporte: ' : 'empresa: '}<b>${displayCompany?.trade_name || displayCompany?.legal_name || '—'}</b></div>
     </div>
-    ${isPlatformAdmin ? `<button class="dmp-usermenu-item" onclick="location.href='admin.html'" style="color:var(--accent,#7C3AED)">
+    ${isPlatformAdmin ? `<button class="dmp-usermenu-item" onclick="sessionStorage.removeItem('dmpay-view-as');location.href='admin.html'" style="color:var(--accent,#7C3AED)">
       <i data-lucide="shield"></i> Torre de Comando
     </button>` : ''}
-    <button class="dmp-usermenu-item" onclick="location.href='configuracoes.html'">
+    ${!_va ? `<button class="dmp-usermenu-item" onclick="location.href='configuracoes.html'">
       <i data-lucide="settings"></i> Configurações
     </button>
     <button class="dmp-usermenu-item" onclick="location.href='meu-plano.html'">
@@ -59,7 +84,7 @@
     </button>
     <button class="dmp-usermenu-item" onclick="location.href='equipe.html'">
       <i data-lucide="users"></i> Equipe
-    </button>
+    </button>` : ''}
     <button class="dmp-usermenu-item danger" onclick="DMPAY.signOut()">
       <i data-lucide="log-out"></i> Sair da conta
     </button>
