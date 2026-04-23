@@ -96,6 +96,54 @@
 
     @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:840px){body{grid-template-columns:1fr}.sidebar{display:none}}
+
+    /* Botão gerenciar na tabela */
+    .btn-gerenciar{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);font-size:12px;font-weight:500;cursor:pointer;transition:.15s}
+    .btn-gerenciar:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+
+    /* Overlay + Drawer */
+    #drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;display:none;backdrop-filter:blur(2px)}
+    #drawer-overlay.open{display:block}
+    #drawer{position:fixed;top:0;right:0;width:420px;height:100vh;background:var(--bg-card);border-left:1px solid var(--border);z-index:101;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+    #drawer.open{transform:translateX(0)}
+    .drawer-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-soft)}
+    .drawer-header h3{margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+    .drawer-close{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text-muted);cursor:pointer;display:grid;place-items:center}
+    .drawer-close:hover{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}
+    .drawer-body{flex:1;overflow-y:auto;padding:20px}
+    .drawer-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--bg-soft)}
+
+    /* Campos do drawer */
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:11.5px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+    .field input,.field select{width:100%;padding:9px 12px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:'Geist',sans-serif;outline:none;transition:.15s}
+    .field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+    .field input[readonly]{background:var(--bg-soft);color:var(--text-muted);cursor:default}
+
+    /* Ações rápidas */
+    .quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+    .btn-quick{padding:8px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);font-size:12px;font-weight:500;cursor:pointer;text-align:center;transition:.15s}
+    .btn-quick:hover{background:var(--bg-hover);color:var(--text)}
+    .btn-quick.green{border-color:rgba(16,185,129,.4);color:var(--success)}
+    .btn-quick.green:hover{background:var(--success-soft)}
+    .btn-quick.red{border-color:rgba(220,38,38,.4);color:var(--danger)}
+    .btn-quick.red:hover{background:var(--danger-soft)}
+
+    /* Botões footer */
+    .btn-primary{flex:1;padding:10px;border-radius:7px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+    .btn-primary:hover{background:var(--accent-hover)}
+    .btn-secondary{padding:10px 16px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:13px;font-weight:500;cursor:pointer}
+    .btn-secondary:hover{background:var(--bg-hover);color:var(--text)}
+
+    /* Info linha */
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+    .info-row:last-child{border-bottom:none}
+    .info-row span:first-child{font-size:12px;color:var(--text-muted)}
+    .info-row span:last-child{font-size:12.5px;font-weight:500}
+
+    /* Toast */
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;z-index:200;transition:transform .25s;pointer-events:none}
+    #toast.show{transform:translateX(-50%) translateY(0)}
   </style>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
@@ -206,6 +254,7 @@
               <th>Sincronização</th>
               <th>Faturamento hoje</th>
               <th style="text-align:center">Ações sens.</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="tenants-tbody">
@@ -218,6 +267,87 @@
       </div>
     </main>
   </div>
+
+  <!-- Drawer de controle -->
+  <div id="drawer-overlay" onclick="closeDrawer()"></div>
+  <div id="drawer">
+    <div class="drawer-header">
+      <h3><i data-lucide="settings-2"></i> <span id="drawer-title">Gerenciar Empresa</span></h3>
+      <button class="drawer-close" onclick="closeDrawer()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="drawer-body">
+
+      <!-- Info readonly -->
+      <div style="margin-bottom:18px">
+        <div class="info-row">
+          <span>ID</span>
+          <span id="d-id" style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--text-muted)">—</span>
+        </div>
+        <div class="info-row">
+          <span>Cidade</span>
+          <span id="d-city">—</span>
+        </div>
+        <div class="info-row">
+          <span>Cadastrado em</span>
+          <span id="d-created">—</span>
+        </div>
+        <div class="info-row">
+          <span>Asaas ID</span>
+          <span id="d-asaas" style="font-size:11px;font-family:'Geist Mono',monospace">—</span>
+        </div>
+        <div class="info-row">
+          <span>Dias em atraso</span>
+          <span id="d-atraso">—</span>
+        </div>
+      </div>
+
+      <!-- Campos editáveis -->
+      <div class="field">
+        <label>Plano</label>
+        <select id="d-plan">
+          <option value="trial">trial</option>
+          <option value="essencial">essencial</option>
+          <option value="pro">pro</option>
+          <option value="rede">rede</option>
+          <option value="expirado">expirado</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Status</label>
+        <select id="d-status">
+          <option value="trial">trial</option>
+          <option value="ativa">ativa</option>
+          <option value="bloqueada">bloqueada</option>
+          <option value="cancelada">cancelada</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Trial válido até</label>
+        <input type="datetime-local" id="d-trial-until">
+      </div>
+
+      <!-- Ações rápidas -->
+      <div style="margin-bottom:8px">
+        <div style="font-size:11.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Ações rápidas</div>
+        <div class="quick-actions">
+          <button class="btn-quick green" onclick="extendTrial(7)">+ 7 dias trial</button>
+          <button class="btn-quick green" onclick="extendTrial(30)">+ 30 dias trial</button>
+          <button class="btn-quick green" onclick="activatePlan('essencial')">Ativar Essencial</button>
+          <button class="btn-quick green" onclick="activatePlan('pro')">Ativar Pro</button>
+          <button class="btn-quick red" onclick="blockCompany()">Bloquear acesso</button>
+          <button class="btn-quick" onclick="unblockCompany()">Desbloquear</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="drawer-footer">
+      <button class="btn-secondary" onclick="closeDrawer()">Cancelar</button>
+      <button class="btn-primary" onclick="saveCompany()">Salvar alterações</button>
+    </div>
+  </div>
+  <div id="toast"></div>
 
   <script>
     // data no hero
