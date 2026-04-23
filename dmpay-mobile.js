@@ -44,6 +44,7 @@
 
     /* focus visible base — sem outline:none global */
     ':focus-visible{outline:2px solid var(--accent,#7C3AED);outline-offset:2px;}',
+    '.icon-btn:focus-visible{outline:2px solid var(--accent,#7C3AED);outline-offset:2px;border-radius:8px;}',
     '.dmp-btn:focus-visible,.dmp-field input:focus-visible,.dmp-field select:focus-visible,.dmp-field textarea:focus-visible{outline:none;}',
 
     /* touch targets 44px em tablet e mobile */

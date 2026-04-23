@@ -17,7 +17,7 @@
 :root[data-theme="dark"] {
   --bg-base:#0A0B0D; --bg-surface:#111316; --bg-elevated:#17191D; --bg-hover:#1C1E23;
   --border:#22252B; --border-strong:#2E3138;
-  --text-primary:#F5F7FA; --text-secondary:#B1B8C2; --text-muted:#6B7280;
+  --text-primary:#F5F7FA; --text-secondary:#B1B8C2; --text-muted:#9CA3AF;
   --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.14);
   --success:#22C55E; --success-soft:rgba(34,197,94,.14);
   --warning:#F59E0B; --warning-soft:rgba(245,158,11,.14);
@@ -385,7 +385,8 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
           <div class="toolbar-right">
             <div class="input-with-icon" style="width:240px">
               <i data-lucide="search" class="icon"></i>
-              <input class="input" placeholder="Buscar fornecedor ou NF">
+              <label class="sr-only" for="busca-cp">Buscar fornecedor ou NF</label>
+              <input id="busca-cp" class="input" placeholder="Buscar fornecedor ou NF">
             </div>
             <button class="btn btn-secondary btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="filter" class="icon"></i>Filtros</button>
           </div>
@@ -395,7 +396,7 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
           <table class="dm">
             <thead>
               <tr>
-                <th style="width:28px"><span class="check" id="selAll" aria-label="Selecionar todos"></span></th>
+                <th style="width:28px"><span class="check" id="selAll" role="checkbox" aria-checked="false" aria-label="Selecionar todos" tabindex="0"></span></th>
                 <th class="sortable">Fornecedor <i data-lucide="chevrons-up-down" class="sort-icon"></i></th>
                 <th class="sortable">NF <i data-lucide="chevrons-up-down" class="sort-icon"></i></th>
                 <th class="sortable">Emissão <i data-lucide="chevrons-up-down" class="sort-icon"></i></th>

@@ -167,7 +167,7 @@
       const cat = p.expense_categories?.name || '—';
       return `
         <tr data-id="${p.id}" onclick="DMPAY_CP.openDrawer('${p.id}')">
-          <td><span class="check" data-row="${p.id}" onclick="event.stopPropagation()"></span></td>
+          <td><span class="check" role="checkbox" aria-checked="false" tabindex="0" data-row="${p.id}" onclick="event.stopPropagation()"></span></td>
           <td><div class="supplier"><span class="supplier-avatar tone-${tone(sup)}">${iniciais(sup)}</span><span class="supplier-name">${supShort}</span></div></td>
           <td><span class="nf-badge">${p.invoices?.nf_number || (p.description?.match(/^NF\s+(\S+)/i)?.[1]) || '—'}</span></td>
           <td class="date">${brDate(p.created_at)}</td>
