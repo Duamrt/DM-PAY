@@ -238,7 +238,7 @@
   // ==================== MODAL NOVA CONTA ====================
   async function openCreate(prefill) {
     const suppliers = await loadSuppliers();
-    const supOptions = suppliers.map(s => `<option value="${s.id}">${s.legal_name} ${s.cnpj?'· '+s.cnpj:''}</option>`).join('');
+    const supOptions = suppliers.map(s => `<option value="${esc(s.id)}">${esc(s.legal_name)} ${s.cnpj?'· '+esc(s.cnpj):''}</option>`).join('');
     const html = `
       <div class="dmp-modal-back" onclick="DMPAY_CP.closeCreate()">
         <div class="dmp-modal" onclick="event.stopPropagation()" style="max-width:520px">
@@ -565,13 +565,18 @@
   // Alias global pra ESC e overlay onclick do HTML
   window.closeDrawer = closeDrawer;
 
-  // Aguarda guard terminar
-  if (window.DMPAY_COMPANY) init();
-  else window.addEventListener('dmpay-sb-ready', () => setTimeout(init, 100));
-  // Também reage quando profile carrega
-  let tries = 0;
-  const wait = setInterval(() => {
-    if (window.DMPAY_COMPANY || tries++ > 50) { clearInterval(wait); init(); }
+  // Aguarda guard terminar — guard único evita dupla execução
+  let _initDone = false;
+  function _tryInit() {
+    if (_initDone || !window.DMPAY_COMPANY) return;
+    _initDone = true;
+    init();
+  }
+  window.addEventListener('dmpay-sb-ready', _tryInit);
+  let _tries = 0;
+  const _wait = setInterval(() => {
+    _tryInit();
+    if (_initDone || _tries++ > 50) clearInterval(_wait);
   }, 100);
 })();
 

@@ -34,3 +34,14 @@ window.DMPAY_CONFIG = {
     window.dispatchEvent(new CustomEvent('dmpay-sb-ready'));
   }
 })();
+
+// ── Escape HTML para evitar XSS em innerHTML com dados do banco ──────────
+window.esc = function(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};

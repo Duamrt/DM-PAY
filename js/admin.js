@@ -219,13 +219,23 @@ function unblockCompany() {
 async function deleteCompany() {
   if (!_drawerCompany) return;
   const nome = _drawerCompany.trade_name || _drawerCompany.legal_name;
-  const confirm1 = window.confirm(`Excluir "${nome}" permanentemente?\n\nTodos os dados serão deletados. Isso não pode ser desfeito.`);
+  const confirm1 = await DMPAY_UI.confirm({
+    title: `Excluir "${nome}"?`,
+    desc: 'Todos os dados serão deletados permanentemente. Isso não pode ser desfeito.',
+    danger: true, okLabel: 'Sim, excluir', cancelLabel: 'Cancelar'
+  });
   if (!confirm1) return;
-  const senha = window.prompt(`Digite a senha master para confirmar:`);
-  if (senha !== 'duanxdzin20*') {
-    showToast('Senha incorreta — exclusão cancelada', true);
-    return;
-  }
+  const confirm2 = await DMPAY_UI.confirm({
+    title: 'Confirmar exclusão definitiva',
+    desc: `Digite "excluir ${nome}" no campo abaixo para confirmar.`,
+    danger: true, okLabel: 'Excluir para sempre', cancelLabel: 'Cancelar',
+    fields: [{ key: 'confirmacao', label: 'Confirmação', placeholder: `excluir ${nome}` }],
+    onSubmit: (v) => {
+      if (v.confirmacao.toLowerCase() !== `excluir ${nome.toLowerCase()}`)
+        throw new Error('Texto não confere — exclusão cancelada');
+    }
+  });
+  if (!confirm2) return;
   const { error } = await sb.from('companies').delete().eq('id', _drawerCompany.id);
   if (error) { showToast('Erro ao excluir: ' + error.message, true); return; }
   showToast('✓ Empresa excluída');

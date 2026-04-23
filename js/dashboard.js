@@ -34,7 +34,7 @@
     if (heroP) {
       const dia = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
       const planoTxt = isPlatformAdmin ? '🛡 visão global · todos os tenants' : (company.plan === 'trial' ? `trial até ${new Date(company.trial_until).toLocaleDateString('pt-BR')}` : 'plano ' + company.plan);
-      heroP.innerHTML = `<span class="dot-success"></span> <b>${dia}</b> · <b>${empresaNome}</b> · ${planoTxt}`;
+      heroP.innerHTML = `<span class="dot-success"></span> <b>${dia}</b> · <b>${esc(empresaNome)}</b> · ${esc(planoTxt)}`;
     }
 
     // === DADOS DO BANCO ===
@@ -146,7 +146,7 @@
     if (deltas[0]) deltas[0].innerHTML = `<a href="#" onclick="DMPAY_DASH.editSaldo();return false" style="color:var(--accent);font-size:11.5px;text-decoration:none">editar saldo inicial</a>`;
     if (deltas[1]) {
       if (formaTop) {
-        deltas[1].innerHTML = `<b>${formaTop[0]}</b> liderou (${fmtBRL(formaTop[1])}) · semana <b>${fmtBRL(vendeuSemana)}</b>`;
+        deltas[1].innerHTML = `<b>${esc(formaTop[0])}</b> liderou (${fmtBRL(formaTop[1])}) · semana <b>${fmtBRL(vendeuSemana)}</b>`;
       } else {
         deltas[1].innerHTML = `sem vendas ontem · semana <b>${fmtBRL(vendeuSemana)}</b>`;
       }
