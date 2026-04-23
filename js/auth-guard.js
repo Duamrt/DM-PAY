@@ -98,7 +98,7 @@
   `;
   document.body.appendChild(menu);
 
-  // Wire avatares
+  // Wire avatares (topbar)
   document.querySelectorAll('.avatar').forEach(function(el) {
     if (!el.dataset.fixed) el.textContent = initials;
     el.style.cursor = 'pointer';
@@ -108,6 +108,22 @@
       menu.classList.toggle('open');
     };
   });
+
+  // Popula user-card da sidebar (contas-a-pagar e páginas similares)
+  var _uc = document.getElementById('user-card');
+  if (_uc) {
+    var _ucName = _uc.querySelector('.name');
+    var _ucEmail = _uc.querySelector('.email');
+    var _ucAvatar = _uc.querySelector('.user-avatar');
+    if (_ucName) _ucName.textContent = session.profile.name || session.user.email;
+    if (_ucEmail) _ucEmail.textContent = session.user.email;
+    if (_ucAvatar) {
+      _ucAvatar.textContent = initials;
+      _ucAvatar.style.cursor = 'pointer';
+      _ucAvatar.title = 'Menu do usuário';
+      _ucAvatar.onclick = function(e) { e.stopPropagation(); menu.classList.toggle('open'); };
+    }
+  }
 
   // Fecha ao clicar fora
   document.addEventListener('click', function(e) {
