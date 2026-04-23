@@ -116,37 +116,6 @@
     }
   });
 
-  // ── SIDEBAR COLLAPSE TOGGLE ──────────────────────────────────────────
-  (function() {
-    // CSS para estado colapsado
-    const sidebarCss = document.createElement('style');
-    sidebarCss.textContent = `
-      body.sb-collapsed { grid-template-columns: 0px 1fr !important; }
-      body.sb-collapsed .sidebar { overflow: hidden; min-width: 0; padding: 0; border-right: none; }
-      #dmp-sb-toggle { position:fixed; top:14px; left:14px; z-index:500; width:28px; height:28px; border-radius:6px; border:1px solid var(--border,#374151); background:var(--bg-soft,#1a1d24); color:var(--text-muted,#9ca3af); cursor:pointer; display:grid; place-items:center; transition:.15s; font-size:0; padding:0; }
-      #dmp-sb-toggle:hover { background:var(--bg-hover,#23272f); color:var(--text,#fff); }
-      body.sb-collapsed #dmp-sb-toggle { left:8px; background:var(--bg-card,#161b28); border-color:var(--accent,#7C3AED); color:var(--accent,#7C3AED); }
-      @media(max-width:600px){ #dmp-sb-toggle { display:none; } }
-    `;
-    document.head.appendChild(sidebarCss);
-
-    // Restaura estado salvo
-    if (localStorage.getItem('dmpay-sb-collapsed') === '1') {
-      document.body.classList.add('sb-collapsed');
-    }
-
-    // Botão toggle — injeta no body após DOMContentLoaded (já estamos nele)
-    const btn = document.createElement('button');
-    btn.id = 'dmp-sb-toggle';
-    btn.title = 'Recolher/abrir menu';
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>';
-    btn.onclick = function() {
-      const collapsed = document.body.classList.toggle('sb-collapsed');
-      localStorage.setItem('dmpay-sb-collapsed', collapsed ? '1' : '0');
-    };
-    document.body.appendChild(btn);
-  })();
-
   if (window.lucide) lucide.createIcons();
   html.style.visibility = '';
 })();

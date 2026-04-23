@@ -31,6 +31,7 @@
     .app { grid-template-columns: 1fr !important; }\
     main, .main { padding-bottom: 68px !important; }\
     #dmp-sb-toggle { display: none !important; }\
+    #dmpay-version-badge { bottom: 72px !important; }\
   }\
   #dmp-bottom-nav {\
     display: none;\
