@@ -481,17 +481,29 @@ function renderVendas() {
 
 /* ── RECEBER ── */
 async function loadReceber() {
-  const { data } = await sb.from('receivables')
-    .select('id,amount,due_date,status,customers(name)')
-    .eq('company_id',CID).in('status',['open','overdue']).order('due_date');
-  DATA.receber = data || [];
   const hj = hoje();
-  const aberto = DATA.receber.filter(r=>r.status==='open'&&r.due_date>=hj).reduce((s,r)=>s+Number(r.amount||0),0);
-  const atrasado = DATA.receber.filter(r=>r.status==='overdue'||(r.status==='open'&&r.due_date<hj)).reduce((s,r)=>s+Number(r.amount||0),0);
-  document.getElementById('kvReceber').textContent = fmt(aberto+atrasado);
-  document.getElementById('kvReceberSub').textContent = `${DATA.receber.length} títulos · ${DATA.receber.filter(r=>r.status==='overdue'||r.due_date<hj).length} atrasado(s)`;
-  document.getElementById('srAberto').textContent = fmt(aberto);
-  document.getElementById('srAtrasado').textContent = fmt(atrasado);
+
+  // KPI via RPC — sem limite de 1000 rows
+  const { data: kpi } = await sb.rpc('get_receivables_summary', { p_company_id: CID, p_today: hj });
+  const resumo = kpi && kpi[0] ? kpi[0] : { total_amount:0, total_count:0, overdue_amount:0, overdue_count:0 };
+  document.getElementById('kvReceber').textContent = fmt(Number(resumo.total_amount));
+  document.getElementById('kvReceberSub').textContent = `${resumo.total_count} títulos · ${resumo.overdue_count} atrasado(s)`;
+  document.getElementById('srAberto').textContent = fmt(Number(resumo.total_amount) - Number(resumo.overdue_amount));
+  document.getElementById('srAtrasado').textContent = fmt(Number(resumo.overdue_amount));
+
+  // Lista com paginação completa (lotes de 1000)
+  let todos = [], from = 0;
+  while (true) {
+    const { data: lote } = await sb.from('receivables')
+      .select('id,amount,due_date,status,customers(name)')
+      .eq('company_id', CID).in('status', ['open','overdue'])
+      .order('due_date').range(from, from + 999);
+    if (!lote || lote.length === 0) break;
+    todos = todos.concat(lote);
+    if (lote.length < 1000) break;
+    from += 1000;
+  }
+  DATA.receber = todos;
   filtrarReceber('todos');
 }
 
