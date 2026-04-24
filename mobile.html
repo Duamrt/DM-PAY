@@ -172,6 +172,46 @@ div[style*="monospace"]{display:none!important}
   padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px;
 }
 
+/* CRESCIMENTO YoY */
+.yoy-hero{
+  background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 60%,#2563eb 100%);
+  border-radius:16px;padding:20px;margin-bottom:10px;color:#fff;position:relative;overflow:hidden;
+}
+.yoy-hero::before{
+  content:'';position:absolute;top:-30px;right:-30px;
+  width:120px;height:120px;border-radius:50%;
+  background:rgba(255,255,255,.07);
+}
+.yoy-hero-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.7;margin-bottom:8px}
+.yoy-hero-mes{font-size:13px;font-weight:500;opacity:.85;margin-bottom:4px}
+.yoy-hero-val{font-size:28px;font-weight:800;letter-spacing:-0.03em;line-height:1}
+.yoy-hero-pct{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:10px;padding:5px 12px;border-radius:999px;
+  font-size:15px;font-weight:800;letter-spacing:-0.01em;
+}
+.yoy-hero-pct.up{background:rgba(16,185,129,.25);color:#6ee7b7}
+.yoy-hero-pct.down{background:rgba(239,68,68,.25);color:#fca5a5}
+.yoy-hero-vs{font-size:11px;opacity:.6;margin-top:6px}
+
+.yoy-trend-card{
+  background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:16px;padding:16px;margin-bottom:10px;
+}
+.yoy-trend-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px}
+.yoy-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.yoy-bar-label{font-size:11px;font-weight:600;color:var(--text-secondary);width:26px;flex-shrink:0}
+.yoy-bar-track{flex:1;height:6px;background:var(--bg-elevated);border-radius:999px;overflow:hidden}
+.yoy-bar-fill{height:100%;border-radius:999px;transition:width .4s ease}
+.yoy-bar-val{font-size:11px;font-weight:700;color:var(--text-primary);min-width:44px;text-align:right}
+.yoy-bar-pct{font-size:10px;font-weight:600;min-width:40px;text-align:right}
+.yoy-proj-row{
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.yoy-proj-label{font-size:11px;color:var(--text-muted)}
+.yoy-proj-val{font-size:16px;font-weight:800;color:var(--accent);letter-spacing:-0.02em}
+
 /* CHIPS FILTRO */
 .filter-chips{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
 .filter-chips::-webkit-scrollbar{display:none}
@@ -227,6 +267,24 @@ div[style*="monospace"]{display:none!important}
       <div class="kpi-label">Recebido (faturado) — mês atual</div>
       <div class="kpi-value c-success num" id="kvRecebido">—</div>
       <div class="kpi-sub" id="kvRecebidoSub">carregando…</div>
+    </div>
+  </div>
+
+  <div class="section-title">📈 Crescimento</div>
+  <div class="yoy-hero" id="yoyHero">
+    <div class="yoy-hero-label">Este mês vs mesmo mês do ano passado</div>
+    <div class="yoy-hero-mes" id="yoyHeroMes">—</div>
+    <div class="yoy-hero-val" id="yoyHeroVal">—</div>
+    <div class="yoy-hero-pct" id="yoyHeroPct">—</div>
+    <div class="yoy-hero-vs" id="yoyHeroVs">carregando…</div>
+  </div>
+
+  <div class="yoy-trend-card">
+    <div class="yoy-trend-title">Últimos meses — comparativo anual</div>
+    <div id="yoyBars"><div style="color:var(--text-muted);font-size:12px">carregando…</div></div>
+    <div class="yoy-proj-row">
+      <div class="yoy-proj-label">🔮 Projeção 2027</div>
+      <div class="yoy-proj-val" id="yoyProjVal">—</div>
     </div>
   </div>
 </div>
@@ -340,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => document.querySelectorAll('body > div').forEach(d => { if(d.style.position==='fixed')d.style.display='none'; }), 500);
 });
 
-waitAuth(() => Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado()]));
+waitAuth(() => Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado(), loadYoY()]));
 
 /* ── VENDAS ── */
 async function loadVendas() {
@@ -494,6 +552,78 @@ async function loadFiado() {
   if(els) els.textContent = DATA.fiado.length === 0
     ? 'Nenhum cliente quitou fiado hoje'
     : `${DATA.fiado.length} cliente${DATA.fiado.length>1?'s':''} quitaram hoje`;
+}
+
+/* ── YoY CRESCIMENTO ── */
+async function loadYoY() {
+  const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const MESES_LONG = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const fmtK = v => { const n=Number(v||0); if(n>=1000000) return 'R$'+(n/1000000).toFixed(1).replace('.',',')+'M'; if(n>=1000) return 'R$'+Math.round(n/1000)+'k'; return 'R$'+Math.round(n); };
+
+  const { data } = await sb.rpc('get_yoy_sales', { p_company_id: CID });
+  if (!data || !data.length) return;
+
+  const mat = {};
+  for (const r of data) {
+    if (!mat[r.ano]) mat[r.ano] = {};
+    mat[r.ano][r.mes] = Number(r.total);
+  }
+
+  const anoAtual = new Date().getFullYear();
+  const mesAtual = new Date().getMonth() + 1;
+
+  // ── Hero: este mês vs ano passado ──
+  const vAtual   = mat[anoAtual]?.[mesAtual];
+  const vAnterior = mat[anoAtual - 1]?.[mesAtual];
+  if (vAtual && vAnterior) {
+    const pct = ((vAtual - vAnterior) / vAnterior) * 100;
+    const up = pct >= 0;
+    document.getElementById('yoyHeroMes').textContent = MESES_LONG[mesAtual-1] + ' ' + anoAtual;
+    document.getElementById('yoyHeroVal').textContent = fmtK(vAtual);
+    const pctEl = document.getElementById('yoyHeroPct');
+    pctEl.textContent = (up ? '▲ +' : '▼ ') + pct.toFixed(1).replace('.',',') + '%';
+    pctEl.className = 'yoy-hero-pct ' + (up ? 'up' : 'down');
+    document.getElementById('yoyHeroVs').textContent = MESES_LONG[mesAtual-1] + '/' + (anoAtual-1) + ' era ' + fmtK(vAnterior);
+  }
+
+  // ── Barras: últimos 4 meses ──
+  const meses4 = [];
+  for (let i = 3; i >= 0; i--) {
+    let m = mesAtual - i; let a = anoAtual;
+    if (m <= 0) { m += 12; a -= 1; }
+    meses4.push({ mes: m, ano: a });
+  }
+  const maxVal = Math.max(...meses4.map(x => mat[x.ano]?.[x.mes] || 0));
+  let barsHtml = '';
+  for (const { mes, ano } of meses4) {
+    const v = mat[ano]?.[mes] || 0;
+    const vPrev = mat[ano-1]?.[mes];
+    const pct = vPrev ? ((v - vPrev) / vPrev * 100) : null;
+    const w = maxVal > 0 ? Math.round(v / maxVal * 100) : 0;
+    const color = !pct ? '#64748B' : pct >= 0 ? '#10B981' : '#EF4444';
+    const pctStr = pct !== null ? `<span class="yoy-bar-pct" style="color:${color}">${pct>=0?'+':''}${pct.toFixed(1).replace('.',',')}%</span>` : '<span class="yoy-bar-pct" style="color:var(--text-muted)">—</span>';
+    barsHtml += `<div class="yoy-bar-row">
+      <div class="yoy-bar-label">${MESES[mes-1]}</div>
+      <div class="yoy-bar-track"><div class="yoy-bar-fill" style="width:${w}%;background:${color}"></div></div>
+      <div class="yoy-bar-val">${fmtK(v)}</div>
+      ${pctStr}
+    </div>`;
+  }
+  document.getElementById('yoyBars').innerHTML = barsHtml;
+
+  // ── Projeção 2027 ──
+  let total2027 = 0;
+  for (let m = 1; m <= 12; m++) {
+    const crescs = [2024,2025,anoAtual].map(a => {
+      const va = mat[a]?.[m], vp = mat[a-1]?.[m];
+      return va && vp ? (va-vp)/vp*100 : null;
+    }).filter(x => x !== null);
+    if (!crescs.length) continue;
+    const mediaG = crescs.reduce((a,b)=>a+b,0)/crescs.length;
+    const base = mat[anoAtual]?.[m] || mat[anoAtual-1]?.[m];
+    if (base) total2027 += base * (1 + mediaG/100);
+  }
+  if (total2027 > 0) document.getElementById('yoyProjVal').textContent = '~' + fmtK(total2027);
 }
 
 let filtroReceber = 'todos';
