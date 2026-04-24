@@ -211,34 +211,47 @@
     .phone-scene:hover .phone-wrap { animation: none; }
 
     .phone-frame {
-      width: 260px;
-      background: linear-gradient(160deg, #22273a 0%, #0d1018 60%, #080b12 100%);
-      border-radius: 50px;
-      padding: 16px 10px 14px;
-      border: 1.5px solid rgba(255,255,255,.14);
+      width: 268px;
+      background: linear-gradient(170deg, #3a4060 0%, #252b3d 8%, #141820 30%, #0a0d14 100%);
+      border-radius: 52px;
+      padding: 18px 12px 16px;
+      border: 2px solid rgba(255,255,255,.22);
       box-shadow:
-        0 0 0 1px rgba(0,0,0,.7),
-        0 70px 140px rgba(0,0,0,.9),
-        0 24px 50px rgba(37,99,235,.18),
-        inset 0 1px 0 rgba(255,255,255,.08),
-        inset 1px 0 0 rgba(255,255,255,.04);
+        0 0 0 1px rgba(0,0,0,.9),
+        0 80px 160px rgba(0,0,0,.95),
+        0 30px 70px rgba(37,99,235,.22),
+        inset 0 2px 0 rgba(255,255,255,.14),
+        inset 0 -1px 0 rgba(255,255,255,.04),
+        inset 2px 0 0 rgba(255,255,255,.07),
+        inset -1px 0 0 rgba(0,0,0,.4);
       position: relative;
     }
-    /* botões laterais */
-    .phone-frame::before {
-      content: '';
-      position: absolute; left: -3px; top: 110px;
-      width: 3px; height: 56px;
-      background: linear-gradient(to bottom, #1e2430 0%, #2a3048 50%, #1e2430 100%);
-      border-radius: 3px 0 0 3px;
-      box-shadow: 0 -28px 0 0 #1e2430, 0 -36px 0 0 #1e2430;
+    /* reflexo metálico lateral esquerdo */
+    .phone-frame .phone-shine {
+      position: absolute; top: 60px; left: 0; bottom: 60px; width: 3px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,.18) 30%, rgba(255,255,255,.28) 50%, rgba(255,255,255,.18) 70%, transparent);
+      border-radius: 0 2px 2px 0;
     }
+    /* botão power */
     .phone-frame::after {
       content: '';
-      position: absolute; right: -3px; top: 140px;
-      width: 3px; height: 44px;
-      background: linear-gradient(to bottom, #1e2430 0%, #2a3048 50%, #1e2430 100%);
-      border-radius: 0 3px 3px 0;
+      position: absolute; right: -4px; top: 150px;
+      width: 4px; height: 48px;
+      background: linear-gradient(to bottom, #2a303e, #363d52 30%, #2a303e 70%, #1e2330);
+      border-radius: 0 4px 4px 0;
+      border: 1px solid rgba(255,255,255,.12);
+      border-left: none;
+    }
+    /* botões volume */
+    .phone-frame::before {
+      content: '';
+      position: absolute; left: -4px; top: 110px;
+      width: 4px; height: 36px;
+      background: linear-gradient(to bottom, #2a303e, #363d52 30%, #2a303e 70%, #1e2330);
+      border-radius: 4px 0 0 4px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-right: none;
+      box-shadow: 0 50px 0 0 #2a303e, 0 50px 0 2px rgba(255,255,255,.08), 0 86px 0 0 #2a303e, 0 86px 0 2px rgba(255,255,255,.08);
     }
 
     /* Dynamic Island */
@@ -591,85 +604,124 @@
     .yoy-author-name { font-size: 13px; font-weight: 700; color: var(--td); }
     .yoy-author-role { font-size: 11px; color: var(--td3); }
 
-    /* tablet 3D */
+    /* tablet 3D portrait */
     .tablet-scene { perspective: 1400px; display: flex; justify-content: center; align-items: center; }
     .tablet-wrap {
-      transform: perspective(1400px) rotateY(-14deg) rotateX(4deg);
+      transform: perspective(1400px) rotateY(-10deg) rotateX(3deg);
       animation: tabletFloat 7s ease-in-out infinite;
       will-change: transform;
     }
     @keyframes tabletFloat {
-      0%,100% { transform: perspective(1400px) rotateY(-14deg) rotateX(4deg) translateY(0); }
-      50%      { transform: perspective(1400px) rotateY(-14deg) rotateX(4deg) translateY(-10px); }
+      0%,100% { transform: perspective(1400px) rotateY(-10deg) rotateX(3deg) translateY(0); }
+      50%      { transform: perspective(1400px) rotateY(-10deg) rotateX(3deg) translateY(-10px); }
     }
     .tablet-frame {
-      width: 600px;
-      background: linear-gradient(160deg, #1e2334 0%, #0c1018 100%);
+      width: 400px;
+      background: linear-gradient(170deg, #2e3448 0%, #1a1f2e 10%, #0c1018 60%, #080b12 100%);
       border-radius: 28px;
-      padding: 14px;
-      border: 1.5px solid rgba(255,255,255,.12);
+      padding: 12px 10px;
+      border: 2px solid rgba(255,255,255,.2);
       box-shadow:
-        0 0 0 1px rgba(0,0,0,.6),
-        0 80px 160px rgba(0,0,0,.95),
-        0 30px 60px rgba(37,99,235,.2),
-        inset 0 1px 0 rgba(255,255,255,.07);
+        0 0 0 1px rgba(0,0,0,.8),
+        0 90px 180px rgba(0,0,0,.95),
+        0 40px 80px rgba(37,99,235,.22),
+        inset 0 2px 0 rgba(255,255,255,.12),
+        inset 2px 0 0 rgba(255,255,255,.06);
       position: relative;
     }
-    .tablet-camera {
+    /* câmera portrait — topo centro */
+    .tablet-frame .tab-cam {
       width: 8px; height: 8px; border-radius: 50%;
-      background: #0e1118; border: 1px solid rgba(255,255,255,.08);
-      position: absolute; top: 50%; right: -1px; transform: translateY(-50%);
+      background: #0e1118; border: 1px solid rgba(255,255,255,.1);
+      margin: 0 auto 6px;
+    }
+    /* botão lateral direito */
+    .tablet-frame::after {
+      content: '';
+      position: absolute; right: -4px; top: 50%; transform: translateY(-50%);
+      width: 4px; height: 40px;
+      background: linear-gradient(to bottom, #2a303e, #363d52 40%, #2a303e);
+      border-radius: 0 4px 4px 0;
+      border: 1px solid rgba(255,255,255,.1); border-left: none;
     }
     .tablet-screen {
-      background: var(--dark2);
+      background: #0a0c12;
       border-radius: 18px;
       overflow: hidden;
-      height: 390px;
+      height: 556px;
     }
 
-    /* conteúdo da tela do tablet */
-    .tab-topbar {
-      background: linear-gradient(135deg, var(--blue) 0%, var(--blue3) 100%);
-      padding: 14px 20px 16px;
+    /* ── mockup do sistema dentro do tablet ── */
+    .tsys { display: flex; flex-direction: column; height: 100%; font-family: 'Geist', sans-serif; }
+
+    /* topbar do sistema */
+    .tsys-top {
+      height: 38px; background: #0d1018; border-bottom: 1px solid #1a1f2c;
       display: flex; align-items: center; justify-content: space-between;
+      padding: 0 12px; flex-shrink: 0;
     }
-    .tab-logo { display: flex; align-items: center; gap: 7px; }
-    .tab-logo-mark { width: 22px; height: 22px; border-radius: 5px; background: rgba(255,255,255,.2); display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; }
-    .tab-logo-name { font-size: 13px; font-weight: 700; color: #fff; }
-    .tab-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.9); }
-    .tab-period { font-size: 11px; color: rgba(255,255,255,.6); background: rgba(255,255,255,.12); padding: 3px 10px; border-radius: 20px; }
+    .tsys-brand { display: flex; align-items: center; gap: 6px; }
+    .tsys-logo { width: 20px; height: 20px; border-radius: 5px; background: linear-gradient(135deg,#2563EB,#4338CA); display: grid; place-items: center; font-size: 9px; font-weight: 800; color: #fff; }
+    .tsys-name { font-size: 11px; font-weight: 700; color: var(--td); }
+    .tsys-right { display: flex; align-items: center; gap: 8px; }
+    .tsys-company { font-size: 9px; color: var(--td3); }
+    .tsys-av { width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg,#2563EB,#4338CA); display: grid; place-items: center; font-size: 8px; font-weight: 700; color: #fff; }
 
-    .tab-body { padding: 18px 20px; }
+    /* corpo: sidebar + main */
+    .tsys-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* sidebar */
+    .tsys-side {
+      width: 110px; flex-shrink: 0;
+      background: #0d1018; border-right: 1px solid #1a1f2c;
+      padding: 12px 0;
+    }
+    .tsys-nav-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 12px; cursor: default;
+      font-size: 9.5px; font-weight: 500; color: var(--td3);
+      border-radius: 0;
+      transition: background .1s;
+    }
+    .tsys-nav-item.active { color: var(--blue); background: rgba(37,99,235,.1); border-right: 2px solid var(--blue); }
+    .tsys-nav-icon { width: 14px; height: 14px; flex-shrink: 0; opacity: .7; }
+    .tsys-nav-item.active .tsys-nav-icon { opacity: 1; }
+    .tsys-nav-sep { height: 1px; background: #1a1f2c; margin: 8px 12px; }
+
+    /* main content */
+    .tsys-main { flex: 1; padding: 12px; overflow: hidden; background: #080b12; }
+    .tsys-page-title { font-size: 13px; font-weight: 800; color: var(--td); letter-spacing: -.03em; margin-bottom: 10px; }
 
     /* kpi row */
-    .tab-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
-    .tab-kpi { background: var(--dark3); border: 1px solid var(--bd); border-radius: 8px; padding: 10px 12px; }
-    .tab-kpi-l { font-size: 9px; font-weight: 700; color: var(--td3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
-    .tab-kpi-v { font-size: 17px; font-weight: 800; color: var(--td); letter-spacing: -.5px; }
-    .tab-kpi-d { font-size: 9px; color: var(--ok); margin-top: 2px; }
+    .tsys-kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 10px; }
+    .tsys-kpi { background: #0d1018; border: 1px solid #1a1f2c; border-radius: 8px; padding: 8px 10px; }
+    .tsys-kpi-l { font-size: 7.5px; font-weight: 700; color: var(--td3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+    .tsys-kpi-v { font-size: 14px; font-weight: 800; color: var(--td); letter-spacing: -.5px; }
+    .tsys-kpi-d { font-size: 7.5px; margin-top: 2px; }
+    .tsys-kpi-d.ok { color: var(--ok); }
+    .tsys-kpi-d.warn { color: var(--warn); }
+    .tsys-kpi-d.danger { color: var(--danger); }
 
-    /* chart area */
-    .tab-chart-label { font-size: 10px; font-weight: 700; color: var(--td3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 12px; }
-    .tab-bars-wrap { display: flex; align-items: flex-end; gap: 8px; height: 130px; }
-    .tab-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-    .tab-bar-outer { flex: 1; width: 100%; display: flex; align-items: flex-end; }
-    .tab-bar {
-      width: 100%; border-radius: 5px 5px 0 0;
-      position: relative; overflow: hidden;
-      min-height: 6px;
-    }
-    .tab-bar-fill {
-      position: absolute; inset: 0;
-      background: linear-gradient(to top, var(--blue), #60A5FA);
-    }
-    .tab-bar.proj .tab-bar-fill { background: linear-gradient(to top, rgba(37,99,235,.35), rgba(96,165,250,.35)); }
-    .tab-bar-val { font-family: var(--mono); font-size: 8px; font-weight: 700; color: rgba(255,255,255,.7); margin-bottom: 2px; white-space: nowrap; }
-    .tab-bar-yr { font-size: 9px; color: var(--td3); font-weight: 600; }
-    .tab-proj-badge {
-      font-size: 8px; font-weight: 700; color: var(--blue);
-      background: var(--blueSoft); border: 1px solid var(--blueBorder);
-      padding: 2px 6px; border-radius: 4px;
-    }
+    /* gráfico YoY dentro do sistema */
+    .tsys-chart-card { background: #0d1018; border: 1px solid #1a1f2c; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .tsys-chart-title { font-size: 8.5px; font-weight: 700; color: var(--td3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .tsys-bars { display: flex; align-items: flex-end; gap: 5px; height: 90px; }
+    .tsys-col { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+    .tsys-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+    .tsys-bar { width: 100%; border-radius: 3px 3px 0 0; background: linear-gradient(to top, #2563EB, #60A5FA); min-height: 4px; }
+    .tsys-bar.proj { background: linear-gradient(to top, rgba(37,99,235,.3), rgba(96,165,250,.3)); border: 1px dashed rgba(96,165,250,.4); border-bottom: none; }
+    .tsys-bar-v { font-family: var(--mono); font-size: 6.5px; color: rgba(255,255,255,.55); }
+    .tsys-bar-y { font-size: 7px; color: var(--td3); font-weight: 600; }
+
+    /* lista recente */
+    .tsys-list-title { font-size: 8.5px; font-weight: 700; color: var(--td3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .tsys-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #1a1f2c; }
+    .tsys-row:last-child { border-bottom: none; }
+    .tsys-row-name { font-size: 8.5px; color: var(--td); font-weight: 500; }
+    .tsys-row-date { font-size: 7.5px; color: var(--td3); }
+    .tsys-row-val { font-family: var(--mono); font-size: 8.5px; font-weight: 700; }
+    .tsys-row-val.ok { color: var(--ok); }
+    .tsys-row-val.danger { color: var(--danger); }
 
     /* ── REVEAL ── */
     .rv { opacity: 0; transform: translateY(20px); transition: opacity .65s ease, transform .65s ease; }
@@ -764,6 +816,7 @@
     <div class="phone-scene">
       <div class="phone-wrap" id="phoneWrap">
         <div class="phone-frame">
+          <div class="phone-shine"></div>
           <div class="dyn-island"></div>
           <div class="phone-status">
             <span class="ps-time">9:41</span>
@@ -987,77 +1040,98 @@
     <div class="tablet-scene rv d1">
       <div class="tablet-wrap" id="tabletWrap">
         <div class="tablet-frame">
-          <div class="tablet-camera"></div>
+          <div class="tab-cam"></div>
           <div class="tablet-screen">
-            <!-- topbar -->
-            <div class="tab-topbar">
-              <div class="tab-logo">
-                <div class="tab-logo-mark">D</div>
-                <span class="tab-logo-name">DM Pay</span>
-              </div>
-              <span class="tab-title">Evolução Anual de Faturamento</span>
-              <span class="tab-period">2021 – 2027</span>
-            </div>
-
-            <div class="tab-body">
-              <!-- kpis -->
-              <div class="tab-kpis">
-                <div class="tab-kpi">
-                  <div class="tab-kpi-l">Faturamento 2026</div>
-                  <div class="tab-kpi-v">R$ 11,8M</div>
-                  <div class="tab-kpi-d">↑ 15,7% vs 2025</div>
+            <div class="tsys">
+              <!-- topbar sistema -->
+              <div class="tsys-top">
+                <div class="tsys-brand">
+                  <div class="tsys-logo">D</div>
+                  <span class="tsys-name">DM Pay</span>
                 </div>
-                <div class="tab-kpi">
-                  <div class="tab-kpi-l">Crescimento 5 anos</div>
-                  <div class="tab-kpi-v">+883%</div>
-                  <div class="tab-kpi-d">↑ desde 2021</div>
-                </div>
-                <div class="tab-kpi">
-                  <div class="tab-kpi-l">Projeção 2027</div>
-                  <div class="tab-kpi-v">R$ 13,7M</div>
-                  <div class="tab-kpi-d" style="color:var(--blue)">→ +16% estimado</div>
+                <div class="tsys-right">
+                  <span class="tsys-company">Mercadinho Liberato</span>
+                  <div class="tsys-av">RL</div>
                 </div>
               </div>
 
-              <!-- chart -->
-              <div class="tab-chart-label">Faturamento anual (R$)</div>
-              <div class="tab-bars-wrap" id="tabBars">
-                <div class="tab-col">
-                  <div class="tab-bar-outer"><div class="tab-bar" style="height:14%"><div class="tab-bar-fill"></div></div></div>
-                  <div class="tab-bar-val">1,2M</div>
-                  <div class="tab-bar-yr">2021</div>
-                </div>
-                <div class="tab-col">
-                  <div class="tab-bar-outer"><div class="tab-bar" style="height:25%"><div class="tab-bar-fill"></div></div></div>
-                  <div class="tab-bar-val">3,1M</div>
-                  <div class="tab-bar-yr">2022</div>
-                </div>
-                <div class="tab-col">
-                  <div class="tab-bar-outer"><div class="tab-bar" style="height:41%"><div class="tab-bar-fill"></div></div></div>
-                  <div class="tab-bar-val">5,4M</div>
-                  <div class="tab-bar-yr">2023</div>
-                </div>
-                <div class="tab-col">
-                  <div class="tab-bar-outer"><div class="tab-bar" style="height:58%"><div class="tab-bar-fill"></div></div></div>
-                  <div class="tab-bar-val">7,7M</div>
-                  <div class="tab-bar-yr">2024</div>
-                </div>
-                <div class="tab-col">
-                  <div class="tab-bar-outer"><div class="tab-bar" style="height:77%"><div class="tab-bar-fill"></div></div></div>
-                  <div class="tab-bar-val">10,2M</div>
-                  <div class="tab-bar-yr">2025</div>
-                </div>
-                <div class="tab-col">
-                  <div class="tab-bar-outer"><div class="tab-bar" style="height:89%"><div class="tab-bar-fill"></div></div></div>
-                  <div class="tab-bar-val">11,8M</div>
-                  <div class="tab-bar-yr">2026</div>
-                </div>
-                <div class="tab-col">
-                  <div class="tab-bar-outer"><div class="tab-bar proj" style="height:100%"><div class="tab-bar-fill"></div></div></div>
-                  <div class="tab-bar-val" style="color:var(--blue)">13,7M</div>
-                  <div class="tab-bar-yr">
-                    <span class="tab-proj-badge">proj.</span>
+              <!-- corpo -->
+              <div class="tsys-body">
+                <!-- sidebar -->
+                <div class="tsys-side">
+                  <div class="tsys-nav-item active">
+                    <svg class="tsys-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
                   </div>
+                  <div class="tsys-nav-item">
+                    <svg class="tsys-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                    Vendas
+                  </div>
+                  <div class="tsys-nav-item">
+                    <svg class="tsys-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Contas a Pagar
+                  </div>
+                  <div class="tsys-nav-item">
+                    <svg class="tsys-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                    NF-e
+                  </div>
+                  <div class="tsys-nav-sep"></div>
+                  <div class="tsys-nav-item">
+                    <svg class="tsys-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    DRE
+                  </div>
+                  <div class="tsys-nav-item">
+                    <svg class="tsys-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                    Fornecedores
+                  </div>
+                </div>
+
+                <!-- main -->
+                <div class="tsys-main">
+                  <div class="tsys-page-title">Dashboard</div>
+
+                  <div class="tsys-kpis">
+                    <div class="tsys-kpi">
+                      <div class="tsys-kpi-l">Saldo Líquido</div>
+                      <div class="tsys-kpi-v">R$ 45.320</div>
+                      <div class="tsys-kpi-d ok">↑ 28,7% vs mês anterior</div>
+                    </div>
+                    <div class="tsys-kpi">
+                      <div class="tsys-kpi-l">A Receber</div>
+                      <div class="tsys-kpi-v">R$ 79k</div>
+                      <div class="tsys-kpi-d ok">47 títulos em aberto</div>
+                    </div>
+                    <div class="tsys-kpi">
+                      <div class="tsys-kpi-l">Em Atraso</div>
+                      <div class="tsys-kpi-v">R$ 2.190</div>
+                      <div class="tsys-kpi-d danger">↑ 8 títulos vencidos</div>
+                    </div>
+                    <div class="tsys-kpi">
+                      <div class="tsys-kpi-l">Vence Amanhã</div>
+                      <div class="tsys-kpi-v">R$ 8.340</div>
+                      <div class="tsys-kpi-d warn">3 fornecedores</div>
+                    </div>
+                  </div>
+
+                  <!-- YoY chart -->
+                  <div class="tsys-chart-card">
+                    <div class="tsys-chart-title">Evolução Anual de Faturamento · 2021–2027</div>
+                    <div class="tsys-bars">
+                      <div class="tsys-col"><div class="tsys-bar-wrap"><div class="tsys-bar" style="height:13%"></div></div><div class="tsys-bar-v">1,2M</div><div class="tsys-bar-y">2021</div></div>
+                      <div class="tsys-col"><div class="tsys-bar-wrap"><div class="tsys-bar" style="height:26%"></div></div><div class="tsys-bar-v">3,1M</div><div class="tsys-bar-y">2022</div></div>
+                      <div class="tsys-col"><div class="tsys-bar-wrap"><div class="tsys-bar" style="height:42%"></div></div><div class="tsys-bar-v">5,4M</div><div class="tsys-bar-y">2023</div></div>
+                      <div class="tsys-col"><div class="tsys-bar-wrap"><div class="tsys-bar" style="height:59%"></div></div><div class="tsys-bar-v">7,7M</div><div class="tsys-bar-y">2024</div></div>
+                      <div class="tsys-col"><div class="tsys-bar-wrap"><div class="tsys-bar" style="height:78%"></div></div><div class="tsys-bar-v">10,2M</div><div class="tsys-bar-y">2025</div></div>
+                      <div class="tsys-col"><div class="tsys-bar-wrap"><div class="tsys-bar" style="height:90%"></div></div><div class="tsys-bar-v">11,8M</div><div class="tsys-bar-y">2026</div></div>
+                      <div class="tsys-col"><div class="tsys-bar-wrap"><div class="tsys-bar proj" style="height:100%"></div></div><div class="tsys-bar-v" style="color:var(--blue)">13,7M</div><div class="tsys-bar-y" style="color:var(--blue)">proj.</div></div>
+                    </div>
+                  </div>
+
+                  <!-- recentes -->
+                  <div class="tsys-list-title">Recebimentos recentes</div>
+                  <div class="tsys-row"><div><div class="tsys-row-name">Supermercado Silva</div><div class="tsys-row-date">Hoje · PIX</div></div><div class="tsys-row-val ok">+R$ 4.200</div></div>
+                  <div class="tsys-row"><div><div class="tsys-row-name">Padaria Bom Pão</div><div class="tsys-row-date">Hoje · Boleto</div></div><div class="tsys-row-val ok">+R$ 1.850</div></div>
+                  <div class="tsys-row"><div><div class="tsys-row-name">NF-e Fornecedor #47</div><div class="tsys-row-date">Ontem · XML</div></div><div class="tsys-row-val danger">−R$ 3.100</div></div>
                 </div>
               </div>
             </div>
@@ -1103,6 +1177,7 @@
   <div class="phone-showcase-visual rv d1">
     <div class="phone-large">
       <div class="phone-frame" style="border-radius:54px;padding:18px 12px 16px;width:300px">
+        <div class="phone-shine"></div>
         <div class="dyn-island" style="width:86px;height:27px"></div>
         <div class="phone-status" style="padding:5px 16px 0">
           <span class="ps-time">9:41</span>
