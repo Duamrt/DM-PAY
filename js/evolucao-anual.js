@@ -30,18 +30,11 @@
     return s;
   }
 
-  function waitReady(fn) {
-    if (window.sb && window.DMPAY_SESSION) return fn();
-    window.addEventListener('dmpay-session-ready', fn, { once: true });
-    window.addEventListener('dmpay-sb-ready', () => {
-      if (window.DMPAY_SESSION) fn();
-    }, { once: true });
-  }
-
-  waitReady(async function () {
-    const session = window.DMPAY_SESSION;
-    if (!session) return;
-    const companyId = session.companyId || session.company_id;
+  async function init() {
+    await DMPAY.ready();
+    const session = await DMPAY.session();
+    if (!session || !session.user) return;
+    const companyId = session.company && session.company.id;
 
     // Busca daily_sales do início de 2021 até hoje
     // Usamos range de datas para garantir o corte correto
@@ -163,7 +156,9 @@
     renderTabela(anos, matriz, proj2027);
 
     lucide.createIcons();
-  });
+  }
+
+  init();
 
   function renderKPIs(melhorMes, piorMes, mediaCrescimento, total2027, total2026) {
     const grid = document.getElementById('kpi-grid');
