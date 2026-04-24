@@ -36,15 +36,9 @@
     if (!session || !session.user) return;
     const companyId = session.company && session.company.id;
 
-    // Busca daily_sales do início de 2021 até hoje
-    // Usamos range de datas para garantir o corte correto
+    // RPC agrega no banco — retorna no máx. 72 linhas (6 anos × 12 meses)
     const { data, error } = await window.sb
-      .from('daily_sales')
-      .select('sale_date, amount, payment_method')
-      .eq('company_id', companyId)
-      .gte('sale_date', '2021-01-01')
-      .order('sale_date', { ascending: true })
-      .limit(50000);
+      .rpc('get_yoy_sales', { p_company_id: companyId });
 
     if (error) {
       console.error('[YoY] erro ao buscar daily_sales:', error);
@@ -53,14 +47,11 @@
       return;
     }
 
-    // Agrega por ano/mês — soma todos os métodos (troco já é negativo, fecha certo)
-    // Exclui apenas 'troco' separado para ter receita bruta limpa
+    // Constrói mapa a partir dos dados pré-agregados
     const mapa = {}; // { '2024-3': 123456.78 }
     for (const row of data) {
-      if (row.payment_method === 'troco') continue; // troco não é receita
-      const [y, m] = row.sale_date.split('-');
-      const key = `${y}-${parseInt(m)}`;
-      mapa[key] = (mapa[key] || 0) + parseFloat(row.amount || 0);
+      const key = `${row.ano}-${row.mes}`;
+      mapa[key] = parseFloat(row.total || 0);
     }
 
     // Descobre anos presentes
