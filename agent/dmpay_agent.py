@@ -332,7 +332,7 @@ def job_customers(cfg, cn, company_id, dry_run):
     return sent
 
 
-def job_receivables(cfg, cn, company_id, days_pgto_window, dry_run, max_history_months=24):
+def job_receivables(cfg, cn, company_id, days_pgto_window, dry_run, max_history_months):
     """
     Sincroniza CONTAS_RECEBER_DADOS (parcelas).
     Estratégia:
@@ -508,6 +508,12 @@ def job_invoices(cfg, cn, company_id, days, dry_run):
             "supplier_id":    supplier_map.get(cnpj),
         })
 
+    # Deduplica por nfe_key — mesma chave pode aparecer duas vezes na janela longa
+    seen = {}
+    for row in payload:
+        seen[row["nfe_key"]] = row
+    payload = list(seen.values())
+
     sent = sb_upsert(cfg, "invoices", payload,
                      on_conflict="company_id,nfe_key", dry_run=dry_run)
     LOG.info("invoices: %d NF-e gravadas", sent)
@@ -523,6 +529,7 @@ def main():
     p.add_argument("--days-sales", type=int, default=7, help="janela em dias pra recalcular daily_sales/withdrawals")
     p.add_argument("--days-receivables", type=int, default=14, help="janela pra capturar pagamentos recentes")
     p.add_argument("--days-invoices", type=int, default=60, help="janela em dias pra buscar NF-e novas")
+    p.add_argument("--max-history-months", type=int, default=24, help="meses de histórico pra receivables (default 24)")
     p.add_argument("--only", choices=["sales", "withdrawals", "customers", "receivables", "invoices"], default=None)
     args = p.parse_args()
 
@@ -544,7 +551,7 @@ def main():
         if args.only in (None, "withdrawals"):
             jobs.append(("withdrawals", lambda: job_cash_withdrawals(cfg, cn, company_id, args.days_sales, args.dry_run)))
         if args.only in (None, "receivables"):
-            jobs.append(("receivables", lambda: job_receivables(cfg, cn, company_id, args.days_receivables, args.dry_run)))
+            jobs.append(("receivables", lambda: job_receivables(cfg, cn, company_id, args.days_receivables, args.dry_run, args.max_history_months)))
         if args.only in (None, "invoices"):
             jobs.append(("invoices", lambda: job_invoices(cfg, cn, company_id, args.days_invoices, args.dry_run)))
 

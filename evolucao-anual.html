@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%232563EB%27/><text x=%2716%27 y=%2722%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2718%27>D</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evolução Anual · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#9CA3AF;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb .sep{opacity:.5}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+
+    main{padding:24px 28px 80px;max-width:1240px}
+
+    .hero{margin-bottom:24px}
+    .hero h1{margin:0 0 6px;font-size:24px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px}
+
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+    @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+    .kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+    .kpi-label{font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .kpi-label svg{width:13px;height:13px}
+    .kpi-value{font-size:22px;font-weight:700;letter-spacing:-.02em;font-family:'Geist',sans-serif}
+    .kpi-sub{font-size:11.5px;color:var(--text-muted);margin-top:4px}
+    .kpi-delta{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:999px;margin-top:6px}
+    .kpi-delta.up{background:var(--success-soft);color:var(--success)}
+    .kpi-delta.down{background:var(--danger-soft);color:var(--danger)}
+
+    /* Gráfico principal */
+    .chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:20px}
+    .chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:14px;flex-wrap:wrap}
+    .chart-title{margin:0 0 4px;font-size:15px;font-weight:600;letter-spacing:-.01em}
+    .chart-sub{font-size:12px;color:var(--text-muted)}
+    .chart-legend{display:flex;gap:14px;font-size:12px;color:var(--text-muted);flex-wrap:wrap;margin-top:8px}
+    .chart-legend span{display:inline-flex;align-items:center;gap:6px}
+    .legend-dot{width:10px;height:10px;border-radius:3px}
+    .legend-dash{width:16px;height:3px;border-radius:2px;border-top:2px dashed}
+    .chart-box{height:340px;position:relative}
+
+    /* Tabela comparativa */
+    .table-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+    .table-head-row{display:flex;padding:12px 18px;background:var(--bg-soft);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;gap:8px}
+    .table-head-row .col-mes{flex:1.2;min-width:80px}
+    .table-head-row .col-ano{flex:1;min-width:90px;text-align:right}
+    .table-row{display:flex;padding:11px 18px;border-bottom:1px solid var(--border);gap:8px;align-items:center;font-size:13px;transition:.12s}
+    .table-row:last-child{border-bottom:none}
+    .table-row:hover{background:var(--bg-hover)}
+    .table-row .col-mes{flex:1.2;min-width:80px;font-weight:500;color:var(--text)}
+    .table-row .col-ano{flex:1;min-width:90px;text-align:right;font-family:'Geist Mono',monospace;font-weight:500;font-size:12.5px}
+    .table-row .col-ano.proj{color:var(--accent);font-style:italic}
+    .delta-pill{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:4px}
+    .delta-pill.up{background:var(--success-soft);color:var(--success)}
+    .delta-pill.down{background:var(--danger-soft);color:var(--danger)}
+
+    .card-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .card-header h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .card-header h3 svg{width:15px;height:15px;color:var(--accent)}
+
+    .projecao-banner{background:var(--accent-soft);border:1px solid var(--accent);border-left-width:4px;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start;font-size:13px}
+    .projecao-banner svg{width:16px;height:16px;color:var(--accent);flex-shrink:0;margin-top:1px}
+    .projecao-banner b{color:var(--accent)}
+
+    .loading{text-align:center;padding:60px;color:var(--text-muted);font-size:13px}
+    .loading svg{width:24px;height:24px;margin-bottom:8px;opacity:.4;display:block;margin:0 auto 8px}
+
+    @media(max-width:860px){
+      body{grid-template-columns:1fr}
+      .sidebar{display:none}
+    }
+  </style>
+  <script src="dmpay-version.js"></script>
+  <script src="dmpay-mobile.js" defer></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/theme.js"></script>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item soon" href="alertas.html"><i data-lucide="bell"></i> Alertas <span class="nav-badge soon-badge">Em breve</span></a>
+    <a class="nav-item soon"><i data-lucide="sparkles"></i> Copiloto <span class="nav-badge soon-badge">Soon</span></a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar</a>
+    <a class="nav-item" href="contas-a-receber.html"><i data-lucide="hand-coins"></i> Contas a receber</a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+    <a class="nav-item active"><i data-lucide="line-chart"></i> Evolução Anual</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="meu-plano.html"><i data-lucide="credit-card"></i> Meu Plano</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb">
+        <a href="dashboard.html" style="color:var(--text-muted);text-decoration:none">Financeiro</a>
+        <span class="sep">/</span>
+        <b>Evolução Anual</b>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <div class="avatar" id="topbar-avatar">—</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>Evolução Anual de Vendas</h1>
+        <p>Comparativo mês a mês entre anos — identifique sazonalidade, meses aquecidos e projete o crescimento para 2027.</p>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card"><div class="loading"><i data-lucide="loader"></i>Carregando...</div></div>
+        <div class="kpi-card"></div>
+        <div class="kpi-card"></div>
+        <div class="kpi-card"></div>
+      </div>
+
+      <!-- Banner projeção -->
+      <div class="projecao-banner" id="projecao-banner" style="display:none">
+        <i data-lucide="trending-up"></i>
+        <div id="projecao-texto"></div>
+      </div>
+
+      <!-- Gráfico YoY -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Vendas por mês — comparativo anual</h3>
+            <div class="chart-sub">Receita líquida (PDV iCommerce) · uma linha por ano · linha tracejada = projeção 2027</div>
+          </div>
+          <div id="chart-legend" class="chart-legend"></div>
+        </div>
+        <div class="chart-box"><canvas id="yoyChart"></canvas></div>
+      </div>
+
+      <!-- Tabela mensal -->
+      <div class="table-card">
+        <div class="card-header">
+          <h3><i data-lucide="table-2"></i> Detalhamento por mês</h3>
+        </div>
+        <div id="table-head" class="table-head-row"></div>
+        <div id="table-body"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    function toggleTheme(){
+      const cur = document.documentElement.getAttribute('data-theme');
+      const next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('dmpay-theme', next);
+    }
+  </script>
+  <script src="js/evolucao-anual.js"></script>
+</body>
+</html>
