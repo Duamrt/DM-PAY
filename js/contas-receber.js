@@ -43,13 +43,20 @@
     const inicioISO = inicioJanela.toISOString().slice(0,10);
     const COMPANY_ID = window.DMPAY_COMPANY.id;
 
-    const [abertasR, recebidasR] = await Promise.all([
+    // Separado em 3 queries paralelas para evitar limite 1000 rows do PostgREST
+    const [overdueR, openR, recebidasR] = await Promise.all([
       sb.from('receivables')
         .select(`*, customers(name, cpf_cnpj)`)
         .eq('company_id', COMPANY_ID)
-        .in('status', ['open','overdue'])
+        .eq('status', 'overdue')
         .order('due_date', { ascending: true })
-        .limit(2000),
+        .limit(1000),
+      sb.from('receivables')
+        .select(`*, customers(name, cpf_cnpj)`)
+        .eq('company_id', COMPANY_ID)
+        .eq('status', 'open')
+        .order('due_date', { ascending: true })
+        .limit(1000),
       sb.from('receivables')
         .select(`*, customers(name, cpf_cnpj)`)
         .eq('company_id', COMPANY_ID)
@@ -58,13 +65,14 @@
         .order('received_at', { ascending: false })
         .limit(1000)
     ]);
-    if (abertasR.error || recebidasR.error) {
-      console.error('CR load error', abertasR.error || recebidasR.error);
+    if (overdueR.error || openR.error || recebidasR.error) {
+      console.error('CR load error', overdueR.error || openR.error || recebidasR.error);
       return;
     }
-    warnIfTruncated(abertasR.data,   2000, 'receivables open');
-    warnIfTruncated(recebidasR.data, 1000, 'receivables received');
-    RECVS = [...(abertasR.data||[]), ...(recebidasR.data||[])];
+    warnIfTruncated(overdueR.data,    1000, 'receivables overdue');
+    warnIfTruncated(openR.data,       1000, 'receivables open');
+    warnIfTruncated(recebidasR.data,  1000, 'receivables received');
+    RECVS = [...(overdueR.data||[]), ...(openR.data||[]), ...(recebidasR.data||[])];
   }
 
   async function loadCustomers(force) {
