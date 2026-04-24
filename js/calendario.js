@@ -80,7 +80,8 @@
       const ehFds = isWk;
       if (isHoje) {
         html += `<span class="cal-day-total" style="font-size:11px;color:var(--accent);font-weight:600">Hoje</span>`;
-      } else if (temAlgo) {
+      }
+      if (temAlgo) {
         html += `<span class="cal-day-total" style="color:var(--danger)">−${fmtBRL(agg.total)}</span>`;
         const atrasado = window.DMPAY_DIAUTIL ? window.DMPAY_DIAUTIL.atrasado(isoOfLocal(dt)) : diffDays(dt.toISOString().slice(0,10)) < 0;
         const dots = Math.min(agg.count, 3);
