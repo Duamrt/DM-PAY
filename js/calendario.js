@@ -85,8 +85,10 @@
         const atrasado = window.DMPAY_DIAUTIL ? window.DMPAY_DIAUTIL.atrasado(isoOfLocal(dt)) : diffDays(dt.toISOString().slice(0,10)) < 0;
         const dots = Math.min(agg.count, 3);
         let chips = '<div class="cal-day-chips">';
+        const allPaid = agg.paid === agg.count;
+        const somePaid = agg.paid > 0 && agg.paid < agg.count;
         for (let i = 0; i < dots; i++) {
-          const cls = agg.paid === agg.count ? 'paid' : (atrasado ? 'late' : 'open');
+          const cls = allPaid ? 'paid' : (somePaid && i < agg.paid ? 'paid' : (atrasado ? 'late' : 'open'));
           chips += `<span class="cal-dot ${cls}"></span>`;
         }
         const cnt = agg.count > 1 ? `${agg.count} boletos` : '1 boleto';

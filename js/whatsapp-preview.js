@@ -56,7 +56,8 @@
       queries.push(
         sb.from('payables').select('amount,description,suppliers(legal_name,trade_name)')
           .eq('company_id',CID).eq('status','paid')
-          .eq('due_date',ontem).limit(50)
+          .gte('paid_at', ontem + 'T00:00:00')
+          .lte('paid_at', ontem + 'T23:59:59.999').limit(50)
       );
     } else queries.push(Promise.resolve({data:[]}));
 
