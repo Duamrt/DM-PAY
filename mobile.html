@@ -684,7 +684,7 @@ function filtrarReceber(f, chipEl) {
     if (at) porCliente[id].atrasado += Number(r.amount||0);
     porCliente[id].titulos.push(r);
   });
-  const clientes = Object.values(porCliente).sort((a,b)=>b.atrasado-a.atrasado||b.total-a.total);
+  const clientes = Object.values(porCliente).sort((a,b)=>b.total-a.total);
   document.getElementById('srLista').innerHTML = clientes.map((c,i)=>{
     const temAtrasado = c.atrasado > 0;
     const titulos = c.titulos.map(r=>{
@@ -708,17 +708,29 @@ function filtrarReceber(f, chipEl) {
 
 /* ── PAGAR ── */
 async function loadPagar() {
-  const { data } = await sb.from('payables')
-    .select('id,amount,due_date,status,description,suppliers(trade_name,legal_name)')
-    .eq('company_id',CID).eq('status','open').order('due_date');
-  DATA.pagar = data || [];
   const hj = hoje();
-  const total = DATA.pagar.reduce((s,r)=>s+Number(r.amount||0),0);
-  const venceHoje = DATA.pagar.filter(r=>r.due_date===hj).reduce((s,r)=>s+Number(r.amount||0),0);
-  document.getElementById('kvPagar').textContent = fmt(total);
-  document.getElementById('kvPagarSub').textContent = `${DATA.pagar.length} títulos em aberto`;
-  document.getElementById('spAberto').textContent = fmt(total);
-  document.getElementById('spHoje').textContent = fmt(venceHoje);
+
+  // KPI via RPC — sem limite de 1000 rows
+  const { data: kpi } = await sb.rpc('get_payables_summary', { p_company_id: CID, p_today: hj });
+  const resumo = kpi && kpi[0] ? kpi[0] : { total_amount:0, total_count:0, vence_hoje_amount:0, vence_hoje_count:0 };
+  document.getElementById('kvPagar').textContent = fmt(Number(resumo.total_amount));
+  document.getElementById('kvPagarSub').textContent = `${resumo.total_count} títulos em aberto`;
+  document.getElementById('spAberto').textContent = fmt(Number(resumo.total_amount));
+  document.getElementById('spHoje').textContent = fmt(Number(resumo.vence_hoje_amount));
+
+  // Lista com paginação completa (lotes de 1000)
+  let todos = [], from = 0;
+  while (true) {
+    const { data: lote } = await sb.from('payables')
+      .select('id,amount,due_date,status,description,suppliers(trade_name,legal_name)')
+      .eq('company_id', CID).eq('status', 'open')
+      .order('due_date').range(from, from + 999);
+    if (!lote || lote.length === 0) break;
+    todos = todos.concat(lote);
+    if (lote.length < 1000) break;
+    from += 1000;
+  }
+  DATA.pagar = todos;
   filtrarPagar('todos');
 }
 
