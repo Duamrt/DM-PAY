@@ -92,9 +92,12 @@
       }
       if (!crescimentos.length) return null;
       const mediaG = crescimentos.reduce((a, b) => a + b, 0) / crescimentos.length;
+      // Usa 2026 como base; se ainda não há dado (meses futuros), usa 2025 como fallback
       const base2026 = matriz[2026]?.[mes];
-      if (!base2026) return null;
-      return base2026 * (1 + mediaG / 100);
+      const base2025 = matriz[2025]?.[mes];
+      const base = base2026 || base2025;
+      if (!base) return null;
+      return base * (1 + mediaG / 100);
     }
 
     const proj2027 = new Array(13).fill(null);
@@ -309,6 +312,22 @@
       html += `<div class="col-ano proj">${vProj ? '~' + fmtK(vProj) : '—'}</div>`;
       html += `</div>`;
     }
+
+    // Linha de totais
+    html += `<div class="table-row table-total">`;
+    html += `<div class="col-mes">TOTAL</div>`;
+    for (const ano of anos) {
+      const tot = Object.values(matriz[ano] || []).reduce((a, b) => a + (b || 0), 0);
+      const totAnt = Object.values(matriz[ano - 1] || []).reduce((a, b) => a + (b || 0), 0);
+      const g = tot > 0 && totAnt > 0 ? ((tot - totAnt) / totAnt) * 100 : null;
+      const gStr = g !== null
+        ? `<span class="delta-pill ${g >= 0 ? 'up' : 'down'}">${pctStr(g)}</span>`
+        : '';
+      html += `<div class="col-ano">${tot > 0 ? fmtK(tot) + gStr : '—'}</div>`;
+    }
+    const totProj = proj2027.slice(1).reduce((a, b) => a + (b || 0), 0);
+    html += `<div class="col-ano proj">${totProj > 0 ? '~' + fmtK(totProj) : '—'}</div>`;
+    html += `</div>`;
 
     body.innerHTML = html;
   }
