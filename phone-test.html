@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html><body style="background:#07080B;display:flex;justify-content:center;padding:60px;font-family:sans-serif">
+
+<div style="position:relative;width:340px;height:660px;overflow:hidden">
+
+  <!-- App content - preenche todo o container -->
+  <div style="position:absolute;inset:0;z-index:1;
+    background:linear-gradient(180deg,#0f1623 0%,#0c1220 100%);
+    overflow:hidden">
+
+    <!-- Status bar -->
+    <div style="height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#0a1019">
+      <span style="color:#94a3b8;font-size:9px">9:41</span>
+      <span style="color:#94a3b8;font-size:9px">DM Pay</span>
+      <span style="color:#94a3b8;font-size:9px">●●●</span>
+    </div>
+
+    <!-- Header -->
+    <div style="padding:14px 18px 10px;background:#0a1019;border-bottom:1px solid rgba(255,255,255,.06)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="color:#94a3b8;font-size:8px;margin-bottom:3px">Bom dia, Reginaldo</div>
+          <div style="color:#fff;font-size:13px;font-weight:700">Mercadinho Liberato</div>
+        </div>
+        <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#4338ca);
+          display:flex;align-items:center;justify-content:center;color:white;font-size:10px;font-weight:700">R</div>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div style="padding:10px 14px;display:flex;gap:8px">
+      <div style="flex:1;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);
+        border-radius:10px;padding:8px 10px">
+        <div style="color:#60a5fa;font-size:7px;margin-bottom:4px">RECEITA HOJE</div>
+        <div style="color:#fff;font-size:13px;font-weight:700">R$4.280</div>
+        <div style="color:#34d399;font-size:7px;margin-top:2px">↑ 12% vs ontem</div>
+      </div>
+      <div style="flex:1;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);
+        border-radius:10px;padding:8px 10px">
+        <div style="color:#34d399;font-size:7px;margin-bottom:4px">SALDO CAIXA</div>
+        <div style="color:#fff;font-size:13px;font-weight:700">R$18.750</div>
+        <div style="color:#94a3b8;font-size:7px;margin-top:2px">Atualizado agora</div>
+      </div>
+    </div>
+
+    <!-- Chart section -->
+    <div style="margin:4px 14px;background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="color:#fff;font-size:9px;font-weight:600">Evolução Anual</div>
+        <div style="color:#60a5fa;font-size:7px">2021–2026</div>
+      </div>
+      <!-- Mini bar chart -->
+      <div style="display:flex;align-items:flex-end;gap:6px;height:60px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:100%;background:#1e3a5f;border-radius:3px 3px 0 0;height:22px"></div>
+          <div style="color:#64748b;font-size:6px">21</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:100%;background:#1e4a7f;border-radius:3px 3px 0 0;height:30px"></div>
+          <div style="color:#64748b;font-size:6px">22</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:100%;background:#1d5ba0;border-radius:3px 3px 0 0;height:38px"></div>
+          <div style="color:#64748b;font-size:6px">23</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:100%;background:#2563eb;border-radius:3px 3px 0 0;height:46px"></div>
+          <div style="color:#94a3b8;font-size:6px">24</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:100%;background:#3b82f6;border-radius:3px 3px 0 0;height:52px"></div>
+          <div style="color:#94a3b8;font-size:6px">25</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:100%;background:linear-gradient(to top,#2563eb,#60a5fa);border-radius:3px 3px 0 0;height:48px"></div>
+          <div style="color:#60a5fa;font-size:6px;font-weight:700">26</div>
+        </div>
+      </div>
+      <div style="margin-top:8px;color:#34d399;font-size:7px;font-weight:600;text-align:center">
+        ↑ 312% crescimento em 5 anos
+      </div>
+    </div>
+
+    <!-- Recent transactions -->
+    <div style="margin:8px 14px">
+      <div style="color:#94a3b8;font-size:7px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Últimas vendas</div>
+      <div style="background:rgba(255,255,255,.04);border-radius:8px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04)">
+          <div>
+            <div style="color:#e2e8f0;font-size:8px">PDV 01 — Caixa 1</div>
+            <div style="color:#64748b;font-size:7px">14:32</div>
+          </div>
+          <div style="color:#34d399;font-size:9px;font-weight:700">+R$142,50</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04)">
+          <div>
+            <div style="color:#e2e8f0;font-size:8px">PDV 02 — Caixa 2</div>
+            <div style="color:#64748b;font-size:7px">14:18</div>
+          </div>
+          <div style="color:#34d399;font-size:9px;font-weight:700">+R$78,00</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px">
+          <div>
+            <div style="color:#e2e8f0;font-size:8px">Fiado — João Silva</div>
+            <div style="color:#64748b;font-size:7px">13:55</div>
+          </div>
+          <div style="color:#f59e0b;font-size:9px;font-weight:700">R$55,00</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SVG phone frame por cima com darken -->
+  <img src="assets/phone-mockup.svg"
+    style="position:absolute;top:50%;left:50%;
+      width:2048px;height:2048px;
+      transform:translate(-50%,-50%) scale(0.22) translate(-5%,-5%);
+      transform-origin:center center;
+      z-index:2;
+      mix-blend-mode:darken;
+      pointer-events:none;
+      filter:drop-shadow(0 40px 80px rgba(0,0,0,.8)) drop-shadow(0 0 40px rgba(37,99,235,.25))">
+</div>
+
+</body></html>
