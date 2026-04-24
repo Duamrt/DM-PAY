@@ -36,19 +36,21 @@
   }
 
   // Fetch paralelo
-  const [companiesR, syncsR, salesR, sensitiveR] = await Promise.all([
+  const [companiesR, syncsR, salesR, sensitiveR, alertsR] = await Promise.all([
     sb.from('companies').select('id,legal_name,trade_name,plan,status,trial_until,city,state,created_at,asaas_customer_id,dias_atraso,bloqueado_em')
       .neq('id', PLATFORM_ID).order('legal_name'),
     sb.from('sync_state').select('company_id,entity,last_sync_at,rows_synced'),
     sb.from('daily_sales').select('company_id,amount').eq('sale_date', todayISO),
     sb.from('audit_log').select('company_id,action,created_at')
-      .in('action', ['delete', 'estorno']).gte('created_at', ago24)
+      .in('action', ['delete', 'estorno']).gte('created_at', ago24),
+    sb.from('platform_alerts').select('id,company_id,alert_type,message,updated_at').is('resolved_at', null)
   ]);
 
   const companies  = companiesR.data  || [];
   const syncs      = syncsR.data      || [];
   const sales      = salesR.data      || [];
   const sensitive  = sensitiveR.data  || [];
+  const alerts     = alertsR.data     || [];
 
   // Índices
   const syncMap = {};
@@ -68,6 +70,22 @@
   const saudePct = companies.length ? Math.round((onlineCount / companies.length) * 100) : 0;
   const totalSensitive = sensitive.length;
 
+  // Watchdog: atualiza alertas automaticamente baseado nos dados de sync carregados
+  const companiesComSync = companies.filter(c => syncMap[c.id]);
+  const staleCompanies = companiesComSync.filter(c => new Date(syncMap[c.id]) < ago26h);
+  const healthyCompanies = companiesComSync.filter(c => new Date(syncMap[c.id]) >= ago26h);
+  if (staleCompanies.length > 0) {
+    sb.from('platform_alerts').upsert(
+      staleCompanies.map(c => ({ company_id: c.id, alert_type: 'sync_offline', message: 'DmSync sem atividade por mais de 25h', resolved_at: null })),
+      { onConflict: 'company_id,alert_type', ignoreDuplicates: false }
+    );
+  }
+  if (healthyCompanies.length > 0) {
+    const healthyIds = healthyCompanies.map(c => c.id);
+    sb.from('platform_alerts').update({ resolved_at: new Date().toISOString() })
+      .in('company_id', healthyIds).eq('alert_type', 'sync_offline').is('resolved_at', null);
+  }
+
   // Render KPIs
   document.getElementById('kpi-faturamento').textContent = fmtBRL(totalHoje);
   document.getElementById('kpi-saude').textContent = saudePct + '%';
@@ -75,6 +93,24 @@
   document.getElementById('kpi-sensivel').textContent = totalSensitive;
   document.getElementById('kpi-sensivel').style.color = totalSensitive > 0 ? 'var(--warn)' : 'var(--text)';
   document.getElementById('kpi-tenants').textContent = companies.length;
+
+  // Banner de alertas watchdog
+  const alertsBanner = document.getElementById('watchdog-alerts');
+  if (alerts.length > 0) {
+    const companyNames = {};
+    for (const c of companies) companyNames[c.id] = c.trade_name || c.legal_name;
+    alertsBanner.innerHTML = alerts.map(a => {
+      const nome = companyNames[a.company_id] || a.company_id;
+      const quando = fmtAgo(a.updated_at);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#7f1d1d22;border:1px solid #dc262644;border-radius:8px;margin-bottom:6px">
+        <span style="font-size:13px"><strong style="color:#f87171">⚠ ${esc(nome)}</strong> — ${esc(a.message)} <span style="color:var(--text-muted);font-size:11px">(${quando})</span></span>
+        <button onclick="resolveAlert('${a.id}')" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid #dc2626;background:transparent;color:#f87171;cursor:pointer">Resolver</button>
+      </div>`;
+    }).join('');
+    alertsBanner.style.display = 'block';
+  } else {
+    alertsBanner.style.display = 'none';
+  }
 
   // Render tabela
   const tbody = document.getElementById('tenants-tbody');
@@ -177,6 +213,13 @@ function closeDrawer() {
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('drawer').classList.remove('open');
   _drawerCompany = null;
+}
+
+async function resolveAlert(alertId) {
+  const { error } = await sb.from('platform_alerts').update({ resolved_at: new Date().toISOString() }).eq('id', alertId);
+  if (error) { showToast('Erro ao resolver alerta', true); return; }
+  showToast('Alerta resolvido');
+  setTimeout(() => location.reload(), 800);
 }
 
 function showToast(msg, isError) {
