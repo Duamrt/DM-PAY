@@ -43,12 +43,20 @@
     const inicioISO = inicioJanela.toISOString().slice(0,10);
     const COMPANY_ID = window.DMPAY_COMPANY.id;
 
-    // Separado em 3 queries paralelas para evitar limite 1000 rows do PostgREST
-    const [overdueR, openR, recebidasR] = await Promise.all([
+    // overdue dividido em 2 faixas (total 1143 > limite 1000 do PostgREST)
+    const [overdue1R, overdue2R, openR, recebidasR] = await Promise.all([
       sb.from('receivables')
         .select(`*, customers(name, cpf_cnpj)`)
         .eq('company_id', COMPANY_ID)
         .eq('status', 'overdue')
+        .lt('due_date', '2024-01-01')
+        .order('due_date', { ascending: true })
+        .limit(1000),
+      sb.from('receivables')
+        .select(`*, customers(name, cpf_cnpj)`)
+        .eq('company_id', COMPANY_ID)
+        .eq('status', 'overdue')
+        .gte('due_date', '2024-01-01')
         .order('due_date', { ascending: true })
         .limit(1000),
       sb.from('receivables')
@@ -65,14 +73,15 @@
         .order('received_at', { ascending: false })
         .limit(1000)
     ]);
-    if (overdueR.error || openR.error || recebidasR.error) {
-      console.error('CR load error', overdueR.error || openR.error || recebidasR.error);
+    if (overdue1R.error || overdue2R.error || openR.error || recebidasR.error) {
+      console.error('CR load error', overdue1R.error || overdue2R.error || openR.error || recebidasR.error);
       return;
     }
-    warnIfTruncated(overdueR.data,    1000, 'receivables overdue');
+    warnIfTruncated(overdue1R.data,   1000, 'receivables overdue <2024');
+    warnIfTruncated(overdue2R.data,   1000, 'receivables overdue 2024+');
     warnIfTruncated(openR.data,       1000, 'receivables open');
     warnIfTruncated(recebidasR.data,  1000, 'receivables received');
-    RECVS = [...(overdueR.data||[]), ...(openR.data||[]), ...(recebidasR.data||[])];
+    RECVS = [...(overdue1R.data||[]), ...(overdue2R.data||[]), ...(openR.data||[]), ...(recebidasR.data||[])];
   }
 
   async function loadCustomers(force) {
