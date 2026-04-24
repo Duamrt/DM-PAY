@@ -5,8 +5,8 @@ const CRON_SECRET=Deno.env.get("CRON_SECRET")??"";
 const GRACE_DAYS=7;const AVISO=[1,3,6];const WA_SUP="5587981456565";
 function json(b:unknown,s=200){return new Response(JSON.stringify(b),{status:s,headers:{"content-type":"application/json"}});}
 Deno.serve(async(req)=>{
-  if(req.method!=="POST"&&req.method!=="GET")return json({error:"method_not_allowed"},405);
-  if(CRON_SECRET&&req.headers.get("x-cron-secret")!==CRON_SECRET)return json({error:"unauthorized"},401);
+  if(req.method!=="POST")return json({error:"method_not_allowed"},405);
+  if(!CRON_SECRET||req.headers.get("x-cron-secret")!==CRON_SECRET)return json({error:"unauthorized"},401);
   const sb=createClient(SUPABASE_URL,SUPABASE_SERVICE_KEY);
   const hj=new Date();hj.setHours(0,0,0,0);
   const {data:assins}=await sb.from("subscriptions").select("id,company_id,plan,valor,proximo_vencimento,status,companies(id,legal_name,whatsapp,phone,status,dias_atraso)").in("status",["atrasada","suspensa"]);

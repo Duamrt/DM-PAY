@@ -391,10 +391,12 @@
     const due = document.getElementById('cr-due').value;
     const method = document.getElementById('cr-method').value;
     const origin = document.getElementById('cr-origin').value;
-    if (!valStr || +valStr <= 0) { alert('Valor obrigatório'); return; }
-    if (!due) { alert('Vencimento obrigatório'); return; }
+    if (!valStr || +valStr <= 0) { DMPAY_UI.alert('Valor obrigatório'); return; }
+    if (!due) { DMPAY_UI.alert('Vencimento obrigatório'); return; }
 
-    const btn = document.getElementById('cr-save'); btn.disabled = true;
+    const btn = document.getElementById('cr-save');
+    if (btn.disabled) return;
+    btn.disabled = true;
     try {
       // Cria cliente novo se preciso
       if (cust_id === '__new') {
@@ -461,7 +463,7 @@
             <div class="dmp-field-row"><span>Forma esperada</span><b>${r.payment_method ? cap(r.payment_method) : '—'}</b></div>
             <div class="dmp-field-row"><span>Origem</span><b>${{manual:'Manual',sale:'Venda fiado',card_settlement:'Cartão a liquidar'}[r.origin] || '—'}</b></div>
             ${r.received_at ? `<div class="dmp-field-row"><span>Recebido em</span><b>${brDate(r.received_at)}</b></div>` : ''}
-            ${r.description ? `<div class="dmp-field-row"><span>Descrição</span><b>${r.description}</b></div>` : ''}
+            ${r.description ? `<div class="dmp-field-row"><span>Descrição</span><b>${esc(r.description)}</b></div>` : ''}
           </div>
           <div class="dmp-modal-foot" style="justify-content:space-between">
             <button class="btn btn-danger" onclick="DMPAY_CR.remove('${r.id}')"><i data-lucide="trash-2"></i> Excluir</button>

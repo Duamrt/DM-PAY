@@ -106,7 +106,7 @@
 
       return `<tr class="tenant-row">
         <td>
-          <div style="font-weight:600;font-size:13px">${nome}</div>
+          <div style="font-weight:600;font-size:13px">${esc(nome)}</div>
           <div style="font-size:11px;color:var(--text-muted)">${cidade}</div>
         </td>
         <td>
@@ -131,7 +131,7 @@
         </td>
         <td style="display:flex;gap:6px;align-items:center">
           <button class="btn-gerenciar" onclick="openDrawer(${JSON.stringify(c).replace(/"/g,'&quot;')})">Gerenciar</button>
-          <button class="btn-gerenciar" style="background:var(--accent-soft);color:var(--accent);border-color:var(--accent)" onclick="(function(){sessionStorage.setItem('dmpay-view-as',JSON.stringify({id:'${c.id}',name:'${(c.trade_name||c.legal_name||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}'}));location.href='dashboard.html'})()">Entrar →</button>
+          <button class="btn-gerenciar" style="background:var(--accent-soft);color:var(--accent);border-color:var(--accent)" onclick="(function(){sessionStorage.setItem('dmpay-view-as',JSON.stringify({id:'${c.id}',name:'${esc(c.trade_name||c.legal_name||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}'}));location.href='dashboard.html'})()">Entrar →</button>
         </td>
       </tr>`;
     }).join('');

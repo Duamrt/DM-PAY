@@ -144,7 +144,7 @@
   async function dreLoad() {
     zeroAll();
     set('dre-mes-titulo', `${MESES_LONGO[MES-1]} / ${ANO}`);
-
+    try {
     const prev = prevMonth(ANO, MES);
     const [sales, salesAnt, invs, pays, taxes] = await Promise.all([
       fetchSales(ANO, MES),
@@ -153,6 +153,7 @@
       fetchPayables(ANO, MES),
       fetchTaxes(ANO, MES),
     ]);
+    sales_cache = sales;
 
     const rb    = sales.reduce((s,r) => s + Number(r.amount), 0);
     const rbAnt = salesAnt.reduce((s,r) => s + Number(r.amount), 0);
@@ -302,6 +303,11 @@
     }
 
     await renderChart(taxReal);
+    } catch(e) {
+      console.error('dreLoad error', e);
+      const el = document.querySelector('.dre-wrap');
+      if (el) el.insertAdjacentHTML('afterbegin','<div style="color:var(--danger);padding:16px;text-align:center">Erro ao carregar DRE. Verifique sua conexão.</div>');
+    }
   }
 
   // ── Drill-down ───────────────────────────────────────────────────────────

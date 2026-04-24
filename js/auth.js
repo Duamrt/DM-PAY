@@ -109,7 +109,8 @@ window.DMPAY = (function() {
   function postLoginRedirect() {
     const target = sessionStorage.getItem('dmpay-redirect');
     sessionStorage.removeItem('dmpay-redirect');
-    return target || 'dashboard.html';
+    if (!target || target.startsWith('http') || target.startsWith('//')) return 'dashboard.html';
+    return target;
   }
 
   return {

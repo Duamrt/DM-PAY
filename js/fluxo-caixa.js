@@ -34,7 +34,10 @@
     SANG = sang.data || [];
 
     const saldoStored = localStorage.getItem('dmpay-saldo-' + COMPANY_ID);
-    SALDO_INICIAL = saldoStored ? parseFloat(saldoStored) : 0;
+    try {
+      const parsed = saldoStored ? JSON.parse(saldoStored) : null;
+      SALDO_INICIAL = parsed && typeof parsed === 'object' ? Number(parsed.v) || 0 : parseFloat(saldoStored) || 0;
+    } catch { SALDO_INICIAL = 0; }
   }
 
   function buildSeries() {
