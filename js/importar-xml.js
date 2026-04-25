@@ -303,7 +303,7 @@
           description: `NF ${PARSED.number} ${PARSED.fornecedor.legal_name} ${parcelas.length > 1 ? '· parc '+par.nDup : ''}`.trim(),
           amount: par.vDup,
           due_date: par.dVenc,
-          payment_method: pm === 'boleto' && codigo ? 'boleto' : (pm !== 'boleto' ? pm : null),
+          payment_method: pm,
           boleto_line: codigo,
           status: 'open'
         };
