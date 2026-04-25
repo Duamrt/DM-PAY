@@ -162,7 +162,8 @@
     if (saidas.length > 0) {
       htmlOut += saidas.map(p => {
         const temBoleto = p.payment_method === 'boleto' && p.boleto_line && p.boleto_line.replace(/\D/g,'').length >= 44;
-        const boletoSemCodigo = p.payment_method === 'boleto' && !temBoleto;
+        // inclui payment_method null (importações antigas antes do fix)
+        const boletoSemCodigo = !temBoleto && (p.payment_method === 'boleto' || p.payment_method === null);
         const isPago = p.status === 'paid';
         return `
         <div style="padding:14px 0;border-bottom:1px solid var(--border)">
