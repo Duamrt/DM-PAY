@@ -182,6 +182,7 @@
               ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.copiarCodigo('${p.id}', this)" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:6px;cursor:pointer;font-weight:600">📋 Copiar código</button>` : ''}
               ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.pagar('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Ver boleto</button>` : ''}
               ${!isPago ? `<button onclick="DMPAY_CAL.marcarPago('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--success);border:1px solid var(--success);border-radius:6px;cursor:pointer;font-weight:600">✓ Marcar pago</button>` : ''}
+              ${isPago ? `<button onclick="DMPAY_CAL.desfazerPago('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-weight:600">↩ Desfazer</button>` : ''}
             </div>
           </div>
         </div>`;
@@ -225,6 +226,16 @@
       before ? { status: before.status, paid_at: before.paid_at } : null,
       { status: 'paid', paid_at });
     document.getElementById('drawer')?.classList.remove('open');
+    await load(); render();
+  }
+
+  async function desfazerPago(id) {
+    const before = (typeof PAYABLES !== 'undefined') ? PAYABLES.find(x => x.id === id) : null;
+    const { error } = await sb.from('payables').update({ status:'open', paid_at: null }).eq('id', id);
+    if (error) { alert(error.message); return; }
+    if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.update('payable', id,
+      before ? { status: before.status, paid_at: before.paid_at } : null,
+      { status: 'open', paid_at: null });
     await load(); render();
   }
 
@@ -348,7 +359,7 @@
     ov.style.display = 'flex';
   }
 
-  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago, colarCodigo: colarCodigo, copiarCodigo: copiarCodigo, ampliarBarcode: ampliarBarcode };
+  window.DMPAY_CAL = { openDia: openDia, nav: nav, pagar: pagar, marcarPago: marcarPago, desfazerPago: desfazerPago, colarCodigo: colarCodigo, copiarCodigo: copiarCodigo, ampliarBarcode: ampliarBarcode };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();
