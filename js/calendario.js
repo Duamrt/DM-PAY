@@ -162,8 +162,10 @@
     if (saidas.length > 0) {
       htmlOut += saidas.map(p => {
         const temBoleto = p.payment_method === 'boleto' && p.boleto_line && p.boleto_line.replace(/\D/g,'').length >= 44;
-        // inclui payment_method null (importações antigas antes do fix)
+        // badge vermelho só pra quem é boleto (ou antigo sem method) sem código
         const boletoSemCodigo = !temBoleto && (p.payment_method === 'boleto' || p.payment_method === null);
+        // botão "Colar código" pra qualquer item aberto sem código válido
+        const podeAdicionarCodigo = !temBoleto;
         const isPago = p.status === 'paid';
         return `
         <div style="padding:14px 0;border-bottom:1px solid var(--border)">
@@ -178,7 +180,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
             ${!isPago && boletoSemCodigo ? `<span class="badge" style="font-size:10px;padding:2px 7px;border-radius:999px;background:#fef2f2;color:#dc2626;font-weight:600;text-transform:uppercase;letter-spacing:.04em">⚠ Boleto sem código</span>` : `<span class="badge" style="font-size:10px;padding:2px 7px;border-radius:999px;background:${isPago?'var(--success-soft)':'var(--warn-soft)'};color:${isPago?'var(--success)':'var(--warn)'};font-weight:600;text-transform:uppercase;letter-spacing:.04em">${isPago?'Pago':'Em aberto'}</span>`}
             <div style="display:flex;gap:6px">
-              ${!isPago && boletoSemCodigo ? `<button onclick="DMPAY_CAL.colarCodigo('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:#fef2f2;color:#dc2626;border:1px solid #dc2626;border-radius:6px;cursor:pointer;font-weight:600">📋 Colar código</button>` : ''}
+              ${!isPago && podeAdicionarCodigo ? `<button onclick="DMPAY_CAL.colarCodigo('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:#fef2f2;color:#dc2626;border:1px solid #dc2626;border-radius:6px;cursor:pointer;font-weight:600">📋 Colar código</button>` : ''}
               ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.copiarCodigo('${p.id}', this)" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:6px;cursor:pointer;font-weight:600">📋 Copiar código</button>` : ''}
               ${!isPago && temBoleto ? `<button onclick="DMPAY_CAL.pagar('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:var(--accent);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Ver boleto</button>` : ''}
               ${!isPago ? `<button onclick="DMPAY_CAL.marcarPago('${p.id}')" style="padding:6px 10px;font-size:11.5px;background:transparent;color:var(--success);border:1px solid var(--success);border-radius:6px;cursor:pointer;font-weight:600">✓ Marcar pago</button>` : ''}
