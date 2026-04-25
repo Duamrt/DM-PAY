@@ -381,10 +381,9 @@
     <div class="drawer-body" id="dr-body">
       <!-- preenchido via JS -->
     </div>
-    <div class="drawer-foot">
-      <button class="btn btn-ghost"><i data-lucide="external-link"></i> Ver todas NFs</button>
-      <button class="btn btn-ghost"><i data-lucide="download"></i> Exportar histórico</button>
-      <button class="btn btn-primary"><i data-lucide="search"></i> Cotar alternativas</button>
+    <div class="drawer-foot" id="dr-foot">
+      <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+      <button class="btn btn-primary" id="dr-btn-salvar" style="display:none" onclick="salvarFornecedor()"><i data-lucide="save"></i> Salvar</button>
     </div>
   </aside>
 
@@ -415,25 +414,45 @@
     function renderDrawer(key) {
       if (key === 'novo') {
         document.getElementById('dr-title').textContent = 'Novo fornecedor';
+        document.getElementById('dr-btn-salvar').style.display = '';
         document.getElementById('dr-body').innerHTML = `
           <div class="dr-section">
             <div class="dr-section-title"><i data-lucide="building-2"></i> Dados básicos</div>
             <div style="display:flex;flex-direction:column;gap:10px">
-              <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Nome</label><input class="filter-select" style="width:100%;padding:9px 12px" placeholder="Ex: Nome do fornecedor"></div>
-              <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">CNPJ</label><input class="filter-select" style="width:100%;padding:9px 12px;font-family:'Geist Mono',monospace" placeholder="00.000.000/0001-00"></div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Categoria</label><select class="filter-select" style="width:100%;padding:9px 12px"><option>Mercearia</option><option>Laticínios</option><option>Bebidas</option><option>Carnes</option><option>Limpeza</option><option>Diversos</option></select></div>
-                <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Cidade/UF</label><input class="filter-select" style="width:100%;padding:9px 12px" placeholder="Jupi-PE"></div>
+
+              <div>
+                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Tipo de pessoa</label>
+                <div style="display:flex;gap:8px">
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+                    <input type="radio" name="forn-tipo" value="PJ" checked onchange="toggleTipoPessoa(this.value)"> Empresa (CNPJ)
+                  </label>
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+                    <input type="radio" name="forn-tipo" value="PF" onchange="toggleTipoPessoa(this.value)"> Pessoa Física (CPF)
+                  </label>
+                </div>
               </div>
-            </div>
-          </div>
-          <div class="dr-section">
-            <div class="dr-section-title"><i data-lucide="credit-card"></i> Condições comerciais</div>
-            <div class="cond-grid">
-              <div class="cond-item"><span class="k">Prazo</span><input style="border:none;background:transparent;text-align:right;color:var(--text);font-weight:600;font-family:inherit;outline:none;max-width:80px" placeholder="30 dias"></div>
-              <div class="cond-item"><span class="k">Parcelamento</span><input style="border:none;background:transparent;text-align:right;color:var(--text);font-weight:600;font-family:inherit;outline:none;max-width:80px" placeholder="1x"></div>
-              <div class="cond-item"><span class="k">Desconto à vista</span><input style="border:none;background:transparent;text-align:right;color:var(--text);font-weight:600;font-family:inherit;outline:none;max-width:80px" placeholder="0%"></div>
-              <div class="cond-item"><span class="k">Forma preferida</span><select style="border:none;background:transparent;text-align:right;color:var(--text);font-weight:600;font-family:inherit;outline:none"><option>Boleto</option><option>PIX</option><option>Crédito</option></select></div>
+
+              <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Nome / Razão Social</label><input id="forn-nome" class="filter-select" style="width:100%;padding:9px 12px" placeholder="Ex: Alipio Gomes da Costa"></div>
+
+              <div id="forn-doc-wrap">
+                <label id="forn-doc-label" style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">CNPJ</label>
+                <input id="forn-doc" class="filter-select" style="width:100%;padding:9px 12px;font-family:'Geist Mono',monospace" placeholder="00.000.000/0001-00">
+              </div>
+
+              <div id="forn-obs-wrap" style="display:none">
+                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">O que fornece <span style="color:var(--accent)">★ importante pro contador</span></label>
+                <input id="forn-obs" class="filter-select" style="width:100%;padding:9px 12px" placeholder="Ex: fornecedor de ovos, autônomo, diarista...">
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Cidade/UF</label><input id="forn-cidade" class="filter-select" style="width:100%;padding:9px 12px" placeholder="Jupi-PE"></div>
+                <div><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">Telefone</label><input id="forn-tel" class="filter-select" style="width:100%;padding:9px 12px" placeholder="(81) 99999-9999"></div>
+              </div>
+
+              <div id="forn-aviso-pf" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e">
+                ⚠️ <b>Atenção:</b> Pagamento a Pessoa Física pode gerar obrigação de retenção de INSS (11%) e IR. Informe ao contador Marcos José o tipo de serviço prestado.
+              </div>
+
             </div>
           </div>`;
         lucide.createIcons();
@@ -522,6 +541,99 @@
       document.querySelector('.drawer-backdrop').classList.remove('open');
       document.getElementById('drawer').classList.remove('open');
     }
+
+    function toggleTipoPessoa(tipo) {
+      const docLabel = document.getElementById('forn-doc-label');
+      const docInput = document.getElementById('forn-doc');
+      const obsWrap  = document.getElementById('forn-obs-wrap');
+      const aviso    = document.getElementById('forn-aviso-pf');
+      if (tipo === 'PF') {
+        docLabel.textContent = 'CPF';
+        docInput.placeholder = '000.000.000-00';
+        obsWrap.style.display = '';
+        aviso.style.display   = '';
+      } else {
+        docLabel.textContent = 'CNPJ';
+        docInput.placeholder = '00.000.000/0001-00';
+        obsWrap.style.display = 'none';
+        aviso.style.display   = 'none';
+      }
+    }
+
+    async function salvarFornecedor() {
+      const tipo  = document.querySelector('input[name="forn-tipo"]:checked')?.value || 'PJ';
+      const nome  = document.getElementById('forn-nome')?.value.trim();
+      const doc   = document.getElementById('forn-doc')?.value.trim().replace(/\D/g, '');
+      const obs   = document.getElementById('forn-obs')?.value.trim();
+      const cidade = document.getElementById('forn-cidade')?.value.trim();
+      const tel   = document.getElementById('forn-tel')?.value.trim();
+
+      if (!nome) return DMPAY_UI.alert('Informe o nome do fornecedor.');
+      if (tipo === 'PJ' && doc.length !== 14) return DMPAY_UI.alert('CNPJ inválido — deve ter 14 dígitos.');
+      if (tipo === 'PF' && doc && doc.length !== 11) return DMPAY_UI.alert('CPF inválido — deve ter 11 dígitos.');
+
+      const btn = document.getElementById('dr-btn-salvar');
+      btn.disabled = true; btn.textContent = 'Salvando…';
+
+      const COMPANY_ID = window.DMPAY_COMPANY?.id;
+      const payload = {
+        company_id: COMPANY_ID,
+        legal_name:  nome,
+        trade_name:  nome,
+        tipo_pessoa: tipo,
+        cnpj:        (tipo === 'PJ' && doc) ? doc : null,
+        observacao:  obs || null,
+        city:        cidade || null,
+        phone:       tel || null,
+      };
+
+      const { error } = await window.sb.from('suppliers').insert(payload);
+      btn.disabled = false; btn.innerHTML = '<i data-lucide="save"></i> Salvar'; lucide.createIcons();
+
+      if (error) return DMPAY_UI.alert('Erro ao salvar: ' + error.message);
+      closeDrawer();
+      carregarFornecedores();
+    }
+
+    async function carregarFornecedores() {
+      const COMPANY_ID = window.DMPAY_COMPANY?.id;
+      if (!COMPANY_ID) return;
+      const { data } = await window.sb
+        .from('suppliers')
+        .select('id, legal_name, cnpj, tipo_pessoa, observacao, city, created_at')
+        .eq('company_id', COMPANY_ID)
+        .order('legal_name');
+
+      const tbody = document.getElementById('fornTable');
+      if (!data?.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:48px 16px;text-align:center;color:var(--text-muted)">Nenhum fornecedor cadastrado ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(f => {
+        const doc = f.tipo_pessoa === 'PF'
+          ? (f.cnpj ? '(CPF)' : 'PF s/ doc')
+          : (f.cnpj ? f.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : '—');
+        const badge = f.tipo_pessoa === 'PF'
+          ? '<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:600;margin-left:4px">PF</span>'
+          : '';
+        return `<tr>
+          <td>
+            <div style="font-weight:500">${f.legal_name}${badge}</div>
+            <div class="forn-cnpj">${doc}${f.observacao ? ' · ' + f.observacao : ''}</div>
+          </td>
+          <td style="color:var(--text-muted);font-size:12px">${f.city || '—'}</td>
+          <td style="color:var(--text-muted);font-size:12px">—</td>
+          <td class="num">—</td>
+          <td class="ctr">—</td>
+          <td class="ctr">—</td>
+        </tr>`;
+      }).join('');
+    }
+
+    (function aguardar() {
+      if (window.sb && window.DMPAY_COMPANY) { carregarFornecedores(); }
+      else setTimeout(aguardar, 150);
+    })();
 
     function toggleTheme() {
       const h = document.documentElement;
