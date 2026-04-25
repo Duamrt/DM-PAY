@@ -19,6 +19,12 @@
     if (c.length !== 14) return c;
     return c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   }
+  function fmtCPF(c) {
+    if (!c) return '—';
+    c = c.replace(/\D/g,'');
+    if (c.length !== 11) return c;
+    return c.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+  }
 
   function parseNFe(xmlString) {
     const doc = new DOMParser().parseFromString(xmlString, 'text/xml');
@@ -36,9 +42,14 @@
     const icmsTot = total ? total.getElementsByTagName('ICMSTot')[0] : null;
     const cobr = infNFe.getElementsByTagName('cobr')[0];
 
-    // Fornecedor
+    // Fornecedor (PJ = CNPJ, PF = CPF em Nota Fiscal Avulsa)
+    const cnpjEmit = getText(emit, 'CNPJ');
+    const cpfEmit  = getText(emit, 'CPF');
+    if (!cnpjEmit && !cpfEmit) throw new Error('Documento do fornecedor (CNPJ/CPF) não encontrado no XML');
     const fornecedor = {
-      cnpj: getText(emit, 'CNPJ'),
+      cnpj: cnpjEmit || null,
+      cpf:  cpfEmit  || null,
+      tipo_pessoa: cnpjEmit ? 'PJ' : 'PF',
       legal_name: getText(emit, 'xNome'),
       trade_name: getText(emit, 'xFant'),
       ie: getText(emit, 'IE'),
@@ -46,7 +57,6 @@
       state: getText(enderEmit, 'UF'),
       phone: getText(enderEmit, 'fone'),
     };
-    if (!fornecedor.cnpj) throw new Error('CNPJ do fornecedor não encontrado no XML');
 
     // Itens
     const itens = Array.from(infNFe.getElementsByTagName('det')).map(det => {
@@ -111,7 +121,7 @@
         <div class="prev-head">
           <div>
             <div class="prev-title">${p.fornecedor.legal_name || '—'}</div>
-            <div class="prev-sub">CNPJ ${fmtCNPJ(p.fornecedor.cnpj)} ${p.fornecedor.city ? '· '+p.fornecedor.city+'/'+p.fornecedor.state : ''}</div>
+            <div class="prev-sub">${p.fornecedor.tipo_pessoa === 'PF' ? 'CPF' : 'CNPJ'} ${p.fornecedor.tipo_pessoa === 'PF' ? fmtCPF(p.fornecedor.cpf) : fmtCNPJ(p.fornecedor.cnpj)} ${p.fornecedor.city ? '· '+p.fornecedor.city+'/'+p.fornecedor.state : ''}</div>
           </div>
           <div style="text-align:right">
             <div class="prev-value">${fmtBRL(p.total_value)}</div>
@@ -163,19 +173,48 @@
     btn.disabled = true; btn.textContent = 'Salvando...';
 
     try {
-      // 1. Upsert fornecedor por CNPJ
-      const cnpjLimpo = PARSED.fornecedor.cnpj.replace(/\D/g,'');
-      const supRes = await sb.from('suppliers').upsert({
-        company_id: COMPANY_ID,
-        cnpj: cnpjLimpo,
-        legal_name: PARSED.fornecedor.legal_name,
-        trade_name: PARSED.fornecedor.trade_name || null,
-        city: PARSED.fornecedor.city || null,
-        state: PARSED.fornecedor.state || null,
-        phone: PARSED.fornecedor.phone || null
-      }, { onConflict: 'company_id,cnpj' }).select().single();
-      if (supRes.error) throw supRes.error;
-      const supplier_id = supRes.data.id;
+      // 1. Upsert fornecedor (PJ por CNPJ, PF por nome pois cnpj é null)
+      let supplier_id;
+      if (PARSED.fornecedor.tipo_pessoa === 'PJ') {
+        const cnpjLimpo = PARSED.fornecedor.cnpj.replace(/\D/g,'');
+        const supRes = await sb.from('suppliers').upsert({
+          company_id: COMPANY_ID,
+          cnpj: cnpjLimpo,
+          tipo_pessoa: 'PJ',
+          legal_name: PARSED.fornecedor.legal_name,
+          trade_name: PARSED.fornecedor.trade_name || null,
+          city: PARSED.fornecedor.city || null,
+          state: PARSED.fornecedor.state || null,
+          phone: PARSED.fornecedor.phone || null
+        }, { onConflict: 'company_id,cnpj' }).select().single();
+        if (supRes.error) throw supRes.error;
+        supplier_id = supRes.data.id;
+      } else {
+        // PF: busca por nome (cnpj é null, não dá pra usar onConflict)
+        const { data: existing } = await sb.from('suppliers')
+          .select('id')
+          .eq('company_id', COMPANY_ID)
+          .eq('legal_name', PARSED.fornecedor.legal_name)
+          .eq('tipo_pessoa', 'PF')
+          .maybeSingle();
+        if (existing) {
+          supplier_id = existing.id;
+        } else {
+          const supRes = await sb.from('suppliers').insert({
+            company_id: COMPANY_ID,
+            cnpj: null,
+            tipo_pessoa: 'PF',
+            legal_name: PARSED.fornecedor.legal_name,
+            trade_name: PARSED.fornecedor.trade_name || null,
+            city: PARSED.fornecedor.city || null,
+            state: PARSED.fornecedor.state || null,
+            phone: PARSED.fornecedor.phone || null,
+            observacao: 'Importado via NF-e (CPF)'
+          }).select().single();
+          if (supRes.error) throw supRes.error;
+          supplier_id = supRes.data.id;
+        }
+      }
 
       // 2. Insert invoice (anti-dup por nfe_key)
       const invRes = await sb.from('invoices').insert({
