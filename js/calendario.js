@@ -18,7 +18,7 @@
     const COMPANY_ID = window.DMPAY_COMPANY.id;
 
     const pagsR = await sb.from('payables')
-      .select('id, amount, due_date, status, paid_at, description, payment_method, boleto_line, suppliers(legal_name, cnpj)')
+      .select('id, amount, due_date, status, paid_at, description, payment_method, boleto_line, notes, suppliers(legal_name, cnpj)')
       .eq('company_id', COMPANY_ID)
       .gte('due_date', inicio).lte('due_date', fim)
       .limit(2000);
@@ -170,6 +170,7 @@
             <div style="flex:1;min-width:0">
               <div style="font-weight:600;font-size:13.5px">${p.suppliers?.legal_name || p.description || '—'}</div>
               <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">${p.description || ''}</div>
+              ${p.notes ? `<div style="font-size:11px;color:var(--warn);margin-top:3px">📝 ${p.notes}</div>` : ''}
             </div>
             <div style="font-family:'Geist Mono',monospace;font-weight:700;font-size:14px;white-space:nowrap">${fmtBRLfull(p.amount)}</div>
           </div>
