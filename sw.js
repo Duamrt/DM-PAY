@@ -1,4 +1,4 @@
-const CACHE = 'dmpay-mobile-v04251110';
+const CACHE = 'dmpay-mobile-v04251122';
 const SHELL = [
   '/DM-PAY/mobile.html',
   '/DM-PAY/js/supabase.js',

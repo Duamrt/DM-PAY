@@ -552,8 +552,10 @@ def main():
             jobs.append(("withdrawals", lambda: job_cash_withdrawals(cfg, cn, company_id, args.days_sales, args.dry_run)))
         if args.only in (None, "receivables"):
             jobs.append(("receivables", lambda: job_receivables(cfg, cn, company_id, args.days_receivables, args.dry_run, args.max_history_months)))
-        if args.only in (None, "invoices"):
-            jobs.append(("invoices", lambda: job_invoices(cfg, cn, company_id, args.days_invoices, args.dry_run)))
+        # invoices desativado: NF-e entra só via importação manual de XML (importar-xml.html)
+        # reativar só se o agente passar a extrair parcelas e boletos automaticamente
+        # if args.only in (None, "invoices"):
+        #     jobs.append(("invoices", lambda: job_invoices(cfg, cn, company_id, args.days_invoices, args.dry_run)))
 
         for name, fn in jobs:
             try:
