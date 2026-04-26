@@ -31,6 +31,12 @@ EOF
 
 git add -A
 git commit -m "${VERSION} ${MSG}"
-git push
+git push origin dev
+
+# Sync main = dev (Gitflow: dev é a fonte da verdade)
+git checkout main
+git reset --hard dev
+git push --force-with-lease origin main
+git checkout dev
 
 echo "✓ ${VERSION} no ar · https://duamrt.github.io/DM-PAY/dashboard.html"
