@@ -373,27 +373,35 @@
   async function load() {
     const CID = window.DMPAY_COMPANY.id;
     const today = new Date();
-    const [y, m, d] = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')];
-    const todayISO = `${y}-${m}-${d}`;
+    const todayISO = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-    const { data } = await sb.from('receivables')
-      .select('id, customer_id, amount, due_date, description, customers(id, name, collection_status, collection_notes, collection_updated_at)')
-      .eq('company_id', CID)
-      .in('status', ['overdue', 'open'])
-      .lt('due_date', todayISO)
-      .not('customer_id', 'is', null)
-      .order('due_date', { ascending: true });
+    const [{ data: recvs }, { data: custs }] = await Promise.all([
+      sb.from('receivables')
+        .select('id, customer_id, amount, due_date, description')
+        .eq('company_id', CID)
+        .in('status', ['overdue', 'open'])
+        .lt('due_date', todayISO)
+        .not('customer_id', 'is', null)
+        .order('due_date', { ascending: true }),
+      sb.from('customers')
+        .select('id, name, collection_status, collection_notes, collection_updated_at')
+        .eq('company_id', CID)
+    ]);
+
+    const custMap = {};
+    (custs || []).forEach(c => { custMap[c.id] = c; });
 
     const map = {};
-    (data || []).forEach(r => {
+    (recvs || []).forEach(r => {
       const cid = r.customer_id;
+      const cust = custMap[cid] || {};
       if (!map[cid]) {
         map[cid] = {
           customer_id: cid,
-          name: r.customers?.name || 'Sem nome',
-          collection_status: r.customers?.collection_status || 'pending',
-          collection_notes: r.customers?.collection_notes || '',
-          collection_updated_at: r.customers?.collection_updated_at,
+          name: cust.name || 'Sem nome',
+          collection_status: cust.collection_status || 'pending',
+          collection_notes: cust.collection_notes || '',
+          collection_updated_at: cust.collection_updated_at || null,
           boletos: [], total: 0, max_days: 0,
         };
       }
@@ -489,6 +497,7 @@
     let t = 0;
     while ((!window.sb || !window.DMPAY_COMPANY) && t++ < 80)
       await new Promise(r => setTimeout(r, 100));
+    document.documentElement.style.visibility = '';
     if (!window.sb || !window.DMPAY_COMPANY) return;
     await load();
   }
