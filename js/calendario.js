@@ -221,12 +221,34 @@
 
   async function marcarPago(id) {
     const before = (typeof PAYABLES !== 'undefined') ? PAYABLES.find(x => x.id === id) : null;
-    const paid_at = new Date().toISOString();
-    const { error } = await sb.from('payables').update({ status:'paid', paid_at }).eq('id', id);
+    const vals = await window.DMPAY_UI.open({
+      title: 'Confirmar pagamento',
+      desc: 'Informe como foi realizado o pagamento.',
+      fields: [
+        { key: 'pago_por', label: 'Pago por *', options: [
+            { value: '',          label: '— selecione —' },
+            { value: 'conta_pj',  label: 'Conta PJ' },
+            { value: 'loteria',   label: 'Loteria' },
+            { value: 'terceiros', label: 'Terceiros' }
+          ], value: '' },
+        { key: 'paid_at', label: 'Data do pagamento *', type: 'date', value: new Date().toISOString().slice(0,10) }
+      ],
+      submitLabel: 'Confirmar',
+      cancelLabel: 'Cancelar',
+      onSubmit: (v) => {
+        if (!v.pago_por) throw new Error('Selecione quem realizou o pagamento.');
+        if (!v.paid_at)  throw new Error('Data do pagamento é obrigatória.');
+        return true;
+      }
+    });
+    if (!vals) return;
+    const paid_at = new Date(vals.paid_at + 'T12:00:00').toISOString();
+    const pago_por = vals.pago_por;
+    const { error } = await sb.from('payables').update({ status:'paid', paid_at, pago_por }).eq('id', id);
     if (error) { alert(error.message); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.pay('payable', id,
       before ? { status: before.status, paid_at: before.paid_at } : null,
-      { status: 'paid', paid_at });
+      { status: 'paid', paid_at, pago_por });
     document.getElementById('drawer')?.classList.remove('open');
     await load(); render();
   }

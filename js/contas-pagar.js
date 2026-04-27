@@ -58,13 +58,13 @@
     const janelaISO = janela.toISOString().slice(0,10);
     const [abertasR, pagasR] = await Promise.all([
       sb.from('payables')
-        .select('*, tipo_lancamento, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
+        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
         .eq('company_id', COMPANY_ID)
         .in('status', ['open'])
         .order('due_date', { ascending: true })
         .limit(2000),
       sb.from('payables')
-        .select('*, tipo_lancamento, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
+        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
         .eq('company_id', COMPANY_ID)
         .eq('status', 'paid')
         .gte('paid_at', janelaISO)
@@ -436,12 +436,34 @@
 
   async function markPaid(id) {
     const before = PAYABLES.find(x => x.id === id) || null;
-    const paid_at = new Date().toISOString();
-    const { error } = await sb.from('payables').update({ status:'paid', paid_at }).eq('id', id);
+    const vals = await window.DMPAY_UI.open({
+      title: 'Confirmar pagamento',
+      desc: 'Informe como foi realizado o pagamento.',
+      fields: [
+        { key: 'pago_por', label: 'Pago por *', options: [
+            { value: '',          label: '— selecione —' },
+            { value: 'conta_pj',  label: 'Conta PJ' },
+            { value: 'loteria',   label: 'Loteria' },
+            { value: 'terceiros', label: 'Terceiros' }
+          ], value: '' },
+        { key: 'paid_at', label: 'Data do pagamento *', type: 'date', value: new Date().toISOString().slice(0,10) }
+      ],
+      submitLabel: 'Confirmar',
+      cancelLabel: 'Cancelar',
+      onSubmit: (v) => {
+        if (!v.pago_por) throw new Error('Selecione quem realizou o pagamento.');
+        if (!v.paid_at)  throw new Error('Data do pagamento é obrigatória.');
+        return true;
+      }
+    });
+    if (!vals) return;
+    const paid_at = new Date(vals.paid_at + 'T12:00:00').toISOString();
+    const pago_por = vals.pago_por;
+    const { error } = await sb.from('payables').update({ status:'paid', paid_at, pago_por }).eq('id', id);
     if (error) { await DMPAY_UI.alert({ title: 'Erro', desc: error.message, danger: true }); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.pay('payable', id,
       before ? { status: before.status, paid_at: before.paid_at } : null,
-      { status: 'paid', paid_at });
+      { status: 'paid', paid_at, pago_por });
     closeDrawer();
     await loadPayables(); render();
   }
