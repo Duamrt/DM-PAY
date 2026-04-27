@@ -121,13 +121,13 @@ window.DMPAY_EXPORT = (() => {
 
     ws.columns = [
       { width: 14 }, // Emissão
-      { width: 18 }, // NF
-      { width: 30 }, // Fornecedor
+      { width: 20 }, // NF
+      { width: 45 }, // Fornecedor
       { width: 14 }, // Vencimento
-      { width: 16 }, // Valor
+      { width: 18 }, // Valor
       { width: 14 }, // Pago em
-      { width: 12 }, // Status
-      { width: 22 }, // Categoria
+      { width: 14 }, // Status
+      { width: 28 }, // Categoria
     ];
 
     addHeader(ws, 'Contas a Pagar', NC);
@@ -170,9 +170,9 @@ window.DMPAY_EXPORT = (() => {
     });
     ws.autoFilter = { from: { row: hRowNum, column: 1 }, to: { row: hRowNum, column: NC } };
 
-    // Helper: extrai número da NF da descrição ("NF 3465493 ...")
+    // Helper: extrai número da NF da descrição ("NF 3465493 ..." ou "NF-e 3465493 ...")
     function extrairNF(desc) {
-      const m = String(desc || '').match(/^NF[-\s]e?\s+(\S+)/i);
+      const m = String(desc || '').match(/^NF(?:-e)?\s+["']?([^\s"',]+)/i);
       return m ? m[1] : '—';
     }
 
@@ -183,8 +183,9 @@ window.DMPAY_EXPORT = (() => {
       if (p.status === 'paid')    { stLabel = 'Pago';     stBg = VERDE_BG;  stFg = VERDE; }
       else if (diff < 0)          { stLabel = 'Atrasado'; stBg = VERM_BG;   stFg = VERMELHO; }
 
-      const _descSup = p.description?.replace(/^NF[-\s]e?\s+\S+\s*/i, '') || '';
-      const sup    = p.suppliers?.legal_name || p.suppliers?.trade_name || _descSup || '—';
+      const _descSup = p.description?.replace(/^NF(?:-e)?\s+\S+\s*/i, '') || '';
+      const supRaw = p.suppliers?.legal_name || p.suppliers?.trade_name || _descSup || '—';
+      const sup    = supRaw === '—' ? '—' : supRaw.toUpperCase();
       const cat    = p.expense_categories?.name || '—';
       const emissao = brDate(p.invoices?.issue_date || p.created_at);
       const nf      = p.invoices?.nf_number || extrairNF(p.description);
