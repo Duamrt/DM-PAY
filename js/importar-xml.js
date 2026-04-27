@@ -99,15 +99,40 @@
     };
   }
 
+  const NATUREZAS_SEM_CP = ['BONIF', 'REM', 'BRINDE', 'DOACAO', 'DOAÇÃO', 'REMESSA', 'BONIFICACAO', 'BONIFICAÇÃO'];
+  function naturezaSemCP(nature) {
+    if (!nature) return false;
+    const up = nature.toUpperCase();
+    return NATUREZAS_SEM_CP.some(n => up.includes(n));
+  }
+
+  function addDays(dateStr, days) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + days);
+    const yy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${yy}-${mm}-${dd}`;
+  }
+
   function renderPreview(p) {
     const el = document.getElementById('preview-area');
     if (!el) return;
-    const parcRows = (p.parcelas.length > 0 ? p.parcelas : [{nDup:'001', dVenc:p.issue_date, vDup:p.total_value}])
-      .map(par => `<tr>
+    const semCP = naturezaSemCP(p.nature);
+    const semDup = p.parcelas.length === 0;
+    let parcRows;
+    if (semCP) {
+      parcRows = `<tr><td colspan="3" style="text-align:center;color:var(--warning);font-weight:600;padding:12px">Natureza "${p.nature}" — sem boleto gerado</td></tr>`;
+    } else if (semDup) {
+      parcRows = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);font-style:italic;padding:12px">Parcelas a definir — você informará ao salvar</td></tr>`;
+    } else {
+      parcRows = p.parcelas.map(par => `<tr>
         <td>${par.nDup}</td>
         <td>${brDate(par.dVenc)}</td>
         <td class="num">${fmtBRL(par.vDup)}</td>
       </tr>`).join('');
+    }
     const itensRows = p.itens.slice(0,10).map(i => `<tr>
       <td><b>${i.description||'—'}</b><div class="tiny" style="color:var(--text-soft)">${i.code||''} · NCM ${i.ncm||'—'}</div></td>
       <td class="num">${i.quantity}</td>
@@ -129,7 +154,7 @@
           </div>
         </div>
         <div class="prev-section">
-          <h4>Parcelas (${p.parcelas.length || 1})</h4>
+          <h4>${naturezaSemCP(p.nature) ? 'Parcelas (sem CP)' : p.parcelas.length === 0 ? 'Parcelas (a definir)' : 'Parcelas (' + p.parcelas.length + ')'}</h4>
           <table class="prev-table">
             <thead><tr><th>#</th><th>Vencimento</th><th class="num">Valor</th></tr></thead>
             <tbody>${parcRows}</tbody>
@@ -248,10 +273,101 @@
       const invoice_id = invRes.data.id;
 
       // 3. Insert payables (1 por parcela)
-      // NF-e não carrega linha digitável. Perguntamos se o usuário já tem o boleto:
-      //   - Sim → modal com campo por parcela (linha digitável, opcional por parcela)
-      //   - Não → salva payment_method=null, usuário cola código depois em contas-a-pagar
-      const parcelas = PARSED.parcelas.length > 0 ? PARSED.parcelas : [{nDup:'001', dVenc:PARSED.issue_date, vDup:PARSED.total_value}];
+      // Naturezas BONIF/REM/BRINDE/DOACAO → não gera CP, só salva invoice
+      if (naturezaSemCP(PARSED.nature)) {
+        if (window.DMPAY_UI) {
+          await window.DMPAY_UI.open({
+            title: 'NF-e sem cobrança',
+            desc: `Natureza "${PARSED.nature}" (bonificação/remessa/brinde/doação) — invoice salva no Histórico, mas nenhuma conta a pagar foi gerada.`,
+            fields: [],
+            submitLabel: 'Ok',
+            cancelLabel: null
+          });
+        }
+        btn.innerHTML = '<i data-lucide="check-circle-2"></i> Salvo!';
+        lucide.createIcons();
+        setTimeout(() => {
+          cancel();
+          const el = document.getElementById('preview-area');
+          el.innerHTML = `<div class="prev-card" style="text-align:center;padding:32px 24px">
+            <div style="width:48px;height:48px;border-radius:50%;background:var(--bg-soft);color:var(--text-muted);margin:0 auto 12px;display:grid;place-items:center"><i data-lucide="info"></i></div>
+            <h3 style="margin:0 0 4px">NF-e salva</h3>
+            <p style="margin:0 0 16px;color:var(--text-muted);font-size:13px">Natureza "${PARSED.nature}" — sem conta a pagar gerada</p>
+            <a href="historico-nfe.html" class="btn btn-ghost" style="text-decoration:none"><i data-lucide="file-text"></i> Ver no Histórico NF-e</a>
+          </div>`;
+          el.style.display = 'block';
+          document.getElementById('dropzone').style.display = 'none';
+          lucide.createIcons();
+        }, 800);
+        return;
+      }
+
+      // Sem <dup> no XML → perguntar qtd + 1º vencimento + intervalo
+      let parcelas;
+      if (PARSED.parcelas.length > 0) {
+        parcelas = PARSED.parcelas;
+      } else {
+        // Modal para definir parcelas manualmente
+        const parcelaVals = await window.DMPAY_UI.open({
+          title: 'Definir parcelas',
+          desc: `XML sem dados de cobrança (sem <dup>). Informe como parcelar ${fmtBRL(PARSED.total_value)}.`,
+          fields: [
+            {
+              key: 'qtd',
+              label: 'Quantidade de parcelas *',
+              type: 'number',
+              placeholder: '1',
+              value: '1',
+              hint: 'Ex: 1, 2, 3...'
+            },
+            {
+              key: 'primeiro_venc',
+              label: '1º Vencimento *',
+              type: 'date',
+              value: PARSED.issue_date,
+              hint: 'Data do primeiro boleto'
+            },
+            {
+              key: 'intervalo',
+              label: 'Intervalo entre parcelas (dias)',
+              type: 'number',
+              placeholder: '30',
+              value: '30',
+              hint: 'Para parcela única, ignore.'
+            }
+          ],
+          submitLabel: 'Confirmar',
+          cancelLabel: 'Cancelar',
+          onSubmit: (v) => {
+            const q = parseInt(v.qtd, 10);
+            if (!q || q < 1 || q > 60) throw new Error('Quantidade inválida (1–60).');
+            if (!v.primeiro_venc) throw new Error('Informe o 1º vencimento.');
+            return true;
+          }
+        });
+
+        if (!parcelaVals) {
+          btn.disabled = false;
+          btn.innerHTML = original;
+          return;
+        }
+
+        const qtd = parseInt(parcelaVals.qtd, 10) || 1;
+        const primeiroVenc = parcelaVals.primeiro_venc;
+        const intervalo = parseInt(parcelaVals.intervalo, 10) || 30;
+        const valorParcela = Math.round((PARSED.total_value / qtd) * 100) / 100;
+        // Última parcela absorve diferença de centavos
+        let acumulado = 0;
+        parcelas = Array.from({ length: qtd }, (_, i) => {
+          const valor = i === qtd - 1 ? Math.round((PARSED.total_value - acumulado) * 100) / 100 : valorParcela;
+          acumulado += valorParcela;
+          return {
+            nDup: String(i + 1).padStart(3, '0'),
+            dVenc: addDays(primeiroVenc, i * intervalo),
+            vDup: valor
+          };
+        });
+      }
 
       let boletosColados = {}; // { parcelaIdx: 'linha digitável' }
       let formaPagamento = null; // 'boleto' | 'dinheiro' | 'pix' | 'outro'
