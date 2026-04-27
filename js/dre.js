@@ -36,6 +36,7 @@
      'v-dv','v-folha','v-maq',
      'v-dadm','v-prolabore','v-contador',
      'v-dger','v-aluguel','v-internet',
+     'v-despvar',
      'v-ebit',
      'v-rf','v-descontos','v-rendimento',
      'v-df','v-tarifas','v-juros','v-antecip',
@@ -43,7 +44,7 @@
      'v-irpj','v-irpjad','v-csll','v-ll'
     ].forEach(id => { set(id,'—',0.4); });
     ['p-rb','p-icms','p-pis','p-cofins','p-dev','p-rl',
-     'p-cmv','p-lb','p-dv','p-dadm','p-dger','p-ebit',
+     'p-cmv','p-lb','p-dv','p-dadm','p-dger','p-despvar','p-ebit',
      'p-rf','p-df','p-resfin','p-outras','p-ebt','p-ll'
     ].forEach(id => { set(id,'—',0.4); });
   }
@@ -210,10 +211,11 @@
     const aluguel   = sumCats('aluguel','energia','água','agua','condomínio','condominio');
     const internet  = sumCats('internet','segurança','seguranca','limpeza','telefone');
 
+    const despVar   = sumCats('despesa variável','despesa variavel','variável');
     const dvTotal   = folha + maqTaxas;
     const dadmTotal = prolabore + contador;
     const dgerTotal = aluguel + internet;
-    const despOp    = dvTotal + dadmTotal + dgerTotal;
+    const despOp    = dvTotal + dadmTotal + dgerTotal + despVar;
 
     // Despesas Financeiras (não usa 'taxa'/'tarifa' — já estão em maqTaxas)
     const dfJuros   = sumCats('juros', 'multa');
@@ -236,6 +238,7 @@
     setDesp('v-dger','p-dger', dgerTotal);
     setDesp('v-aluguel',null, aluguel);
     setDesp('v-internet',null, internet);
+    setDesp('v-despvar','p-despvar', despVar);
     setDesp('v-df','p-df', despFin);
     setDesp('v-juros',null, dfJuros);
     setDesp('v-antecip',null, dfAntecip);
@@ -315,7 +318,7 @@
     const idMap = {
       'receita-bruta': 'rb', 'icms': 'icms', 'pis': 'pis', 'cofins': 'cofins',
       'dev': 'dev', 'cmv': 'cmv', 'op-vendas': 'dv', 'op-adm': 'dadm',
-      'op-gerais': 'dger', 'rec-fin': 'rf', 'desp-fin': 'df', 'outras': 'outras'
+      'op-gerais': 'dger', 'despvar': 'despvar', 'rec-fin': 'rf', 'desp-fin': 'df', 'outras': 'outras'
     };
     const valEl = $v('v-' + (idMap[key] || key));
     const val = valEl ? valEl.textContent : '—';

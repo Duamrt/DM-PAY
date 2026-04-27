@@ -591,12 +591,89 @@
     await loadPayables(); render();
   }
 
+  // ── Despesa Variável ─────────────────────────────────────────────────────
+  const DESP_VAR_CAT_ID = '7cee9d58-7d58-4559-a8ea-9de07a449aab';
+
+  async function openCreateDespVar() {
+    const html = `
+      <div class="dmp-modal-back" onclick="DMPAY_CP.closeCreate()">
+        <div class="dmp-modal" onclick="event.stopPropagation()" style="max-width:520px">
+          <div class="dmp-modal-head">
+            <h3>Nova despesa variável</h3>
+            <button onclick="DMPAY_CP.closeCreate()"><i data-lucide="x"></i></button>
+          </div>
+          <div class="dmp-modal-body">
+            <div class="dmp-row">
+              <div class="dmp-field"><label>Data de emissão *</label><input id="dv-data" type="date" value="${isoToday()}"></div>
+              <div class="dmp-field"><label>Nº NF <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label><input id="dv-nf" placeholder="Ex: 1234"></div>
+            </div>
+            <div class="dmp-field">
+              <label>Descrição *</label>
+              <input id="dv-desc" placeholder="Ex: Embalagens fevereiro, Conserto balança…">
+            </div>
+            <div class="dmp-row">
+              <div class="dmp-field"><label>Valor *</label><input id="dv-val" type="number" step="0.01" placeholder="0,00"></div>
+              <div class="dmp-field"><label>Vencimento *</label><input id="dv-due" type="date" value="${isoToday()}"></div>
+            </div>
+            <div class="dmp-field">
+              <label>Categoria</label>
+              <input disabled value="Despesa Variável" style="background:var(--bg-soft);color:var(--text-muted);cursor:not-allowed">
+            </div>
+          </div>
+          <div class="dmp-modal-foot">
+            <button class="btn btn-ghost" onclick="DMPAY_CP.closeCreate()">Cancelar</button>
+            <button class="btn btn-primary" id="dv-save" onclick="DMPAY_CP.saveDespVar()"><i data-lucide="check"></i> Lançar</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    lucide.createIcons();
+    setTimeout(() => document.getElementById('dv-desc').focus(), 50);
+  }
+
+  async function saveDespVar() {
+    const _ui = window.DMPAY_UI;
+    const data   = document.getElementById('dv-data').value;
+    const nf     = document.getElementById('dv-nf').value.trim();
+    const desc   = document.getElementById('dv-desc').value.trim();
+    const valStr = document.getElementById('dv-val').value;
+    const due    = document.getElementById('dv-due').value;
+    if (!desc)            { await _ui.alert({ title: 'Descrição obrigatória' }); return; }
+    if (!valStr || +valStr <= 0) { await _ui.alert({ title: 'Valor obrigatório' }); return; }
+    if (!due)             { await _ui.alert({ title: 'Vencimento obrigatório' }); return; }
+    const btn = document.getElementById('dv-save'); btn.disabled = true;
+    const fullDesc = nf ? `NF ${nf} - ${desc}` : desc;
+    try {
+      const payload = {
+        company_id:      window.DMPAY_COMPANY.id,
+        description:     fullDesc,
+        amount:          +valStr,
+        due_date:        due,
+        tipo_lancamento: 'despesa',
+        category_id:     DESP_VAR_CAT_ID,
+        notes:           data !== due ? `Emissão: ${data}` : null,
+        status:          'open'
+      };
+      const { data: row, error } = await sb.from('payables').insert(payload).select('id').single();
+      if (error) throw error;
+      if (window.DMPAY_AUDIT && row?.id) window.DMPAY_AUDIT.create('payable', row.id, payload);
+      closeCreate();
+      await loadPayables();
+      render();
+    } catch (e) {
+      await _ui.alert({ title: 'Erro ao lançar', desc: e.message, danger: true });
+      btn.disabled = false;
+    }
+  }
+
   // Expoe API
   window.DMPAY_CP = {
     getPayables: () => PAYABLES,
     openCreate: openCreate,
+    openCreateDespVar: openCreateDespVar,
     closeCreate: closeCreate,
     saveNew: saveNew,
+    saveDespVar: saveDespVar,
     openDrawer: openDrawer,
     closeDrawer: closeDrawer,
     markPaid: markPaid,
