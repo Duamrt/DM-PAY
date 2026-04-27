@@ -172,8 +172,8 @@ window.DMPAY_EXPORT = (() => {
 
     // Helper: extrai número da NF da descrição ("NF 3465493 ...")
     function extrairNF(desc) {
-      const m = String(desc || '').match(/^NF\s+(\S+)/i);
-      return m ? m[1] : (desc || '—');
+      const m = String(desc || '').match(/^NF[-\s]e?\s+(\S+)/i);
+      return m ? m[1] : '—';
     }
 
     // Dados
@@ -183,9 +183,10 @@ window.DMPAY_EXPORT = (() => {
       if (p.status === 'paid')    { stLabel = 'Pago';     stBg = VERDE_BG;  stFg = VERDE; }
       else if (diff < 0)          { stLabel = 'Atrasado'; stBg = VERM_BG;   stFg = VERMELHO; }
 
-      const sup    = p.suppliers?.trade_name || p.suppliers?.legal_name || '—';
+      const _descSup = p.description?.replace(/^NF[-\s]e?\s+\S+\s*/i, '') || '';
+      const sup    = p.suppliers?.legal_name || p.suppliers?.trade_name || _descSup || '—';
       const cat    = p.expense_categories?.name || '—';
-      const emissao = brDate(p.created_at);
+      const emissao = brDate(p.invoices?.issue_date || p.created_at);
       const nf      = p.invoices?.nf_number || extrairNF(p.description);
       const band    = i % 2 === 0 ? CINZA_CLR : BRANCO;
 

@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <script>if(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)&&window.innerWidth<480&&!sessionStorage.getItem('dmpay-view-as'))location.replace('mobile.html');</script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%232563EB%27/><text x=%2716%27 y=%2722%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2718%27>D</text></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Insights · DM Pay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/ui-esc.js"></script>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
+      --border:#E5E7EB; --border-strong:#D1D5DB;
+      --text:#111827; --text-muted:#6B7280; --text-soft:#6B7280;
+      --accent:#2563EB; --accent-hover:#1D4ED8; --accent-soft:#DBEAFE;
+      --success:#10B981; --success-soft:#D1FAE5;
+      --warn:#D97706; --warn-soft:#FEF3C7;
+      --danger:#DC2626; --danger-soft:#FEE2E2;
+      --shadow:0 1px 2px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.06);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.08),0 4px 10px rgba(0,0,0,.05);
+    }
+    [data-theme="dark"] {
+      --bg:#0B0D10; --bg-soft:#111418; --bg-card:#141820; --bg-hover:#1A1F27;
+      --border:#222832; --border-strong:#2D3440;
+      --text:#F3F4F6; --text-muted:#9CA3AF; --text-soft:#6B7280;
+      --accent:#3B82F6; --accent-hover:#60A5FA; --accent-soft:rgba(59,130,246,.15);
+      --success:#10B981; --success-soft:rgba(16,185,129,.15);
+      --warn:#FBBF24; --warn-soft:rgba(251,191,36,.15);
+      --danger:#F87171; --danger-soft:rgba(248,113,113,.15);
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 1px 3px rgba(0,0,0,.3);
+      --shadow-lg:0 10px 25px rgba(0,0,0,.5),0 4px 10px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:'Geist',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+    .sidebar{background:var(--bg-soft);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:28px;height:28px;border-radius:6px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:-.02em}
+    .brand-name{font-weight:600;font-size:15px;letter-spacing:-.01em}
+    .sidebar-label{font-size:11px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;padding:14px 10px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;cursor:pointer}
+    .nav-item:hover{background:var(--bg-hover);color:var(--text)}
+    .nav-item.active{background:var(--accent-soft);color:var(--accent)}
+    .nav-item svg{width:16px;height:16px}
+    .nav-item.soon{opacity:0.55;cursor:default}
+    .nav-item.soon:hover{background:transparent;color:var(--text-muted)}
+    .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--bg-hover);color:var(--text-soft);padding:2px 6px;border-radius:999px;letter-spacing:.02em}
+    .nav-badge.soon-badge{background:var(--accent-soft);color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-size:9px;padding:2px 7px}
+
+    .topbar{height:56px;border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:20}
+    .breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+    .breadcrumb b{color:var(--text);font-weight:500}
+    .topbar-actions{display:flex;align-items:center;gap:10px}
+    .icon-btn{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer}
+    .icon-btn:hover{background:var(--bg-hover);color:var(--text)}
+    .icon-btn svg{width:15px;height:15px}
+    .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:white;display:grid;place-items:center;font-weight:600;font-size:12px}
+
+    main{padding:24px 28px 80px}
+
+    .hero{margin-bottom:22px}
+    .hero h1{margin:0 0 4px;font-size:22px;font-weight:600;letter-spacing:-.02em}
+    .hero p{margin:0;color:var(--text-muted);font-size:13px}
+    .hero p span{font-weight:500;color:var(--text)}
+
+    /* KPIs */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+    .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;transition:.15s}
+    .kpi:hover{border-color:var(--border-strong);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+    .kpi-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .kpi-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+    .kpi-icon svg{width:16px;height:16px}
+    .kpi-icon.warn{background:var(--warn-soft);color:var(--warn)}
+    .kpi-icon.success{background:var(--success-soft);color:var(--success)}
+    .kpi-icon.danger{background:var(--danger-soft);color:var(--danger)}
+    .kpi-label{font-size:11.5px;font-weight:500;color:var(--text-muted);letter-spacing:.01em}
+    .kpi-value{font-size:26px;font-weight:600;letter-spacing:-.03em;font-family:'Geist',sans-serif;margin-bottom:4px;line-height:1}
+    .kpi-sub{font-size:12px;color:var(--text-muted);margin-top:6px}
+    .kpi-sub b{color:var(--text);font-weight:600}
+    .kpi-bar{height:3px;border-radius:99px;background:var(--border);margin-top:10px;overflow:hidden}
+    .kpi-bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+
+    /* Alertas */
+    .section-title{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+    .alerts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+    .alert-card{background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px}
+    .alert-card.danger{border-left-color:var(--danger)}
+    .alert-card.warn{border-left-color:var(--warn)}
+    .alert-card.success{border-left-color:var(--success)}
+    .alert-card.info{border-left-color:var(--accent)}
+    .ac-icon{width:30px;height:30px;min-width:30px;border-radius:7px;display:grid;place-items:center}
+    .alert-card.danger .ac-icon{background:var(--danger-soft);color:var(--danger)}
+    .alert-card.warn .ac-icon{background:var(--warn-soft);color:var(--warn)}
+    .alert-card.success .ac-icon{background:var(--success-soft);color:var(--success)}
+    .alert-card.info .ac-icon{background:var(--accent-soft);color:var(--accent)}
+    .ac-icon svg{width:14px;height:14px}
+    .ac-title{font-weight:600;font-size:13px;margin-bottom:3px;color:var(--text)}
+    .ac-text{font-size:12px;color:var(--text-muted);line-height:1.5}
+    .ac-text b{color:var(--text);font-weight:600}
+
+    /* Grid 2 colunas */
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+    .full-col{margin-bottom:18px}
+    .card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-soft)}
+    .card-head h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+    .card-head h3 svg{width:15px;height:15px;color:var(--text-muted)}
+    .card-head .sub{font-size:11.5px;color:var(--text-soft);font-weight:400}
+
+    /* Gráfico */
+    .chart-wrap{padding:16px 18px;height:240px;position:relative}
+
+    /* Devedores */
+    .devedor-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border)}
+    .devedor-row:last-child{border-bottom:none}
+    .devedor-rank{width:22px;height:22px;border-radius:50%;background:var(--bg-soft);border:1px solid var(--border);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--text-muted);flex-shrink:0}
+    .devedor-rank.top1{background:var(--danger-soft);border-color:var(--danger);color:var(--danger)}
+    .devedor-rank.top2{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
+    .devedor-name{font-weight:600;font-size:13px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .devedor-meta{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+    .devedor-val{font-family:'Geist Mono',monospace;font-weight:700;font-size:13.5px;color:var(--danger);text-align:right;white-space:nowrap}
+    .devedor-bar{height:3px;border-radius:99px;background:var(--border);margin-top:4px}
+    .devedor-bar-fill{height:100%;border-radius:99px;background:var(--danger);transition:width .6s ease}
+
+    /* Distribuição por tipo */
+    .distrib-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border)}
+    .distrib-row:last-child{border-bottom:none}
+    .distrib-label{font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+    .distrib-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .distrib-bar-wrap{height:4px;background:var(--border);border-radius:99px;margin-top:4px;overflow:hidden}
+    .distrib-bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+    .distrib-val{font-family:'Geist Mono',monospace;font-weight:600;font-size:12.5px;text-align:right;white-space:nowrap}
+    .distrib-pct{font-size:11px;color:var(--text-muted)}
+
+    /* Loading */
+    .skeleton{background:linear-gradient(90deg,var(--border) 25%,var(--bg-hover) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:6px;height:26px}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+    @media (max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}.alerts-grid{grid-template-columns:1fr}}
+    @media (max-width:600px){body{grid-template-columns:1fr}.sidebar{display:none}}
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">D</div>
+      <div class="brand-name">DM Pay</div>
+    </div>
+
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a class="nav-item active"><i data-lucide="sparkles"></i> Insights</a>
+    <a class="nav-item" href="alertas.html"><i data-lucide="bell"></i> Alertas</a>
+
+    <div class="sidebar-label">Financeiro</div>
+    <a class="nav-item" href="contas-a-pagar.html"><i data-lucide="receipt"></i> Contas a pagar</a>
+    <a class="nav-item" href="contas-a-receber.html"><i data-lucide="hand-coins"></i> Contas a receber</a>
+    <a class="nav-item" href="calendario.html"><i data-lucide="calendar"></i> Calendário</a>
+    <a class="nav-item" href="fluxo-caixa.html"><i data-lucide="trending-up"></i> Fluxo de caixa</a>
+    <a class="nav-item" href="dre.html"><i data-lucide="bar-chart-3"></i> DRE</a>
+    <a class="nav-item" href="evolucao-anual.html"><i data-lucide="line-chart"></i> Evolução Anual</a>
+
+    <div class="sidebar-label">Entradas</div>
+    <a class="nav-item" href="importar-xml.html"><i data-lucide="upload"></i> NF-e</a>
+    <a class="nav-item" href="historico-nfe.html"><i data-lucide="file-text"></i> Histórico NF-e</a>
+    <a class="nav-item" href="vendas.html"><i data-lucide="shopping-cart"></i> Vendas diárias</a>
+    <a class="nav-item" href="despesas.html"><i data-lucide="plus-square"></i> Despesas</a>
+
+    <div class="sidebar-label">Cadastros</div>
+    <a class="nav-item" href="fornecedores.html"><i data-lucide="building-2"></i> Fornecedores</a>
+    <a class="nav-item" href="categorias.html"><i data-lucide="tag"></i> Categorias</a>
+
+    <div class="sidebar-label">Config</div>
+    <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
+    <a class="nav-item" href="meu-plano.html"><i data-lucide="credit-card"></i> Meu Plano</a>
+    <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
+  </aside>
+
+  <div>
+    <header class="topbar">
+      <div class="breadcrumb"><b>Insights</b></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <div class="avatar" id="avatarEl">?</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>Diagnóstico do negócio</h1>
+        <p>Visão automática de saúde financeira — <span id="heroDate">carregando...</span></p>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-head">
+            <span class="kpi-label">Inadimplência</span>
+            <div class="kpi-icon danger"><i data-lucide="alert-triangle"></i></div>
+          </div>
+          <div class="kpi-value" id="kpiInadimplencia">—</div>
+          <div class="kpi-sub" id="kpiInadimplenciaSub">do total a receber está em atraso</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="kpiInadimplenciaBar" style="background:var(--danger);width:0%"></div></div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-head">
+            <span class="kpi-label">Ticket médio</span>
+            <div class="kpi-icon"><i data-lucide="users"></i></div>
+          </div>
+          <div class="kpi-value" id="kpiTicket">—</div>
+          <div class="kpi-sub" id="kpiTicketSub">por cliente ativo</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-head">
+            <span class="kpi-label">Receita este mês</span>
+            <div class="kpi-icon success"><i data-lucide="trending-up"></i></div>
+          </div>
+          <div class="kpi-value" id="kpiReceita">—</div>
+          <div class="kpi-sub" id="kpiReceitaSub">em vendas no período</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-head">
+            <span class="kpi-label">Total em aberto</span>
+            <div class="kpi-icon warn"><i data-lucide="clock"></i></div>
+          </div>
+          <div class="kpi-value" id="kpiAberto">—</div>
+          <div class="kpi-sub" id="kpiAbertoSub">entre atrasados e a vencer</div>
+        </div>
+      </div>
+
+      <!-- Alertas -->
+      <p class="section-title">Alertas automáticos</p>
+      <div class="alerts-grid" id="alertsGrid">
+        <div class="alert-card info">
+          <div class="ac-icon"><i data-lucide="loader"></i></div>
+          <div><div class="ac-title">Carregando análise...</div><div class="ac-text">Processando dados do período</div></div>
+        </div>
+      </div>
+
+      <!-- Gráfico + Devedores -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head">
+            <h3><i data-lucide="bar-chart-2"></i> Receita mensal</h3>
+            <span class="sub">últimos 6 meses</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chartReceita"></canvas>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3><i data-lucide="alert-octagon"></i> Maiores devedores</h3>
+            <span class="sub">top 5 em aberto</span>
+          </div>
+          <div id="devedoresList"><div style="padding:20px 18px;color:var(--text-muted);font-size:13px">Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- Distribuição inadimplência por faixa -->
+      <div class="full-col">
+        <div class="card">
+          <div class="card-head">
+            <h3><i data-lucide="pie-chart"></i> Inadimplência por faixa de atraso</h3>
+            <span class="sub">quanto deve por tempo de atraso</span>
+          </div>
+          <div id="faixaList"><div style="padding:20px 18px;color:var(--text-muted);font-size:13px">Carregando...</div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  (function(){
+    // --- Helpers ---
+    const fmt = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const fmtK = v => { v = Number(v||0); return v >= 1000 ? 'R$ ' + (v/1000).toFixed(1).replace('.',',') + 'k' : fmt(v); };
+
+    function today() {
+      const d = new Date();
+      const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${dd}`;
+    }
+    function monthStart(offset) {
+      offset = offset || 0;
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() + offset);
+      const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0');
+      return `${y}-${m}-01`;
+    }
+    function monthEnd(offset) {
+      offset = offset || 0;
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() + offset + 1);
+      d.setDate(0);
+      const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${dd}`;
+    }
+    function monthLabel(offset) {
+      offset = offset || 0;
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() + offset);
+      return d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'})
+             .replace(' de ','/').replace('.','')
+             .replace(/^(\w)/,function(c){return c.toUpperCase();});
+    }
+
+    function setEl(id, val){ const el = document.getElementById(id); if(el) el.textContent = val; }
+
+    // --- Init: aguarda DMPAY_COMPANY (padrão das outras páginas) ---
+    let _tries = 0, _done = false;
+    async function init() {
+      if (_done) return;
+      if (!window.DMPAY_COMPANY) { if (++_tries < 80) { setTimeout(init, 100); return; } }
+      _done = true;
+
+      const company = window.DMPAY_COMPANY;
+      const isPlatformAdmin = company && company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
+      // Platform admin sem view-as não tem dados de tenant — mostra aviso
+      if (isPlatformAdmin && !window.DMPAY_VIEW_AS) {
+        document.getElementById('heroDate').textContent = 'selecione um tenant na Torre de Comando';
+        document.getElementById('alertsGrid').innerHTML = `
+          <div class="alert-card info" style="grid-column:1/-1">
+            <div class="ac-icon"><i data-lucide="shield"></i></div>
+            <div><div class="ac-title">Visão de administrador</div>
+            <div class="ac-text">Para ver os insights de um cliente, acesse a <a href="admin.html" style="color:var(--accent)">Torre de Comando</a> e clique em "Ver como".</div></div>
+          </div>`;
+        lucide.createIcons();
+        return;
+      }
+
+      const cid = company ? company.id : null;
+      const td = today();
+      const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const d = new Date();
+      document.getElementById('heroDate').textContent =
+        d.getDate() + ' de ' + meses[d.getMonth()] + ' de ' + d.getFullYear();
+
+      // Chama análises em paralelo
+      await Promise.all([
+        carregarInadimplencia(cid, td),
+        carregarReceita(cid, td),
+        carregarDevedores(cid, td),
+        carregarGrafico(cid),
+      ]);
+      lucide.createIcons();
+    }
+    setTimeout(init, 150);
+
+    // --- Inadimplência ---
+    async function carregarInadimplencia(cid, td) {
+      let qAtrasados = window.sb.from('receivables')
+        .select('amount, customer_id, due_date')
+        .eq('status', 'overdue');
+      let qTodos = window.sb.from('receivables')
+        .select('amount, customer_id')
+        .in('status', ['overdue', 'open']);
+      if (cid) { qAtrasados = qAtrasados.eq('company_id', cid); qTodos = qTodos.eq('company_id', cid); }
+
+      const [{ data: atrasados }, { data: todos }] = await Promise.all([qAtrasados, qTodos]);
+
+      const totalAtrasado = (atrasados||[]).reduce((s,r)=>s+Number(r.amount||0),0);
+      const totalGeral    = (todos||[]).reduce((s,r)=>s+Number(r.amount||0),0);
+      const pct = totalGeral > 0 ? (totalAtrasado/totalGeral*100) : 0;
+
+      setEl('kpiInadimplencia', pct.toFixed(1) + '%');
+      setEl('kpiInadimplenciaSub', `${fmtK(totalAtrasado)} de ${fmtK(totalGeral)} a receber em atraso`);
+      const bar = document.getElementById('kpiInadimplenciaBar');
+      if(bar) bar.style.width = Math.min(pct,100) + '%';
+
+      // Ticket médio
+      const clientesUnicos = new Set((todos||[]).map(r=>r.customer_id)).size;
+      const ticket = clientesUnicos > 0 ? totalGeral / clientesUnicos : 0;
+      setEl('kpiTicket', fmtK(ticket));
+      setEl('kpiTicketSub', `média entre ${clientesUnicos} clientes com pendências`);
+
+      // Total em aberto
+      let qVencer = window.sb.from('receivables').select('amount').eq('status','open');
+      if(cid) qVencer = qVencer.eq('company_id', cid);
+      const { data: vencer } = await qVencer;
+      const totalVencer = (vencer||[]).reduce((s,r)=>s+Number(r.amount||0),0);
+      setEl('kpiAberto', fmtK(totalAtrasado + totalVencer));
+      setEl('kpiAbertoSub', `${fmtK(totalAtrasado)} atrasado + ${fmtK(totalVencer)} a vencer`);
+
+      // Alertas
+      gerarAlertas(pct, totalAtrasado, totalVencer, clientesUnicos);
+
+      // Faixas de atraso
+      carregarFaixas(atrasados||[], td);
+    }
+
+    // --- Receita do mês ---
+    async function carregarReceita(cid, td) {
+      const ini = monthStart(0), fim = monthEnd(0);
+      let q = window.sb.from('daily_sales').select('amount').gte('sale_date', ini).lte('sale_date', fim);
+      if(cid) q = q.eq('company_id', cid);
+      const { data } = await q;
+
+      const total = (data||[]).reduce((s,r)=>s+Number(r.amount||0),0);
+      setEl('kpiReceita', fmtK(total));
+      setEl('kpiReceitaSub', `entre ${ini.slice(8,10)}/${ini.slice(5,7)} e hoje`);
+    }
+
+    // --- Gráfico 6 meses ---
+    async function carregarGrafico(cid) {
+      const labels = [], values = [];
+      const queries = [];
+      for(let i = -5; i <= 0; i++){
+        labels.push(monthLabel(i));
+        let q = window.sb.from('daily_sales').select('amount').gte('sale_date', monthStart(i)).lte('sale_date', monthEnd(i));
+        if(cid) q = q.eq('company_id', cid);
+        queries.push(q);
+      }
+      const results = await Promise.all(queries);
+      results.forEach(({data}) => {
+        values.push((data||[]).reduce((s,r)=>s+Number(r.amount||0),0));
+      });
+
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const ctx = document.getElementById('chartReceita');
+      if(!ctx) return;
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Receita',
+            data: values,
+            backgroundColor: values.map((v,i) => i === 5
+              ? 'rgba(37,99,235,0.85)'
+              : 'rgba(37,99,235,0.25)'),
+            borderColor: 'rgba(37,99,235,1)',
+            borderWidth: 1,
+            borderRadius: 5,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ' ' + fmt(ctx.parsed.y)
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#9CA3AF', font: { size: 11 } } },
+            y: {
+              grid: { color: isDark ? '#222832' : '#F3F4F6' },
+              ticks: {
+                color: '#9CA3AF', font: { size: 11 },
+                callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // --- Top 5 devedores ---
+    async function carregarDevedores(cid, td) {
+      let q = window.sb.from('receivables')
+        .select('amount, customer_id, customers(name)')
+        .eq('status','overdue')
+        .order('amount', { ascending: false })
+        .limit(500);
+      if(cid) q = q.eq('company_id', cid);
+      const { data } = await q;
+
+      // Agrupa por cliente
+      const map = {};
+      (data||[]).forEach(r => {
+        const id = r.customer_id;
+        if(!id) return;
+        if(!map[id]) map[id] = { name: r.customers?.name || 'Cliente '+id, total: 0, qtd: 0 };
+        map[id].total += Number(r.amount||0);
+        map[id].qtd++;
+      });
+
+      const sorted = Object.values(map).sort((a,b)=>b.total-a.total).slice(0,5);
+      const maxVal = sorted[0]?.total || 1;
+
+      const list = document.getElementById('devedoresList');
+      if(!sorted.length){
+        list.innerHTML = '<div style="padding:20px 18px;color:var(--text-muted);font-size:13px">Nenhum devedor em atraso 🎉</div>';
+        return;
+      }
+
+      list.innerHTML = sorted.map((d,i) => `
+        <div class="devedor-row">
+          <div class="devedor-rank ${i===0?'top1':i===1?'top2':''}">${i+1}</div>
+          <div>
+            <div class="devedor-name">${esc(d.name)}</div>
+            <div class="devedor-meta">${d.qtd} boleto${d.qtd>1?'s':''} em atraso</div>
+            <div class="devedor-bar"><div class="devedor-bar-fill" style="width:${(d.total/maxVal*100).toFixed(1)}%"></div></div>
+          </div>
+          <div class="devedor-val">${fmtK(d.total)}</div>
+        </div>
+      `).join('');
+    }
+
+    // --- Faixas de atraso ---
+    function carregarFaixas(atrasados, td) {
+      const faixas = [
+        { label: '1–30 dias', min:1, max:30, cor:'#FBBF24' },
+        { label: '31–60 dias', min:31, max:60, cor:'#F97316' },
+        { label: '61–90 dias', min:61, max:90, cor:'#EF4444' },
+        { label: 'Mais de 90 dias', min:91, max:9999, cor:'#7F1D1D' },
+      ];
+      const tdDate = new Date(td+'T00:00:00');
+      const totais = faixas.map(f => {
+        const soma = atrasados.filter(r => {
+          if(!r.due_date) return false;
+          const [y,m,d] = r.due_date.slice(0,10).split('-').map(Number);
+          const dias = Math.round((tdDate - new Date(y,m-1,d)) / 86400000);
+          return dias >= f.min && dias <= f.max;
+        }).reduce((s,r)=>s+Number(r.amount||0),0);
+        return { ...f, soma };
+      });
+
+      const maxSoma = Math.max(...totais.map(f=>f.soma), 1);
+      const totalGeral = totais.reduce((s,f)=>s+f.soma,0);
+
+      const list = document.getElementById('faixaList');
+      list.innerHTML = totais.map(f => `
+        <div class="distrib-row">
+          <div>
+            <div class="distrib-label">
+              <span class="distrib-dot" style="background:${f.cor}"></span>
+              ${f.label}
+            </div>
+            <div class="distrib-bar-wrap">
+              <div class="distrib-bar-fill" style="width:${(f.soma/maxSoma*100).toFixed(1)}%;background:${f.cor}"></div>
+            </div>
+          </div>
+          <div>
+            <div class="distrib-val">${fmtK(f.soma)}</div>
+            <div class="distrib-pct">${totalGeral>0?(f.soma/totalGeral*100).toFixed(1)+'%':'—'}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- Alertas inteligentes ---
+    function gerarAlertas(pct, totalAtrasado, totalVencer, clientes) {
+      const cards = [];
+
+      if(pct >= 20) {
+        cards.push({ tipo:'danger', icon:'alert-triangle',
+          title: `Inadimplência crítica: ${pct.toFixed(1)}%`,
+          text: `<b>${fmtK(totalAtrasado)}</b> em boletos vencidos. Priorize a cobrança dos maiores devedores abaixo.` });
+      } else if(pct >= 10) {
+        cards.push({ tipo:'warn', icon:'alert-circle',
+          title: `Inadimplência elevada: ${pct.toFixed(1)}%`,
+          text: `<b>${fmtK(totalAtrasado)}</b> em atraso. Fique de olho — se subir mais pode comprometer o fluxo.` });
+      } else {
+        cards.push({ tipo:'success', icon:'check-circle',
+          title: `Inadimplência sob controle: ${pct.toFixed(1)}%`,
+          text: `Apenas <b>${fmtK(totalAtrasado)}</b> em atraso. Mantenha a régua de cobrança ativa.` });
+      }
+
+      if(totalVencer > 0) {
+        cards.push({ tipo: totalVencer > 50000 ? 'warn' : 'info', icon:'clock',
+          title: `${fmtK(totalVencer)} vencem nos próximos dias`,
+          text: `Boletos ainda dentro do prazo. Envie lembretes agora para evitar novos atrasos.` });
+      }
+
+      if(clientes > 0) {
+        cards.push({ tipo:'info', icon:'users',
+          title: `${clientes} clientes com pendências`,
+          text: `Ticket médio de inadimplência por cliente: <b>${fmtK(totalAtrasado/clientes)}</b>.` });
+      }
+
+      // Preenche com até 4 alertas
+      const grid = document.getElementById('alertsGrid');
+      grid.innerHTML = cards.slice(0,4).map(c => `
+        <div class="alert-card ${c.tipo}">
+          <div class="ac-icon"><i data-lucide="${c.icon}"></i></div>
+          <div>
+            <div class="ac-title">${c.title}</div>
+            <div class="ac-text">${c.text}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function esc(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // Ativa ícones já no load (sidebar)
+    document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+  })();
+  </script>
+</body>
+</html>

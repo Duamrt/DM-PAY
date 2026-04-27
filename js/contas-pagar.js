@@ -170,7 +170,7 @@
           <td><span class="check" role="checkbox" aria-checked="false" tabindex="0" data-row="${p.id}" onclick="event.stopPropagation()"></span></td>
           <td><div class="supplier"><span class="supplier-avatar tone-${tone(sup)}">${iniciais(sup)}</span><span class="supplier-name">${supShort}</span></div></td>
           <td><span class="nf-badge">${p.invoices?.nf_number || (p.description?.match(/^NF\s+(\S+)/i)?.[1]) || '—'}</span></td>
-          <td class="date">${brDate(p.created_at)}</td>
+          <td class="date">${brDate(p.invoices?.issue_date || p.created_at)}</td>
           <td class="date">${brDate(p.due_date)}</td>
           <td>${cat}</td>
           <td class="money">${fmtBRL(p.amount)}</td>
