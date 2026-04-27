@@ -508,11 +508,16 @@
     const methodBefore   = p.payment_method || 'outro';
     const boletoBefore   = p.boleto_line || '';
     const notesBefore    = p.notes || '';
+    const tipoBefore     = p.tipo_lancamento || '';
 
     const vals = await window.DMPAY_UI.open({
       title: 'Editar lançamento',
-      desc: 'Altere vencimento, valor, forma ou linha digitável.',
+      desc: 'Altere vencimento, valor, tipo ou forma de pagamento.',
       fields: [
+        { key: 'tipo', label: 'Tipo de lançamento *', options: [
+            { value: 'compra',  label: 'Compra (mercadoria / NF)' },
+            { value: 'despesa', label: 'Despesa (luz, FGTS, aluguel…)' }
+          ], value: tipoBefore },
         { key: 'amount',     label: 'Valor (R$) *',          type: 'number',  value: Number(amountBefore).toFixed(2) },
         { key: 'due_date',   label: 'Vencimento *',           type: 'date',    value: dueBefore },
         { key: 'method',     label: 'Forma de pagamento',     options: [
@@ -530,6 +535,7 @@
       cancelLabel: 'Cancelar',
       onSubmit: (v) => {
         const n = Number(String(v.amount).replace(',', '.'));
+        if (!v.tipo) throw new Error('Tipo de lançamento é obrigatório.');
         if (!isFinite(n) || n <= 0) throw new Error('Valor precisa ser maior que zero.');
         if (!v.due_date) throw new Error('Vencimento é obrigatório.');
         const raw = (v.boleto_line || '').replace(/\D/g, '');
@@ -541,13 +547,14 @@
 
     if (!vals) return;
 
-    const amount       = Number(String(vals.amount).replace(',', '.'));
-    const due_date     = vals.due_date;
+    const amount         = Number(String(vals.amount).replace(',', '.'));
+    const due_date       = vals.due_date;
+    const tipo_lancamento = vals.tipo || null;
     const payment_method = vals.method || null;
-    const boleto_line  = payment_method === 'boleto' ? ((vals.boleto_line || '').replace(/\s/g, '') || null) : null;
-    const notes        = (vals.notes || '').trim() || null;
+    const boleto_line    = payment_method === 'boleto' ? ((vals.boleto_line || '').replace(/\s/g, '') || null) : null;
+    const notes          = (vals.notes || '').trim() || null;
 
-    const { error } = await sb.from('payables').update({ amount, due_date, payment_method, boleto_line, notes }).eq('id', id);
+    const { error } = await sb.from('payables').update({ amount, due_date, payment_method, boleto_line, notes, tipo_lancamento }).eq('id', id);
     if (error) { await DMPAY_UI.alert({ title: 'Erro ao salvar', desc: error.message, danger: true }); return; }
 
     if (window.DMPAY_AUDIT) {
