@@ -18,6 +18,44 @@ import requests
 LOG = logging.getLogger("dmpay-agent")
 SOURCE = "icommerce"
 
+def get_cielo_rate(brand, tipo, parcelas):
+    """Retorna a taxa Cielo para a bandeira/tipo/parcelas informados."""
+    b = (brand or '').upper().strip()
+    t = (tipo or '').upper().strip()
+    p = int(parcelas or 0)
+
+    if t == 'PIX' or b == 'PIX':
+        return 0.0099
+
+    is_debito = t == 'DEBITO' or 'DEBITO' in b
+    if is_debito:
+        if 'ELO' in b: return 0.0181
+        if 'BANESCARD' in b or 'CABAL' in b: return 0.0260
+        return 0.0081  # Visa, Master, default débito
+
+    # Crédito parcelado 7-12x
+    if p >= 7:
+        if 'DINERS' in b: return 0.0258
+        if any(x in b for x in ('SOROCRED','BANESCARD','CABAL','JCB')): return 0.0455
+        return 0.0139
+    # Crédito parcelado 2-6x
+    if p >= 2:
+        if any(x in b for x in ('ELO','AMEX','HIPERCARD')): return 0.0349
+        if 'DINERS' in b: return 0.0240
+        if any(x in b for x in ('SOROCRED','BANESCARD','CABAL')):
+            return 0.0380 if p <= 3 else 0.0405
+        if 'JCB' in b: return 0.0130
+        return 0.0249  # Visa, Master 2-6x
+    # Crédito à vista
+    if any(x in b for x in ('ELO','AMEX','HIPERCARD')): return 0.0235
+    if 'DINERS' in b: return 0.0213
+    if any(x in b for x in ('SOROCRED','BANESCARD','CABAL','AGIPLAN')): return 0.0410
+    if 'JCB' in b: return 0.0120
+    # Vouchers alimentação — taxa similar ao crédito à vista
+    if any(x in b for x in ('ALIMENTA','REFEIC','TICKET','ALELO','SODEXO')): return 0.0139
+    return 0.0139  # Visa, Master à vista (default)
+
+
 FRP_TO_METHOD = {
     1: "dinheiro",
     2: "cheque",
@@ -520,6 +558,61 @@ def job_invoices(cfg, cn, company_id, days, dry_run):
     return sent
 
 
+def job_card_fees(cfg, cn, company_id, days, dry_run):
+    """Lê DETALHE_CARTAO, calcula taxa Cielo por bandeira e agrega por dia.
+    Usa DCC_DATA como data. Idempotente via UPSERT.
+    """
+    cutoff = datetime.now() - timedelta(days=days)
+
+    sql = """
+        SELECT
+            CONVERT(date, DCC_DATA) AS dia,
+            DCC_REDE AS bandeira,
+            DCC_TIPO AS tipo,
+            DCC_QTDE_PARCELA AS parcelas,
+            COUNT(*) AS qtd,
+            SUM(DCC_VALOR) AS total
+        FROM DETALHE_CARTAO WITH (NOLOCK)
+        WHERE DCC_DATA >= ?
+          AND DCC_STATUS = 'A'
+          AND DCC_VALOR > 0
+        GROUP BY CONVERT(date, DCC_DATA), DCC_REDE, DCC_TIPO, DCC_QTDE_PARCELA
+        ORDER BY dia
+    """
+    rows = cn.cursor().execute(sql, cutoff).fetchall()
+
+    # Agrega por (dia, bandeira, tipo) calculando fee correto por parcelas
+    agg = {}
+    for dia, bandeira, tipo, parcelas, qtd, total in rows:
+        rate = get_cielo_rate(bandeira, tipo, parcelas)
+        total_f = float(total or 0)
+        key = (to_iso_date(dia),
+               (bandeira or 'OUTRO').strip()[:50],
+               (tipo or 'OUTRO').strip()[:20])
+        if key not in agg:
+            agg[key] = {'total': 0.0, 'fee': 0.0, 'count': 0}
+        agg[key]['total'] += total_f
+        agg[key]['fee']   += total_f * rate
+        agg[key]['count'] += int(qtd or 0)
+
+    payload = [{
+        "company_id":        company_id,
+        "fee_date":          k[0],
+        "card_brand":        k[1],
+        "card_type":         k[2],
+        "total_amount":      round(v['total'], 2),
+        "fee_amount":        round(v['fee'], 2),
+        "transaction_count": v['count'],
+        "source":            SOURCE,
+    } for k, v in agg.items() if k[0] is not None]
+
+    sent = sb_upsert(cfg, "daily_card_fees", payload,
+                     on_conflict="company_id,fee_date,card_brand,card_type,source",
+                     dry_run=dry_run)
+    LOG.info("card_fees: %d linhas (%d dias)", sent, len({p['fee_date'] for p in payload}))
+    return sent
+
+
 # ---------------- main ----------------
 
 def main():
@@ -530,7 +623,8 @@ def main():
     p.add_argument("--days-receivables", type=int, default=14, help="janela pra capturar pagamentos recentes")
     p.add_argument("--days-invoices", type=int, default=60, help="janela em dias pra buscar NF-e novas")
     p.add_argument("--max-history-months", type=int, default=24, help="meses de histórico pra receivables (default 24)")
-    p.add_argument("--only", choices=["sales", "withdrawals", "customers", "receivables", "invoices"], default=None)
+    p.add_argument("--days-card-fees", type=int, default=90, help="janela em dias pra recalcular taxas de cartão")
+    p.add_argument("--only", choices=["sales", "withdrawals", "customers", "receivables", "invoices", "card_fees"], default=None)
     args = p.parse_args()
 
     base = Path(__file__).parent
@@ -552,6 +646,8 @@ def main():
             jobs.append(("withdrawals", lambda: job_cash_withdrawals(cfg, cn, company_id, args.days_sales, args.dry_run)))
         if args.only in (None, "receivables"):
             jobs.append(("receivables", lambda: job_receivables(cfg, cn, company_id, args.days_receivables, args.dry_run, args.max_history_months)))
+        if args.only in (None, "card_fees"):
+            jobs.append(("card_fees", lambda: job_card_fees(cfg, cn, company_id, args.days_card_fees, args.dry_run)))
         # invoices desativado: NF-e entra só via importação manual de XML (importar-xml.html)
         # reativar só se o agente passar a extrair parcelas e boletos automaticamente
         # if args.only in (None, "invoices"):

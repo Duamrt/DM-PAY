@@ -33,7 +33,7 @@
   function zeroAll() {
     ['v-rb','v-icms','v-pis','v-cofins','v-dev','v-rl',
      'v-cmv','v-lb',
-     'v-dv','v-folha','v-maq',
+     'v-dv','v-folha','v-maq','v-cielo',
      'v-dadm','v-prolabore','v-contador',
      'v-dger','v-aluguel','v-internet',
      'v-despvar',
@@ -79,6 +79,15 @@
       .select('amount,status,category_id,description,expense_categories(name)')
       .eq('company_id', CID)
       .gte(dateField, ini).lt(dateField, prox);
+    return data || [];
+  }
+
+  async function fetchCardFees(ano, mes) {
+    const { ini, prox } = monthRange(ano, mes);
+    const { data } = await sb.from('daily_card_fees')
+      .select('fee_amount,card_brand,card_type,total_amount,transaction_count')
+      .eq('company_id', CID)
+      .gte('fee_date', ini).lt('fee_date', prox);
     return data || [];
   }
 
@@ -147,13 +156,15 @@
     set('dre-mes-titulo', `${MESES_LONGO[MES-1]} / ${ANO}`);
     try {
     const prev = prevMonth(ANO, MES);
-    const [sales, salesAnt, invs, pays, taxes] = await Promise.all([
+    const [sales, salesAnt, invs, pays, taxes, cardFees] = await Promise.all([
       fetchSales(ANO, MES),
       fetchSales(prev.ano, prev.mes),
       fetchInvoices(ANO, MES),
       fetchPayables(ANO, MES),
       fetchTaxes(ANO, MES),
+      fetchCardFees(ANO, MES),
     ]);
+    cardFees_cache = cardFees;
     sales_cache = sales;
 
     const rb    = sales.reduce((s,r) => s + Number(r.amount), 0);
@@ -205,14 +216,15 @@
     }
 
     const folha     = sumCats('folha','salário','salario','funcionário','funcionario','trabalhista','holerite','inss','fgts','encargo','guia das','simples nacional');
-    const maqTaxas  = sumCats('maquininha','cielo','stone','rede','getnet','taxa','tarifa');
+    const maqTaxas  = sumCats('maquininha','cielo','stone','rede','getnet','mensalidade maquina','aluguel maquina');
     const prolabore = sumCats('pro-labore','pró-labore','prolabore','sócio','socio','retirada');
     const contador  = sumCats('contador','contabilidade','software','sistema');
     const aluguel   = sumCats('aluguel','energia','água','agua','condomínio','condominio');
     const internet  = sumCats('internet','segurança','seguranca','limpeza','telefone');
 
     const despVar   = sumCats('despesa variável','despesa variavel','variável');
-    const dvTotal   = folha + maqTaxas;
+    const cieloV    = cardFees.reduce((s,r) => s + Number(r.fee_amount||0), 0);
+    const dvTotal   = folha + maqTaxas + cieloV;
     const dadmTotal = prolabore + contador;
     const dgerTotal = aluguel + internet;
     const despOp    = dvTotal + dadmTotal + dgerTotal + despVar;
@@ -232,6 +244,7 @@
     setDesp('v-dv','p-dv', dvTotal);
     setDesp('v-folha',null, folha);
     setDesp('v-maq',null, maqTaxas);
+    setDesp('v-cielo',null, cieloV);
     setDesp('v-dadm','p-dadm', dadmTotal);
     setDesp('v-prolabore',null, prolabore);
     setDesp('v-contador',null, contador);
@@ -363,6 +376,18 @@
           { name: '⚠️ Clique em "Lançar impostos" para usar valores reais', val: '' }
         ];
       }
+    } else if (key === 'cielo') {
+      const byBrand = {};
+      cardFees_cache.forEach(r => {
+        const k = `${r.card_brand} (${r.card_type})`;
+        byBrand[k] = (byBrand[k]||0) + Number(r.fee_amount||0);
+      });
+      items = Object.entries(byBrand).sort(([,a],[,b])=>b-a)
+        .map(([k,v]) => ({ name: k, val: fmt(v) }));
+      const totalTxn = cardFees_cache.reduce((s,r) => s + Number(r.transaction_count||0), 0);
+      const totalVenda = cardFees_cache.reduce((s,r) => s + Number(r.total_amount||0), 0);
+      if (items.length) items.push({ name: '────────────', val: '' });
+      items.push({ name: `${totalTxn} transações · vendas R$ ${fmt(totalVenda)}`, val: '' });
     } else {
       items = [{ name: 'Detalhamento disponível em breve', val: '—' }];
     }
@@ -384,6 +409,7 @@
   }
 
   let sales_cache = [];
+  let cardFees_cache = [];
 
   // ── Chart ────────────────────────────────────────────────────────────────
   let dreChart;
