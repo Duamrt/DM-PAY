@@ -595,6 +595,8 @@
   const DESP_VAR_CAT_ID = '7cee9d58-7d58-4559-a8ea-9de07a449aab';
 
   async function openCreateDespVar() {
+    const suppliers = await loadSuppliers();
+    const supOptions = suppliers.map(s => `<option value="${esc(s.id)}">${esc(s.legal_name)} ${s.cnpj?'· '+esc(s.cnpj):''}</option>`).join('');
     const html = `
       <div class="dmp-modal-back" onclick="DMPAY_CP.closeCreate()">
         <div class="dmp-modal" onclick="event.stopPropagation()" style="max-width:520px">
@@ -610,6 +612,10 @@
             <div class="dmp-field">
               <label>Descrição *</label>
               <input id="dv-desc" placeholder="Ex: Embalagens fevereiro, Conserto balança…">
+            </div>
+            <div class="dmp-field">
+              <label>Fornecedor <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+              <select id="dv-sup"><option value="">— sem fornecedor —</option>${supOptions}</select>
             </div>
             <div class="dmp-row">
               <div class="dmp-field"><label>Valor *</label><input id="dv-val" type="number" step="0.01" placeholder="0,00"></div>
@@ -636,6 +642,7 @@
     const data   = document.getElementById('dv-data').value;
     const nf     = document.getElementById('dv-nf').value.trim();
     const desc   = document.getElementById('dv-desc').value.trim();
+    const supId  = document.getElementById('dv-sup').value || null;
     const valStr = document.getElementById('dv-val').value;
     const due    = document.getElementById('dv-due').value;
     if (!desc)            { await _ui.alert({ title: 'Descrição obrigatória' }); return; }
@@ -646,6 +653,7 @@
     try {
       const payload = {
         company_id:      window.DMPAY_COMPANY.id,
+        supplier_id:     supId,
         description:     fullDesc,
         amount:          +valStr,
         due_date:        due,
