@@ -98,11 +98,12 @@ window._FORN_render = function() {
   }
 
   tbody.innerHTML = rows.map(function(f) {
-    var nm = f.s.legal_name || f.s.trade_name || 'Fornecedor '+f.s.cnpj;
+    var rawNm = f.s.legal_name || f.s.trade_name || '';
+    var isPlaceholder = !rawNm;
+    var nm = isPlaceholder ? 'Fornecedor '+f.s.cnpj : rawNm.toUpperCase();
     var color = _fornAvatarColor(nm), ini = _fornInitials(nm);
-    var isPlaceholder = /^Fornecedor \d{14}$/.test(nm);
     var nameHtml = isPlaceholder
-      ? '<span style="color:var(--text-muted);font-style:italic">'+nm+'</span>'
+      ? '<span style="color:var(--text-muted)">SEM RAZÃO SOCIAL</span>'
       : '<span>'+nm+'</span>';
     var isRec = f.monthly.filter(function(v){return v>0;}).length >= 2;
     var badgeRec = isRec ? '<span style="font-size:10px;background:var(--success-soft);color:var(--success);padding:2px 7px;border-radius:999px;font-weight:600;margin-left:6px;white-space:nowrap">recorrente</span>' : '';
@@ -127,7 +128,8 @@ window._FORN_render = function() {
 window._FORN_openDrawer = function(supId) {
   var f = window._FORN.all.find(function(x){ return x.s.id === supId; });
   if (!f) return;
-  var nm = f.s.legal_name || f.s.trade_name || 'Fornecedor '+f.s.cnpj;
+  var rawNm2 = f.s.legal_name || f.s.trade_name || '';
+  var nm = rawNm2 ? rawNm2.toUpperCase() : 'SEM RAZÃO SOCIAL';
   var color = _fornAvatarColor(nm), ini = _fornInitials(nm);
   var total6m = f.monthly.reduce(function(a,b){return a+b;},0);
   var maxV = Math.max.apply(null,f.monthly.concat([1]));
