@@ -443,7 +443,7 @@
         { key: 'pago_por', label: 'Pago por *', options: [
             { value: '',          label: '— selecione —' },
             { value: 'conta_pj',  label: 'Conta PJ' },
-            { value: 'loteria',   label: 'Loteria' },
+            { value: 'loteria',   label: 'Lotérica' },
             { value: 'terceiros', label: 'Terceiros' }
           ], value: '' },
         { key: 'paid_at', label: 'Data do pagamento *', type: 'date', value: new Date().toISOString().slice(0,10) }

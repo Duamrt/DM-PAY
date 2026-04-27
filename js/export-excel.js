@@ -192,7 +192,7 @@ window.DMPAY_EXPORT = (() => {
       const emissao = brDate(p.invoices?.issue_date || p.created_at);
       const nf      = p.invoices?.nf_number || extrairNF(p.description);
       const tipo    = p.tipo_lancamento === 'compra' ? 'Compra' : p.tipo_lancamento === 'despesa' ? 'Despesa' : '—';
-      const pagoPor = p.pago_por === 'conta_pj' ? 'Conta PJ' : p.pago_por === 'loteria' ? 'Loteria' : p.pago_por === 'terceiros' ? 'Terceiros' : '—';
+      const pagoPor = p.pago_por === 'conta_pj' ? 'Conta PJ' : p.pago_por === 'loteria' ? 'Lotérica' : p.pago_por === 'terceiros' ? 'Terceiros' : '—';
       const band    = i % 2 === 0 ? CINZA_CLR : BRANCO;
 
       const row = ws.addRow([
