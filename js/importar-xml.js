@@ -348,6 +348,7 @@
           payment_method: pm,
           boleto_line: codigo,
           notes: nfeObs,
+          tipo_lancamento: 'compra',
           status: 'open'
         };
       });

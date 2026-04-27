@@ -117,7 +117,7 @@ window.DMPAY_EXPORT = (() => {
     const wb = new ExcelJS.Workbook();
     wb.creator = 'DM Pay';
     const ws = wb.addWorksheet('Contas a Pagar', { properties: { defaultColWidth: 18 } });
-    const NC = 8;
+    const NC = 9;
 
     ws.columns = [
       { width: 14 }, // Emissão
@@ -127,6 +127,7 @@ window.DMPAY_EXPORT = (() => {
       { width: 18 }, // Valor
       { width: 14 }, // Pago em
       { width: 14 }, // Status
+      { width: 14 }, // Tipo
       { width: 28 }, // Categoria
     ];
 
@@ -159,7 +160,7 @@ window.DMPAY_EXPORT = (() => {
     ws.addRow([]);
 
     // Cabeçalho colunas + AutoFilter
-    const hRow = ws.addRow(['Emissão', 'NF', 'Fornecedor', 'Vencimento', 'Valor (R$)', 'Pago em', 'Status', 'Categoria']);
+    const hRow = ws.addRow(['Emissão', 'NF', 'Fornecedor', 'Vencimento', 'Valor (R$)', 'Pago em', 'Status', 'Tipo', 'Categoria']);
     const hRowNum = hRow.number;
     hRow.height = 24;
     hRow.eachCell(c => {
@@ -189,6 +190,7 @@ window.DMPAY_EXPORT = (() => {
       const cat    = p.expense_categories?.name || '—';
       const emissao = brDate(p.invoices?.issue_date || p.created_at);
       const nf      = p.invoices?.nf_number || extrairNF(p.description);
+      const tipo    = p.tipo_lancamento === 'compra' ? 'Compra' : p.tipo_lancamento === 'despesa' ? 'Despesa' : '—';
       const band    = i % 2 === 0 ? CINZA_CLR : BRANCO;
 
       const row = ws.addRow([
@@ -199,6 +201,7 @@ window.DMPAY_EXPORT = (() => {
         Number(p.amount || 0),
         brDate(p.paid_at),
         stLabel,
+        tipo,
         cat,
       ]);
       row.height = 20;
@@ -217,9 +220,11 @@ window.DMPAY_EXPORT = (() => {
       row.getCell(7).font = { name: 'Arial', size: 9, bold: true, color: { argb: stFg } };
       row.getCell(7).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: stBg } };
       row.getCell(7).alignment = { horizontal: 'center', vertical: 'middle' };
-      row.getCell(8).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
+      row.getCell(8).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(8).font = { name: 'Arial', size: 9, bold: true };
+      row.getCell(9).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
 
-      [1,2,3,4,5,6,8].forEach(ci => {
+      [1,2,3,4,5,6,8,9].forEach(ci => {
         row.getCell(ci).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: band } };
       });
       row.eachCell(c => { c.border = brd(); });

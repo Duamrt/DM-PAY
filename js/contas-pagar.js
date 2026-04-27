@@ -58,13 +58,13 @@
     const janelaISO = janela.toISOString().slice(0,10);
     const [abertasR, pagasR] = await Promise.all([
       sb.from('payables')
-        .select('*, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
+        .select('*, tipo_lancamento, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
         .eq('company_id', COMPANY_ID)
         .in('status', ['open'])
         .order('due_date', { ascending: true })
         .limit(2000),
       sb.from('payables')
-        .select('*, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
+        .select('*, tipo_lancamento, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
         .eq('company_id', COMPANY_ID)
         .eq('status', 'paid')
         .gte('paid_at', janelaISO)
@@ -261,6 +261,14 @@
               <div class="dmp-field"><label>Vencimento *</label><input id="cp-due" type="date" value="${(prefill && prefill.due) || isoToday()}"></div>
             </div>
             <div class="dmp-field">
+              <label>Tipo de lançamento *</label>
+              <select id="cp-tipo">
+                <option value="">— selecione —</option>
+                <option value="compra">Compra (mercadoria / NF)</option>
+                <option value="despesa">Despesa (luz, FGTS, aluguel…)</option>
+              </select>
+            </div>
+            <div class="dmp-field">
               <label>Forma de pagamento</label>
               <select id="cp-method">
                 <option value="boleto">Boleto bancário</option>
@@ -304,9 +312,11 @@
     const valStr = document.getElementById('cp-val').value;
     const due = document.getElementById('cp-due').value;
     const method = document.getElementById('cp-method').value;
+    const tipo = document.getElementById('cp-tipo').value;
     const line = (document.getElementById('cp-line').value||'').replace(/\D/g,'');
     const _ui = window.DMPAY_UI;
     if (!desc) { await _ui.alert({ title: 'Descrição obrigatória' }); return; }
+    if (!tipo) { await _ui.alert({ title: 'Tipo de lançamento obrigatório', desc: 'Selecione Compra ou Despesa.' }); return; }
     if (!valStr || +valStr <= 0) { await _ui.alert({ title: 'Valor obrigatório' }); return; }
     if (!due) { await _ui.alert({ title: 'Vencimento obrigatório' }); return; }
     if (method === 'boleto' && line && ![44,47,48].includes(line.length)) {
@@ -326,6 +336,7 @@
         due_date: due,
         payment_method: method,
         boleto_line: method === 'boleto' && line ? line : null,
+        tipo_lancamento: tipo,
         status: 'open'
       };
       const { data, error } = await sb.from('payables').insert(payload).select('id').single();
