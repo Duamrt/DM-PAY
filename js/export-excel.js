@@ -184,7 +184,7 @@ window.DMPAY_EXPORT = (() => {
       if (p.status === 'paid')    { stLabel = 'Pago';     stBg = VERDE_BG;  stFg = VERDE; }
       else if (diff < 0)          { stLabel = 'Atrasado'; stBg = VERM_BG;   stFg = VERMELHO; }
 
-      const _descSup = p.description?.replace(/^NF(?:-e)?\s+\S+\s*/i, '') || '';
+      const _descSup = p.description?.replace(/^NF(?:-e)?\s+[\d\s\-,]+/i, '').trim() || '';
       const supRaw = p.suppliers?.legal_name || p.suppliers?.trade_name || _descSup || '—';
       const sup    = supRaw === '—' ? '—' : supRaw.toUpperCase();
       const cat    = p.expense_categories?.name || '—';
