@@ -9,10 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/auth-guard.js"></script>
-  <script src="js/theme.js"></script>
-  <script src="js/ui-modal.js" defer></script>
   <style>
     :root {
       --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-elevated:#F3F4F6; --bg-hover:#F3F4F6; --bg-surface:#F9FAFB;
@@ -264,6 +260,15 @@
     <button class="btn btn-primary" onclick="saveDrawer()"><i data-lucide="save"></i>Salvar</button>
   </div>
 </div>
+
+<script src="dmpay-version.js"></script>
+<script src="dmpay-mobile.js" defer></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auth-guard.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/ui-modal.js"></script>
+<script src="js/ui-esc.js"></script>
 
 <script>
 (function () {
