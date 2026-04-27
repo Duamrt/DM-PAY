@@ -357,9 +357,10 @@
     document.getElementById('kpi-sub-pct').textContent = 'Calculando...';
 
     // busca total a receber pra calcular %
-    sb.from('receivables').select('amount', { count: 'exact' })
+    sb.from('receivables').select('amount')
       .eq('company_id', window.DMPAY_COMPANY.id)
       .in('status', ['open', 'overdue'])
+      .range(0, 4999)
       .then(({ data: all }) => {
         const totalAR = (all || []).reduce((s, r) => s + Number(r.amount), 0);
         if (totalAR > 0) {
@@ -382,10 +383,12 @@
         .in('status', ['overdue', 'open'])
         .lt('due_date', todayISO)
         .not('customer_id', 'is', null)
-        .order('due_date', { ascending: true }),
+        .order('due_date', { ascending: true })
+        .range(0, 4999),
       sb.from('customers')
         .select('id, name, collection_status, collection_notes, collection_updated_at')
         .eq('company_id', CID)
+        .range(0, 4999)
     ]);
 
     const custMap = {};

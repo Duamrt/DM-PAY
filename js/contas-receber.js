@@ -535,7 +535,8 @@
     closeDrawer: closeDrawer,
     markReceived: markReceived,
     markOpen: markOpen,
-    remove: remove
+    remove: remove,
+    getRecvs: () => RECVS
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

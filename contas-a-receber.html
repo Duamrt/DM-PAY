@@ -15,6 +15,7 @@
   <script src="js/audit.js"></script>
   <script src="js/auth-guard.js"></script>
   <script src="js/contas-receber.js" defer></script>
+  <script src="js/export-excel.js" defer></script>
   <style>
     :root {
       --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-card:#FFFFFF; --bg-hover:#F3F4F6;
@@ -207,6 +208,7 @@
           <p>Quem te deve, quanto e quando vai pagar. Fiado de cliente, cartão a liquidar, recebimento futuro — <b>tudo separado das vendas</b> pra você ver dinheiro real entrando.</p>
         </div>
         <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" id="btn-exportar" onclick="exportarExcel()"><i data-lucide="download"></i> Exportar Excel</button>
           <button class="btn btn-primary" id="btn-novo"><i data-lucide="plus"></i> Nova conta a receber</button>
         </div>
       </div>
@@ -277,6 +279,21 @@
   </div>
 
   <script>
+    function exportarExcel() {
+      const btn = document.getElementById('btn-exportar');
+      if (!window.DMPAY_EXPORT || !window.DMPAY_CR) return;
+      const recvs = window.DMPAY_CR.getRecvs();
+      if (!recvs || !recvs.length) { alert('Nenhum dado para exportar.'); return; }
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader-2"></i> Gerando...';
+      if (window.lucide) lucide.createIcons();
+      DMPAY_EXPORT.contasReceber(recvs).finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="download"></i> Exportar Excel';
+        if (window.lucide) lucide.createIcons();
+      });
+    }
+
     function toggleTheme() {
       const h = document.documentElement;
       const next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
