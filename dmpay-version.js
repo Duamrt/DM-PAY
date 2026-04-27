@@ -1,5 +1,5 @@
 // DM Pay · versao atual
-window.DMPAY_VERSION = 'v04271251';
+window.DMPAY_VERSION = 'v04271256';
 (function() {
   var el = document.createElement('div');
   el.id = 'dmpay-version-badge';
