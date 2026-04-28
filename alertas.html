@@ -450,7 +450,7 @@
     renderTable();
   }
 
-  window.openDrawer = function (customerId) {
+  window.openDrawer = async function (customerId) {
     const c = allData.find(x => x.customer_id === customerId);
     if (!c) return;
     currentCustomerId = customerId;
@@ -573,7 +573,7 @@
       await new Promise(r => setTimeout(r, 100));
     document.documentElement.style.visibility = '';
     if (!window.sb || !window.DMPAY_COMPANY) return;
-    setQuick('year'); // default: este ano — dados acionáveis, não histórico completo
+    await load();
   }
 
   init();
