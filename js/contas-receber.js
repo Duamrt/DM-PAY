@@ -6,6 +6,33 @@
   let CUSTOMERS_CACHE = null;
   let FILTRO = 'open';
   let BUSCA = '';
+  let CR_PQ = { from: null, to: null }; // período selecionado
+
+  function pqISO(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function setQuickPeriod(period) {
+    const today = new Date(), y = today.getFullYear(), m = today.getMonth();
+    document.querySelectorAll('#cr-period-bar .pq-btn').forEach(b => b.classList.toggle('active', b.dataset.pq === period));
+    if (period === 'all') {
+      CR_PQ.from = null; CR_PQ.to = null;
+      document.getElementById('cr-pq-from').value = '';
+      document.getElementById('cr-pq-to').value = '';
+    } else if (period === 'month') {
+      CR_PQ.from = pqISO(new Date(y, m, 1));
+      CR_PQ.to   = pqISO(new Date(y, m+1, 0));
+    } else if (period === 'lastmonth') {
+      CR_PQ.from = pqISO(new Date(y, m-1, 1));
+      CR_PQ.to   = pqISO(new Date(y, m, 0));
+    } else if (period === 'year') {
+      CR_PQ.from = `${y}-01-01`;
+      CR_PQ.to   = `${y}-12-31`;
+    }
+    if (CR_PQ.from) document.getElementById('cr-pq-from').value = CR_PQ.from;
+    if (CR_PQ.to)   document.getElementById('cr-pq-to').value   = CR_PQ.to;
+    load();
+  }
 
   function isoToday(){ return new Date().toISOString().split('T')[0]; }
   function diffDays(iso){ return window.diffDaysUtil ? window.diffDaysUtil(iso) : 0; }
@@ -38,12 +65,29 @@
   };
 
   async function load() {
-    // Abertas (open + overdue) sem limite prático + recebidas dos últimos 3 meses
-    const inicioJanela = new Date(HOJE); inicioJanela.setMonth(inicioJanela.getMonth() - 3);
-    const inicioISO = inicioJanela.toISOString().slice(0,10);
     const COMPANY_ID = window.DMPAY_COMPANY.id;
 
-    // overdue dividido em 2 faixas (total 1143 > limite 1000 do PostgREST)
+    // Se período selecionado → usa RPC que filtra por due_date no servidor
+    if (CR_PQ.from && CR_PQ.to) {
+      const { data, error } = await sb.rpc('get_receivables_period', {
+        p_company_id: COMPANY_ID,
+        p_from_date:  CR_PQ.from,
+        p_to_date:    CR_PQ.to
+      });
+      if (error) { console.error('CR period load error', error); return; }
+      // mapeia para o formato esperado pelo render (customers.name)
+      RECVS = (data || []).map(r => ({
+        ...r,
+        customers: r.customer_name ? { name: r.customer_name, cpf_cnpj: r.customer_cpf_cnpj } : null
+      }));
+      return;
+    }
+
+    // Sem período: carrega abertas/vencidas completas + recebidas dos últimos 3 meses
+    const inicioJanela = new Date(HOJE); inicioJanela.setMonth(inicioJanela.getMonth() - 3);
+    const inicioISO = inicioJanela.toISOString().slice(0,10);
+
+    // overdue dividido em 2 faixas (total > limite 1000 do PostgREST)
     const [overdue1R, overdue2R, openR, recebidasR] = await Promise.all([
       sb.from('receivables')
         .select(`*, customers(name, cpf_cnpj)`)
@@ -523,6 +567,24 @@
     }
     const btnNovo = document.getElementById('btn-novo');
     if (btnNovo) btnNovo.onclick = () => openCreate();
+
+    const periodBar = document.getElementById('cr-period-bar');
+    if (periodBar) {
+      periodBar.addEventListener('click', e => {
+        const btn = e.target.closest('.pq-btn');
+        if (btn) setQuickPeriod(btn.dataset.pq);
+      });
+      document.getElementById('cr-pq-from')?.addEventListener('change', e => {
+        CR_PQ.from = e.target.value || null;
+        document.querySelectorAll('#cr-period-bar .pq-btn').forEach(b => b.classList.remove('active'));
+        load().then(render);
+      });
+      document.getElementById('cr-pq-to')?.addEventListener('change', e => {
+        CR_PQ.to = e.target.value || null;
+        document.querySelectorAll('#cr-period-bar .pq-btn').forEach(b => b.classList.remove('active'));
+        load().then(render);
+      });
+    }
 
     await load(); render();
   }

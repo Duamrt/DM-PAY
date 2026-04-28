@@ -98,6 +98,15 @@
     .btn-icon:hover{background:var(--bg-elevated);color:var(--text-primary)}
     .btn-icon svg{width:14px;height:14px}
     .empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
+
+    /* Period picker */
+    .period-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+    .pq-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:.12s;white-space:nowrap}
+    .pq-btn.active{background:var(--accent);color:white;border-color:var(--accent)}
+    .pq-btn:hover:not(.active){background:var(--bg-elevated);color:var(--text-primary)}
+    .pq-lbl{font-size:12px;color:var(--text-muted);white-space:nowrap}
+    .pq-inp{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-primary);font-size:12px;font-family:inherit;cursor:pointer}
+    .pq-inp:focus{outline:none;border-color:var(--accent)}
     .empty svg{width:40px;height:40px;margin-bottom:12px;opacity:.3}
 
     /* Drawer */
@@ -190,6 +199,19 @@
       <div class="kpi-val danger" id="kpi-pct">—</div>
       <div class="kpi-sub" id="kpi-sub-pct">—</div>
     </div>
+  </div>
+
+  <div class="period-bar" id="period-bar">
+    <span class="pq-lbl" style="font-weight:600;color:var(--text-secondary)">Período:</span>
+    <button class="pq-btn active" data-pq="all">Tudo</button>
+    <button class="pq-btn" data-pq="month">Este mês</button>
+    <button class="pq-btn" data-pq="lastmonth">Mês anterior</button>
+    <button class="pq-btn" data-pq="year">Este ano</button>
+    <div style="flex:1"></div>
+    <span class="pq-lbl">De</span>
+    <input type="date" class="pq-inp" id="pq-from">
+    <span class="pq-lbl">até</span>
+    <input type="date" class="pq-inp" id="pq-to">
   </div>
 
   <div class="filters">
@@ -304,6 +326,33 @@
   let agingFilter = 'all';
   let statusFilter = 'all';
   let searchFilter = '';
+  let pqFrom = null, pqTo = null;
+
+  function pqDateISO(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function setQuick(period) {
+    const today = new Date(), y = today.getFullYear(), m = today.getMonth();
+    document.querySelectorAll('.pq-btn').forEach(b => b.classList.toggle('active', b.dataset.pq === period));
+    if (period === 'all') {
+      pqFrom = null; pqTo = null;
+      document.getElementById('pq-from').value = '';
+      document.getElementById('pq-to').value = '';
+    } else if (period === 'month') {
+      pqFrom = pqDateISO(new Date(y, m, 1));
+      pqTo   = pqDateISO(new Date(y, m+1, 0));
+    } else if (period === 'lastmonth') {
+      pqFrom = pqDateISO(new Date(y, m-1, 1));
+      pqTo   = pqDateISO(new Date(y, m, 0));
+    } else if (period === 'year') {
+      pqFrom = `${y}-01-01`;
+      pqTo   = `${y}-12-31`;
+    }
+    if (pqFrom) document.getElementById('pq-from').value = pqFrom;
+    if (pqTo)   document.getElementById('pq-to').value   = pqTo;
+    load();
+  }
 
   function applyFilters() {
     return allData.filter(c => {
@@ -377,7 +426,10 @@
     const todayISO = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
     // RPC agrega tudo no servidor — sem limite de linhas
-    const { data: rows } = await sb.rpc('get_overdue_by_customer', { p_company_id: CID });
+    const rpcParams = { p_company_id: CID };
+    if (pqFrom) rpcParams.p_from_date = pqFrom;
+    if (pqTo)   rpcParams.p_to_date   = pqTo;
+    const { data: rows } = await sb.rpc('get_overdue_by_customer', rpcParams);
 
     const map = {};
     (rows || []).forEach(r => {
@@ -475,6 +527,23 @@
   });
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+  document.getElementById('period-bar').addEventListener('click', e => {
+    const btn = e.target.closest('.pq-btn');
+    if (btn) setQuick(btn.dataset.pq);
+  });
+
+  document.getElementById('pq-from').addEventListener('change', e => {
+    pqFrom = e.target.value || null;
+    document.querySelectorAll('.pq-btn').forEach(b => b.classList.remove('active'));
+    load();
+  });
+
+  document.getElementById('pq-to').addEventListener('change', e => {
+    pqTo = e.target.value || null;
+    document.querySelectorAll('.pq-btn').forEach(b => b.classList.remove('active'));
+    load();
+  });
 
   async function init() {
     let t = 0;
