@@ -203,7 +203,7 @@
 
   <div class="period-bar" id="period-bar">
     <span class="pq-lbl" style="font-weight:600;color:var(--text-secondary)">Período:</span>
-    <button class="pq-btn active" data-pq="all">Tudo</button>
+    <button class="pq-btn" data-pq="all">Tudo</button>
     <button class="pq-btn" data-pq="month">Este mês</button>
     <button class="pq-btn" data-pq="lastmonth">Mês anterior</button>
     <button class="pq-btn" data-pq="year">Este ano</button>
@@ -405,19 +405,18 @@
     document.getElementById('kpi-pct').textContent = '—';
     document.getElementById('kpi-sub-pct').textContent = 'Calculando...';
 
-    // busca total a receber pra calcular %
-    sb.from('receivables').select('amount')
-      .eq('company_id', window.DMPAY_COMPANY.id)
-      .in('status', ['open', 'overdue'])
-      .range(0, 4999)
-      .then(({ data: all }) => {
-        const totalAR = (all || []).reduce((s, r) => s + Number(r.amount), 0);
-        if (totalAR > 0) {
-          const pct = (total / totalAR * 100).toFixed(1);
-          document.getElementById('kpi-pct').textContent = pct + '%';
-          document.getElementById('kpi-sub-pct').textContent = `de R$ ${fmt(totalAR)} total a receber`;
-        }
-      });
+    // RPC sem cap de linhas — total real do período
+    sb.rpc('get_receivables_total', {
+      p_company_id: window.DMPAY_COMPANY.id,
+      p_from_date: pqFrom || undefined,
+      p_to_date:   pqTo   || undefined
+    }).then(({ data: totalAR }) => {
+      if (totalAR > 0) {
+        const pct = (total / totalAR * 100).toFixed(1);
+        document.getElementById('kpi-pct').textContent = pct + '%';
+        document.getElementById('kpi-sub-pct').textContent = `de R$ ${fmt(totalAR)} total a receber`;
+      }
+    });
   }
 
   async function load() {
@@ -551,7 +550,7 @@
       await new Promise(r => setTimeout(r, 100));
     document.documentElement.style.visibility = '';
     if (!window.sb || !window.DMPAY_COMPANY) return;
-    await load();
+    setQuick('year'); // default: este ano — dados acionáveis, não histórico completo
   }
 
   init();
