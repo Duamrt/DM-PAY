@@ -336,7 +336,7 @@
         </div>
         <div class="val-red">R$ ${fmt(c.total)}</div>
         <div>${daysBadge(c.max_days)}</div>
-        <div class="boleto-count">${c.boletos.length} boleto${c.boletos.length > 1 ? 's' : ''}</div>
+        <div class="boleto-count">${(c.boleto_count || c.boletos.length)} boleto${(c.boleto_count || c.boletos.length) > 1 ? 's' : ''}</div>
         <div>${statusBadge(c.collection_status)}</div>
         <div><button class="btn-icon" onclick="event.stopPropagation();openDrawer('${c.customer_id}')"><i data-lucide="chevron-right"></i></button></div>
       </div>`).join('');
@@ -376,45 +376,25 @@
     const today = new Date();
     const todayISO = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-    // Pagina receivables em lotes de 5000 para cobrir bases grandes (ex: Ducal com 92k)
-    let recvs = [];
-    let from = 0;
-    while (true) {
-      const { data: batch } = await sb.from('receivables')
-        .select('id, customer_id, amount, due_date, description, customers(name, collection_status, collection_notes, collection_updated_at)')
-        .eq('company_id', CID)
-        .in('status', ['overdue', 'open'])
-        .lt('due_date', todayISO)
-        .not('customer_id', 'is', null)
-        .order('due_date', { ascending: true })
-        .range(from, from + 4999);
-      if (!batch || batch.length === 0) break;
-      recvs = recvs.concat(batch);
-      if (batch.length < 5000) break;
-      from += 5000;
-    }
+    // RPC agrega tudo no servidor — sem limite de linhas
+    const { data: rows } = await sb.rpc('get_overdue_by_customer', { p_company_id: CID });
 
     const map = {};
-    recvs.forEach(r => {
-      const cid = r.customer_id;
-      const cust = r.customers || {};
-      if (!map[cid]) {
-        map[cid] = {
-          customer_id: cid,
-          name: cust.name || 'Sem nome',
-          collection_status: cust.collection_status || 'pending',
-          collection_notes: cust.collection_notes || '',
-          collection_updated_at: cust.collection_updated_at || null,
-          boletos: [], total: 0, max_days: 0,
-        };
-      }
-      const days = daysOverdue(r.due_date);
-      map[cid].boletos.push({ ...r, days_overdue: days });
-      map[cid].total += Number(r.amount);
-      map[cid].max_days = Math.max(map[cid].max_days, days);
+    (rows || []).forEach(r => {
+      map[r.customer_id] = {
+        customer_id: r.customer_id,
+        name: r.customer_name || 'Sem nome',
+        collection_status: r.collection_status || 'pending',
+        collection_notes: r.collection_notes || '',
+        collection_updated_at: r.collection_updated_at || null,
+        boletos: [{ amount: r.total_due, days_overdue: r.max_days_overdue }],
+        total: Number(r.total_due),
+        max_days: r.max_days_overdue || 0,
+        boleto_count: r.boleto_count,
+      };
     });
 
-    allData = Object.values(map).sort((a, b) => b.total - a.total);
+    allData = Object.values(map);
     renderKPIs(allData);
     renderTable();
   }
@@ -425,7 +405,7 @@
     currentCustomerId = customerId;
 
     document.getElementById('drawer-name').textContent = c.name;
-    document.getElementById('drawer-sub').textContent = `${c.boletos.length} boleto(s) · R$ ${fmt(c.total)} em atraso`;
+    document.getElementById('drawer-sub').textContent = `${(c.boleto_count || c.boletos.length)} boleto(s) · R$ ${fmt(c.total)} em atraso`;
     document.getElementById('drawer-status').value = c.collection_status || 'pending';
     document.getElementById('drawer-notes').value = c.collection_notes || '';
 
