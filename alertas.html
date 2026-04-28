@@ -465,20 +465,43 @@
       : '';
     document.getElementById('drawer-updated').textContent = upd;
 
-    const blist = c.boletos.sort((a, b) => a.due_date.localeCompare(b.due_date));
-    document.getElementById('drawer-boletos').innerHTML = blist.map(b => `
-      <div class="boleto-item">
-        <div>
-          <div class="boleto-desc">${b.description || 'Boleto'}</div>
-          <div class="boleto-meta">Venceu ${b.due_date.split('-').reverse().join('/')} · ${b.days_overdue}d em atraso</div>
-        </div>
-        <div class="boleto-val">R$ ${fmt(b.amount)}</div>
-      </div>`).join('');
-
+    // Abre o drawer imediatamente e carrega boletos individuais em paralelo
+    document.getElementById('drawer-boletos').innerHTML =
+      '<div style="color:var(--text-muted);font-size:12.5px;padding:12px 0">Carregando boletos...</div>';
     document.getElementById('drawer-total').textContent = 'R$ ' + fmt(c.total);
-
     document.getElementById('drawer').classList.add('open');
     document.getElementById('drawerBg').classList.add('open');
+
+    // Busca boletos individuais do cliente — lazy-load
+    const today = new Date();
+    const todayISO = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const { data: boletos } = await sb.from('receivables')
+      .select('id, description, amount, due_date, status')
+      .eq('company_id', window.DMPAY_COMPANY.id)
+      .eq('customer_id', customerId)
+      .in('status', ['overdue', 'open'])
+      .lt('due_date', todayISO)
+      .order('due_date', { ascending: true })
+      .limit(500);
+
+    const blist = boletos || [];
+    document.getElementById('drawer-boletos').innerHTML = blist.length
+      ? blist.map(b => {
+          const [y, m, d] = b.due_date.split('-').map(Number);
+          const due = new Date(y, m-1, d);
+          const hoje = new Date(); hoje.setHours(0,0,0,0);
+          const dias = Math.floor((hoje - due) / 86400000);
+          return `
+            <div class="boleto-item">
+              <div>
+                <div class="boleto-desc">${b.description || 'Boleto'}</div>
+                <div class="boleto-meta">Venceu ${b.due_date.split('-').reverse().join('/')} · ${dias}d em atraso</div>
+              </div>
+              <div class="boleto-val">R$ ${fmt(b.amount)}</div>
+            </div>`;
+        }).join('')
+      : '<div style="color:var(--text-muted);font-size:12.5px">Nenhum boleto encontrado</div>';
+
     if (window.lucide) lucide.createIcons();
   };
 
