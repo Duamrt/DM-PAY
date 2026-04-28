@@ -376,28 +376,28 @@
     const today = new Date();
     const todayISO = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
-    const [{ data: recvs }, { data: custs }] = await Promise.all([
-      sb.from('receivables')
-        .select('id, customer_id, amount, due_date, description')
+    // Pagina receivables em lotes de 5000 para cobrir bases grandes (ex: Ducal com 92k)
+    let recvs = [];
+    let from = 0;
+    while (true) {
+      const { data: batch } = await sb.from('receivables')
+        .select('id, customer_id, amount, due_date, description, customers(name, collection_status, collection_notes, collection_updated_at)')
         .eq('company_id', CID)
         .in('status', ['overdue', 'open'])
         .lt('due_date', todayISO)
         .not('customer_id', 'is', null)
         .order('due_date', { ascending: true })
-        .range(0, 4999),
-      sb.from('customers')
-        .select('id, name, collection_status, collection_notes, collection_updated_at')
-        .eq('company_id', CID)
-        .range(0, 4999)
-    ]);
-
-    const custMap = {};
-    (custs || []).forEach(c => { custMap[c.id] = c; });
+        .range(from, from + 4999);
+      if (!batch || batch.length === 0) break;
+      recvs = recvs.concat(batch);
+      if (batch.length < 5000) break;
+      from += 5000;
+    }
 
     const map = {};
-    (recvs || []).forEach(r => {
+    recvs.forEach(r => {
       const cid = r.customer_id;
-      const cust = custMap[cid] || {};
+      const cust = r.customers || {};
       if (!map[cid]) {
         map[cid] = {
           customer_id: cid,
