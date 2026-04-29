@@ -294,7 +294,7 @@ def job_cash_withdrawals(cfg, cn, company_id, days, dry_run):
         WHERE mc.MOV_TIPO = 'D'
           AND mc.MOV_DATA >= ?
           AND mc.MOV_STATUS <> 'C'
-        GROUP BY CONVERT(date, mc.MOV_DATA), mc.MOV_FUNCIONARIO, f.FUN_NOME
+        GROUP BY CONVERT(date, mc.MOV_DATA), mc.MOV_FUNCIONARIO
     """
     sql_fallback = """
         SELECT
