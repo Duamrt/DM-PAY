@@ -544,6 +544,268 @@ window.DMPAY_EXPORT = (() => {
     wb.creator = 'DM Pay';
 
     // ══════════════════════════════════════════════════════════════════════
+    // ABA 0 — ANÁLISE DE CARTEIRA (executive report)
+    // ══════════════════════════════════════════════════════════════════════
+    {
+      const NC = 5;
+      const ws = wb.addWorksheet('Análise de Carteira', { properties: { defaultColWidth: 20 } });
+      ws.columns = [{ width: 40 }, { width: 18 }, { width: 18 }, { width: 30 }, { width: 14 }];
+      addHeader(ws, 'Análise de Carteira — Contas a Receber', NC);
+
+      // ── Cálculos base ──────────────────────────────────────────────────
+      const abertas = recvs.filter(r => r.status !== 'received');
+      const totalAberto = abertas.reduce((s, r) => s + Number(r.amount || 0), 0);
+      const hoje0 = new Date();
+      const hojeIso = hoje0.toISOString().slice(0, 10);
+
+      function dias0(iso) {
+        if (!iso) return 0;
+        const [y, m, d] = String(iso).split('T')[0].split('-');
+        return Math.floor((hoje0 - new Date(+y, +m - 1, +d)) / 86400000);
+      }
+
+      // Agrupa clientes abertos
+      const cMap = {};
+      abertas.forEach(r => {
+        const nome = r.customers?.name || r.description || 'Sem cliente';
+        const cpf  = r.customers?.cpf_cnpj || '';
+        if (!cMap[nome]) cMap[nome] = { nome, cpf, total: 0, parcelas: [] };
+        cMap[nome].total += Number(r.amount || 0);
+        cMap[nome].parcelas.push(r);
+      });
+      const cList = Object.values(cMap).sort((a, b) => b.total - a.total);
+      const nCli = cList.length;
+      const nPar = abertas.length;
+
+      // Aging por parcela e por cliente único
+      const aging = { av: { v: 0, cli: new Set() }, d30: { v: 0, cli: new Set() }, d90: { v: 0, cli: new Set() }, d90p: { v: 0, cli: new Set() } };
+      abertas.forEach(r => {
+        const d = dias0(r.due_date);
+        const v = Number(r.amount || 0);
+        const n = r.customers?.name || r.description || '?';
+        if      (d <= 0)  { aging.av.v  += v; aging.av.cli.add(n); }
+        else if (d <= 30) { aging.d30.v += v; aging.d30.cli.add(n); }
+        else if (d <= 90) { aging.d90.v += v; aging.d90.cli.add(n); }
+        else              { aging.d90p.v += v; aging.d90p.cli.add(n); }
+      });
+
+      // Top 15
+      const top15 = cList.slice(0, 15);
+      const subTop15 = top15.reduce((s, c) => s + c.total, 0);
+
+      // Projeção por mês
+      const proj = {};
+      abertas.forEach(r => {
+        const due = String(r.due_date || '').split('T')[0];
+        if (!due) return;
+        const v = Number(r.amount || 0);
+        const key = due < hojeIso ? '__venc' : due.slice(0, 7);
+        proj[key] = (proj[key] || 0) + v;
+      });
+      const mesesFut = Object.keys(proj).filter(k => k !== '__venc').sort();
+
+      // Clientes críticos (> 365 dias)
+      const criticos = cList
+        .map(c => ({ ...c, maxDias: Math.max(...c.parcelas.map(r => dias0(r.due_date))), maisAntiga: c.parcelas.map(r => r.due_date).sort()[0] }))
+        .filter(c => c.maxDias > 365)
+        .sort((a, b) => b.maxDias - a.maxDias);
+
+      // ── Helpers visuais ────────────────────────────────────────────────
+      function secTit(txt) {
+        ws.addRow([]);
+        const r = ws.addRow([txt]);
+        ws.mergeCells(r.number, 1, r.number, NC);
+        r.height = 22;
+        for (let c = 1; c <= NC; c++) {
+          r.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: AZUL_ESCURO } };
+        }
+        r.getCell(1).font      = { name: 'Arial', size: 11, bold: true, color: { argb: BRANCO } };
+        r.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
+      }
+      function cabec(cols) {
+        const r = ws.addRow(cols);
+        r.height = 20;
+        r.eachCell(c => {
+          c.font      = { name: 'Arial', size: 9, bold: true, color: { argb: BRANCO } };
+          c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: AZUL } };
+          c.alignment = { horizontal: 'center', vertical: 'middle' };
+          c.border    = brd();
+        });
+        return r;
+      }
+      function linhaDat(cols, bg) {
+        const r = ws.addRow(cols);
+        r.height = 19;
+        r.eachCell(c => {
+          c.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+          c.border = brd();
+          c.font   = { name: 'Arial', size: 9 };
+          c.alignment = { vertical: 'middle' };
+        });
+        return r;
+      }
+      function rodapeBold(cols, bg) {
+        const r = ws.addRow(cols);
+        r.height = 20;
+        r.eachCell(c => {
+          c.font = { name: 'Arial', size: 9, bold: true, color: { argb: BRANCO } };
+          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+          c.border = brd();
+        });
+        return r;
+      }
+
+      // ── RESUMO EXECUTIVO ───────────────────────────────────────────────
+      secTit('RESUMO EXECUTIVO');
+      cabec(['INDICADOR', 'VALOR', 'REFERÊNCIA', '', '']);
+      const kpis = [
+        ['Total em Aberto',          totalAberto,              `${nCli} clientes  ·  ${nPar} parcelas`],
+        ['Ticket Médio por Cliente',  nCli > 0 ? totalAberto / nCli : 0, 'Média de exposição por cliente'],
+        ['Ticket Médio por Parcela',  nPar > 0 ? totalAberto / nPar : 0, 'Valor médio por título'],
+      ];
+      kpis.forEach(([label, val, ref], i) => {
+        const r = linhaDat([label, val, ref, '', ''], i % 2 === 0 ? CINZA_CLR : BRANCO);
+        ws.mergeCells(r.number, 3, r.number, NC);
+        r.getCell(1).font = { name: 'Arial', size: 9, bold: true };
+        r.getCell(2).numFmt = '#,##0.00';
+        r.getCell(2).font = { name: 'Arial', size: 10, bold: true, color: { argb: AZUL } };
+        r.getCell(2).alignment = { horizontal: 'right', vertical: 'middle' };
+        r.getCell(3).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
+      });
+
+      // ── AGING ──────────────────────────────────────────────────────────
+      secTit('1.  AGING DE INADIMPLÊNCIA');
+      cabec(['FAIXA DE ATRASO', 'Nº CLIENTES', 'VALOR (R$)', '% TOTAL', '']);
+      const agingDef = [
+        ['A vencer  (sem atraso)', aging.av.cli.size,  aging.av.v,  false],
+        ['Atraso  1 – 30 dias',    aging.d30.cli.size, aging.d30.v, false],
+        ['Atraso  31 – 90 dias',   aging.d90.cli.size, aging.d90.v, false],
+        ['Atraso  > 90 dias',      aging.d90p.cli.size, aging.d90p.v, true],
+      ];
+      agingDef.forEach(([label, nc, val, crit], i) => {
+        const pct = totalAberto > 0 ? val / totalAberto : 0;
+        const bg  = crit ? VERM_BG : (i % 2 === 0 ? CINZA_CLR : BRANCO);
+        const r   = linhaDat([label, nc, val, pct, ''], bg);
+        ws.mergeCells(r.number, 4, r.number, NC);
+        r.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
+        r.getCell(3).numFmt = '#,##0.00';
+        r.getCell(3).font = { name: 'Arial', size: 9, bold: true, color: { argb: crit ? VERMELHO : TEXTO } };
+        r.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+        r.getCell(4).numFmt = '0.0%';
+        r.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+      });
+      const rTot = rodapeBold(['TOTAL', nCli, totalAberto, 1, ''], AZUL_ESCURO);
+      ws.mergeCells(rTot.number, 4, rTot.number, NC);
+      rTot.getCell(3).numFmt = '#,##0.00';
+      rTot.getCell(4).numFmt = '0.0%';
+      rTot.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+
+      // ── TOP 15 ─────────────────────────────────────────────────────────
+      secTit('2.  TOP 15 CLIENTES POR VALOR EM ABERTO');
+      cabec(['CLIENTE', 'CPF / CNPJ', 'VALOR EM ABERTO', '% CARTEIRA', 'SITUAÇÃO']);
+      top15.forEach((cl, i) => {
+        const maxD = Math.max(...cl.parcelas.map(r => dias0(r.due_date)));
+        const sit  = maxD > 365 ? `${maxD} dias ⚠` : maxD > 0 ? `${maxD} dias` : 'a vencer';
+        const pct  = totalAberto > 0 ? cl.total / totalAberto : 0;
+        const r    = linhaDat([`${i + 1}.  ${cl.nome}`, cl.cpf || '—', cl.total, pct, sit], i % 2 === 0 ? CINZA_CLR : BRANCO);
+        r.getCell(1).font = { name: 'Arial', size: 9, bold: true };
+        r.getCell(2).font = { name: 'Arial', size: 8, color: { argb: MUTED } };
+        r.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
+        r.getCell(3).numFmt = '#,##0.00';
+        r.getCell(3).font = { name: 'Arial', size: 9, bold: true, color: { argb: maxD > 90 ? VERMELHO : TEXTO } };
+        r.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+        r.getCell(4).numFmt = '0.0%';
+        r.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+        r.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
+        r.getCell(5).font = { name: 'Arial', size: 9, color: { argb: maxD > 90 ? VERMELHO : maxD > 30 ? AMARELO_FG : MUTED } };
+      });
+      const rSub = rodapeBold(['SUBTOTAL  TOP 15', '', subTop15, subTop15 / totalAberto, ''], AZUL);
+      rSub.getCell(3).numFmt = '#,##0.00';
+      rSub.getCell(4).numFmt = '0.0%';
+      rSub.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
+
+      // ── PROJEÇÃO ───────────────────────────────────────────────────────
+      const mesNomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      secTit('3.  PROJEÇÃO DE RECEBÍVEIS');
+      cabec(['PERÍODO', 'VALOR PREVISTO', '% TOTAL', 'OBSERVAÇÃO', '']);
+      const futExib = mesesFut.slice(0, 4);
+      futExib.forEach((mes, i) => {
+        const [y, m] = mes.split('-');
+        const label  = `${mesNomes[+m - 1]} / ${y}`;
+        const val    = proj[mes];
+        const pct    = totalAberto > 0 ? val / totalAberto : 0;
+        const obs    = i === 0 ? 'Maior volume — muitos vencimentos concentrados' : 'Parcelas futuras e cheques pré-datados';
+        const r      = linhaDat([label, val, pct, obs, ''], i % 2 === 0 ? CINZA_CLR : BRANCO);
+        ws.mergeCells(r.number, 4, r.number, NC);
+        r.getCell(2).numFmt = '#,##0.00';
+        r.getCell(2).font = { name: 'Arial', size: 9, bold: true };
+        r.getCell(2).alignment = { horizontal: 'right', vertical: 'middle' };
+        r.getCell(3).numFmt = '0.0%';
+        r.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+        r.getCell(4).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
+      });
+      if (mesesFut.length > 4) {
+        const restoVal = mesesFut.slice(4).reduce((s, k) => s + proj[k], 0);
+        const r = linhaDat(['Demais meses', restoVal, totalAberto > 0 ? restoVal / totalAberto : 0, 'Parcelamentos longos', ''], CINZA_CLR);
+        ws.mergeCells(r.number, 4, r.number, NC);
+        r.getCell(2).numFmt = '#,##0.00'; r.getCell(2).alignment = { horizontal: 'right', vertical: 'middle' };
+        r.getCell(3).numFmt = '0.0%';    r.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+      }
+      if (proj['__venc']) {
+        const vv = proj['__venc'];
+        const r  = linhaDat(['Vencidos (em cobrança)', vv, totalAberto > 0 ? vv / totalAberto : 0, 'Títulos vencidos sem pagamento confirmado', ''], VERM_BG);
+        ws.mergeCells(r.number, 4, r.number, NC);
+        r.getCell(1).font = { name: 'Arial', size: 9, bold: true, color: { argb: VERMELHO } };
+        r.getCell(2).numFmt = '#,##0.00'; r.getCell(2).font = { name: 'Arial', size: 9, bold: true, color: { argb: VERMELHO } }; r.getCell(2).alignment = { horizontal: 'right', vertical: 'middle' };
+        r.getCell(3).numFmt = '0.0%';    r.getCell(3).alignment = { horizontal: 'center', vertical: 'middle' };
+        r.getCell(4).font = { name: 'Arial', size: 9, color: { argb: VERMELHO } };
+      }
+
+      // ── CLIENTES CRÍTICOS ──────────────────────────────────────────────
+      if (criticos.length > 0) {
+        secTit('4.  CLIENTES CRÍTICOS  —  RISCO DE PERDA  ( > 365 dias )');
+        cabec(['CLIENTE', 'CPF / CNPJ', 'VALOR EM ABERTO', 'DIAS ATRASO', '1º VENCIMENTO']);
+        let totCrit = 0;
+        criticos.forEach((cl, i) => {
+          totCrit += cl.total;
+          const r = linhaDat([cl.nome, cl.cpf || '—', cl.total, cl.maxDias, brDate(cl.maisAntiga)], i % 2 === 0 ? VERM_BG : BRANCO);
+          r.getCell(1).font = { name: 'Arial', size: 9, bold: true };
+          r.getCell(2).font = { name: 'Arial', size: 8, color: { argb: MUTED } };
+          r.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
+          r.getCell(3).numFmt = '#,##0.00'; r.getCell(3).font = { name: 'Arial', size: 9, bold: true, color: { argb: VERMELHO } }; r.getCell(3).alignment = { horizontal: 'right', vertical: 'middle' };
+          r.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' }; r.getCell(4).font = { name: 'Arial', size: 9, color: { argb: VERMELHO } };
+          r.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' }; r.getCell(5).font = { name: 'Arial', size: 9, color: { argb: MUTED } };
+        });
+        const rCrit = rodapeBold(['SUBTOTAL CRÍTICOS', '', totCrit, '', ''], VERMELHO);
+        rCrit.getCell(3).numFmt = '#,##0.00';
+      }
+
+      // ── ALERTAS ────────────────────────────────────────────────────────
+      secTit('ALERTAS');
+      const alertas = [];
+      if (aging.d90p.v > 0) {
+        const pct = (aging.d90p.v / totalAberto * 100).toFixed(1);
+        alertas.push([`⚠  R$ ${Math.round(aging.d90p.v).toLocaleString('pt-BR')} (${pct}% da carteira) vencidos há mais de 90 dias — ação imediata de cobrança recomendada.`, VERM_BG, VERMELHO, true]);
+      }
+      if (criticos.length > 0)
+        alertas.push(['⚠  Títulos com mais de 365 dias de atraso têm risco elevado de irrecuperabilidade — avaliar provisionamento.', AMARELO_BG, AMARELO_FG, false]);
+      alertas.push([`ℹ  Top 15 clientes concentram ${(subTop15 / totalAberto * 100).toFixed(1)}% da exposição total — monitoramento individual recomendado.`, AZUL_CLARO, AZUL, false]);
+      alertas.forEach(([txt, bg, fg, bold]) => {
+        ws.addRow([]);
+        const r = ws.addRow([txt]);
+        ws.mergeCells(r.number, 1, r.number, NC);
+        r.height = 30;
+        r.getCell(1).font      = { name: 'Arial', size: 9, bold, color: { argb: fg } };
+        r.getCell(1).fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+        r.getCell(1).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+        r.getCell(1).border    = brd();
+      });
+
+      ws.pageSetup = { orientation: 'portrait', fitToPage: true, fitToWidth: 1, paperSize: 9 };
+      ws.headerFooter = { oddFooter: `${nomeEmpresa()} — Análise de Carteira — Página &P de &N` };
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
     // ABA 1 — RESUMO POR CLIENTE
     // ══════════════════════════════════════════════════════════════════════
     const ws1 = wb.addWorksheet('Resumo por Cliente', { properties: { defaultColWidth: 20 } });
