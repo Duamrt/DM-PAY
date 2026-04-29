@@ -291,6 +291,15 @@ div[style*="monospace"]{display:none!important}
 
 <!-- VIEW: VENDAS -->
 <div class="view" id="viewVendas">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;background:var(--bg-elevated);border-radius:12px;padding:8px 12px">
+    <button onclick="vendaNavDia(-1)" style="background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;padding:4px 10px;border-radius:8px;line-height:1">‹</button>
+    <div style="text-align:center">
+      <div id="svDataLabel" style="font-size:14px;font-weight:600;color:var(--text-primary)">—</div>
+      <input type="date" id="svDatePicker" style="display:none" oninput="vendaIrData(this.value)">
+      <div id="svDataSub" style="font-size:11px;color:var(--text-muted);cursor:pointer" onclick="document.getElementById('svDatePicker').showPicker?.()??document.getElementById('svDatePicker').click()">toque para escolher data</div>
+    </div>
+    <button onclick="vendaNavDia(+1)" id="svBtnProx" style="background:none;border:none;color:var(--text-primary);font-size:20px;cursor:pointer;padding:4px 10px;border-radius:8px;line-height:1">›</button>
+  </div>
   <div class="summary-row">
     <div class="sum-box"><div class="sum-label">Total</div><div class="sum-val c-success num" id="svTotal">—</div></div>
     <div class="sum-box"><div class="sum-label">Cupons</div><div class="sum-val num" id="svCupons">—</div></div>
@@ -377,7 +386,7 @@ const hoje = () => { const d = new Date(); return `${d.getFullYear()}-${String(d
 
 document.getElementById('hdrDate').textContent = new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
 
-let CID = null, DATA = {};
+let CID = null, DATA = {}, _vendaData = hoje();
 
 /* NAVEGAÇÃO */
 const navMap = {viewResumo:'nb-resumo',viewVendas:'nb-vendas',viewReceber:'nb-receber',viewPagar:'nb-pagar'};
@@ -398,11 +407,37 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => document.querySelectorAll('body > div').forEach(d => { if(d.style.position==='fixed')d.style.display='none'; }), 500);
 });
 
-waitAuth(() => Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado(), loadYoY()]));
+waitAuth(() => { atualizarNavVendas(); Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado(), loadYoY()]); });
+
+/* ── NAVEGAÇÃO DATA VENDAS ── */
+function atualizarNavVendas() {
+  const d = new Date(_vendaData + 'T12:00:00');
+  document.getElementById('svDataLabel').textContent = d.toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
+  document.getElementById('svDatePicker').value = _vendaData;
+  document.getElementById('svBtnProx').style.opacity = _vendaData >= hoje() ? '0.3' : '1';
+  document.getElementById('svBtnProx').style.pointerEvents = _vendaData >= hoje() ? 'none' : 'auto';
+}
+function vendaNavDia(delta) {
+  const d = new Date(_vendaData + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const nova = d.toISOString().slice(0,10);
+  if (nova > hoje()) return;
+  _vendaData = nova;
+  atualizarNavVendas();
+  DATA.vendas = null; DATA.raw_caixas = null; DATA.pdvs = null; DATA.sangrias = null;
+  loadVendas(); loadCaixas(); loadSangria();
+}
+function vendaIrData(val) {
+  if (!val || val > hoje()) return;
+  _vendaData = val;
+  atualizarNavVendas();
+  DATA.vendas = null; DATA.raw_caixas = null; DATA.pdvs = null; DATA.sangrias = null;
+  loadVendas(); loadCaixas(); loadSangria();
+}
 
 /* ── VENDAS ── */
 async function loadVendas() {
-  const { data } = await sb.from('daily_sales').select('payment_method,amount').eq('company_id',CID).eq('sale_date',hoje());
+  const { data } = await sb.from('daily_sales').select('payment_method,amount').eq('company_id',CID).eq('sale_date',_vendaData);
   DATA.vendas = data || [];
   const total = DATA.vendas.reduce((s,r)=>s+Number(r.amount||0),0);
   document.getElementById('kvVendas').textContent = fmt(total);
@@ -413,7 +448,7 @@ async function loadVendas() {
 async function loadCaixas() {
   const { data } = await sb.from('register_sessions')
     .select('pdv_id,pdv_nome,operador_id,operador_nome,total_vendas,total_cupons')
-    .eq('company_id',CID).eq('session_date',hoje()).order('pdv_id');
+    .eq('company_id',CID).eq('session_date',_vendaData).order('pdv_id');
   DATA.raw_caixas = data || [];
   const pdvs = {};
   DATA.raw_caixas.forEach(r => {
@@ -525,12 +560,12 @@ async function loadSangria() {
   const { data } = await sb.from('cash_withdrawals')
     .select('amount,operator,notes,withdrawal_date')
     .eq('company_id', CID)
-    .eq('withdrawal_date', hoje());
+    .eq('withdrawal_date', _vendaData);
   DATA.sangrias = data || [];
   const total = DATA.sangrias.reduce((s,r)=>s+Number(r.amount||0),0);
   const el = document.getElementById('svSangrias');
   if (!el) return;
-  if (!DATA.sangrias.length) { el.innerHTML='<div class="empty">Nenhuma sangria hoje.</div>'; return; }
+  if (!DATA.sangrias.length) { el.innerHTML=`<div class="empty">Nenhuma sangria em ${fmtData(_vendaData)}.</div>`; return; }
   el.innerHTML = `<div class="list-card">${DATA.sangrias.map(r=>`
     <div class="list-item">
       <div>
