@@ -600,10 +600,10 @@
             <div class="panel-body">
 
               <div class="integracao">
-                <div class="integracao-logo">iC</div>
+                <div class="integracao-logo" id="integracao-erp-logo">iC</div>
                 <div class="integracao-info">
-                  <div class="integracao-name">iCommerce (Ideia Sistema)</div>
-                  <div class="integracao-desc">Sincronização de clientes, vendas, sangrias e fiados do ERP. Rodando via agente Python local no servidor do cliente (daily 19:30).</div>
+                  <div class="integracao-name" id="integracao-erp-name">iCommerce (Ideia Sistema)</div>
+                  <div class="integracao-desc" id="integracao-erp-desc">Sincronização de clientes, vendas, sangrias e fiados do ERP. Rodando via agente Python local no servidor do cliente (daily 19:30).</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">
                   <div class="integracao-status on"><span class="integracao-status-dot"></span>Ativa (agente local)</div>
@@ -894,5 +894,22 @@
   <script src="js/configuracoes-bancos.js" defer></script>
   <script src="js/configuracoes-empresa.js" defer></script>
   <script src="js/configuracoes-historico.js" defer></script>
+  <script>
+    (function waitErp() {
+      if (!window.DMPAY_COMPANY || !window.sb) { setTimeout(waitErp, 100); return; }
+      window.sb.from('sync_state').select('source_system').eq('company_id', window.DMPAY_COMPANY.id).limit(1).then(({ data }) => {
+        const src = data?.[0]?.source_system || 'icommerce';
+        const isOmsys = src === 'omsys';
+        const nameEl = document.getElementById('integracao-erp-name');
+        const descEl = document.getElementById('integracao-erp-desc');
+        const logoEl = document.getElementById('integracao-erp-logo');
+        if (isOmsys) {
+          if (nameEl) nameEl.textContent = 'OMSYS (OM Informática)';
+          if (descEl) descEl.textContent = 'Sincronização de clientes, vendas, recebimentos e contas a pagar do ERP. Rodando via agente Python na máquina do Duam via VPN (daily 07:00).';
+          if (logoEl) logoEl.textContent = 'OM';
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
