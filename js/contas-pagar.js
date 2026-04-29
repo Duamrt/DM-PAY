@@ -535,6 +535,44 @@
       novoBtn.innerHTML = '<i data-lucide="plus" class="icon"></i>Nova conta';
     }
 
+    // Dropdown filtro status na coluna STATUS
+    const cpSfTrigger = document.getElementById('cp-status-filter');
+    const cpSfLabel   = document.getElementById('cp-status-label');
+    const CP_SF_LABELS = { open:'Em aberto', today:'Vence hoje', overdue:'Atrasado', week:'Esta semana', paid:'Pagos' };
+    if (cpSfTrigger) {
+      const cpSfDrop = document.createElement('div');
+      cpSfDrop.id = 'cp-status-drop';
+      cpSfDrop.style.cssText = 'display:none;position:fixed;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;min-width:148px;padding:4px';
+      cpSfDrop.innerHTML = `
+        <div class="cr-sd-item" data-sf="open">Em aberto</div>
+        <div class="cr-sd-item" data-sf="overdue">Atrasado</div>
+        <div class="cr-sd-item" data-sf="today">Vence hoje</div>
+        <div class="cr-sd-item" data-sf="week">Esta semana</div>
+        <div class="cr-sd-item" data-sf="paid">Pagos</div>
+        <div class="cr-sd-item cr-sd-clear" data-sf="">Todos</div>`;
+      document.body.appendChild(cpSfDrop);
+
+      cpSfTrigger.addEventListener('click', e => {
+        e.stopPropagation();
+        if (cpSfDrop.style.display !== 'none') { cpSfDrop.style.display = 'none'; return; }
+        const r = cpSfTrigger.getBoundingClientRect();
+        cpSfDrop.style.top  = (r.bottom + 4) + 'px';
+        cpSfDrop.style.left = r.left + 'px';
+        cpSfDrop.style.display = 'block';
+        cpSfDrop.querySelectorAll('.cr-sd-item').forEach(i => i.classList.toggle('active', i.dataset.sf === FILTRO));
+      });
+      cpSfDrop.addEventListener('click', e => {
+        const item = e.target.closest('.cr-sd-item');
+        if (!item) return;
+        FILTRO = item.dataset.sf || '';
+        cpSfLabel.textContent = item.dataset.sf ? CP_SF_LABELS[item.dataset.sf] : 'Status';
+        cpSfLabel.style.color = item.dataset.sf ? 'var(--accent)' : '';
+        cpSfDrop.style.display = 'none';
+        render();
+      });
+      document.addEventListener('click', () => { cpSfDrop.style.display = 'none'; });
+    }
+
     await loadPayables();
 
     // Popular select de meses com os meses que existem nos dados

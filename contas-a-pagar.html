@@ -408,7 +408,12 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
                 <th class="sortable active">Vencimento <i data-lucide="arrow-up" class="sort-icon"></i></th>
                 <th>Categoria</th>
                 <th class="sortable" style="text-align:right">Valor <i data-lucide="chevrons-up-down" class="sort-icon"></i></th>
-                <th>Status</th>
+                <th>
+                  <div id="cp-status-filter" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none;white-space:nowrap" title="Filtrar por status">
+                    <span id="cp-status-label">Status</span>
+                    <i data-lucide="chevron-down" style="width:13px;height:13px;opacity:.5"></i>
+                  </div>
+                </th>
                 <th style="width:30px"></th>
               </tr>
             </thead>
