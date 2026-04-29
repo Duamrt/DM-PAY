@@ -234,20 +234,6 @@
   }
 
   function atualizaChips(visibleCount) {
-    const opens = PAYABLES.filter(p => p.status === 'open').length;
-    const today = PAYABLES.filter(p => statusOf(p).s === 'today').length;
-    const overdue = PAYABLES.filter(p => statusOf(p).s === 'overdue').length;
-    const week = PAYABLES.filter(p => { if (p.status !== 'open') return false; const dd = diffDays(p.due_date); return dd >= 0 && dd <= 7; }).length;
-    const paid = PAYABLES.filter(p => p.status === 'paid').length;
-    const chips = document.querySelectorAll('.filter-chips .chip');
-    const counts = { open: opens, today: today, overdue: overdue, week: week, paid: paid };
-    chips.forEach(c => {
-      const f = c.dataset.filter;
-      if (counts[f] !== undefined) {
-        const sp = c.querySelector('span'); if (sp) sp.textContent = `(${counts[f]})`;
-      }
-      c.classList.toggle('active', f === FILTRO);
-    });
     const pag = document.querySelector('.pag-info');
     if (pag) pag.innerHTML = `Mostrando <strong>${visibleCount}</strong> de <strong>${PAYABLES.length}</strong>`;
   }
@@ -510,13 +496,6 @@
   // ==================== INIT ====================
   async function init() {
     if (!window.sb || !window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
-
-    // Wire chips
-    document.querySelectorAll('.filter-chips .chip').forEach((c, i) => {
-      const map = ['open','today','overdue','week','paid'];
-      c.dataset.filter = map[i] || 'open';
-      c.addEventListener('click', e => { FILTRO = c.dataset.filter; render(); });
-    });
 
     // Wire busca
     const searchInput = document.querySelector('.input-with-icon input');

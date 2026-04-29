@@ -375,13 +375,6 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
       <!-- TABELA + TOOLBAR -->
       <section class="panel">
         <div class="table-toolbar">
-          <div class="filter-chips">
-            <button class="chip active" data-filter="todos"><i data-lucide="list" class="icon"></i>Todos</button>
-            <button class="chip" data-filter="hoje"><i data-lucide="calendar-clock" class="icon"></i>Hoje</button>
-            <button class="chip" data-filter="atrasados"><i data-lucide="alert-circle" class="icon"></i>Atrasados</button>
-            <button class="chip" data-filter="semana"><i data-lucide="clock" class="icon"></i>Semana</button>
-            <button class="chip" data-filter="pagos"><i data-lucide="check-circle-2" class="icon"></i>Pagos</button>
-          </div>
           <div style="display:flex;align-items:center;gap:6px">
             <select id="filtro-mes" class="input" style="height:32px;font-size:13px;padding:0 10px;width:160px;cursor:pointer">
               <option value="">Todos os meses</option>
@@ -393,7 +386,6 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
               <label class="sr-only" for="busca-cp">Buscar fornecedor ou NF</label>
               <input id="busca-cp" class="input" placeholder="Buscar fornecedor ou NF">
             </div>
-            <button class="btn btn-secondary btn-sm" disabled title="Em construção" style="opacity:.5;cursor:not-allowed"><i data-lucide="filter" class="icon"></i>Filtros</button>
           </div>
         </div>
 
