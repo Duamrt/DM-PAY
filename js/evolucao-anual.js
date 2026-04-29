@@ -292,9 +292,22 @@
     head.innerHTML = `<div class="col-mes">Mês</div>` +
       colsAno.map(a => `<div class="col-ano">${esc(String(a))}</div>`).join('');
 
+    // Calcula os 2 meses com maior média histórica (anos completos = sem o ano corrente)
+    const anoAtual = new Date().getFullYear();
+    const anosCompletos = anos.filter(a => Number(a) < anoAtual);
+    const mediasMes = {};
+    for (let m = 1; m <= 12; m++) {
+      const vals = anosCompletos.map(a => matriz[a]?.[m] || 0).filter(v => v > 0);
+      mediasMes[m] = vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0;
+    }
+    const top2 = Object.entries(mediasMes)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(([m]) => Number(m));
+
     let html = '';
     for (let m = 1; m <= 12; m++) {
-      const isDestaque = m === 6 || m === 12; // São João e Natal
+      const isDestaque = top2.includes(m);
       html += `<div class="table-row" style="${isDestaque ? 'background:var(--warn-soft)' : ''}">`;
       html += `<div class="col-mes">${MESES_LONGO[m - 1]}${isDestaque ? ' 🔥' : ''}</div>`;
 
