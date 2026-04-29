@@ -286,7 +286,8 @@ def job_cash_withdrawals(cfg, cn, company_id, days, dry_run):
     sql_com_nome = """
         SELECT
             CONVERT(date, mc.MOV_DATA) AS dia,
-            ISNULL(f.FUN_NOME, CONVERT(varchar(50), mc.MOV_FUNCIONARIO)) AS operador,
+            mc.MOV_FUNCIONARIO AS funcionario_id,
+            MAX(ISNULL(f.FUN_NOME, CONVERT(varchar(50), mc.MOV_FUNCIONARIO))) AS operador,
             SUM(mc.MOV_VALOR) AS total,
             STRING_AGG(CONVERT(varchar(MAX), ISNULL(mc.MOV_OBS, '')), ' | ') AS notas
         FROM MOV_CAIXA mc WITH (NOLOCK)
@@ -294,7 +295,7 @@ def job_cash_withdrawals(cfg, cn, company_id, days, dry_run):
         WHERE mc.MOV_TIPO = 'D'
           AND mc.MOV_DATA >= ?
           AND mc.MOV_STATUS <> 'C'
-        GROUP BY CONVERT(date, mc.MOV_DATA), mc.MOV_FUNCIONARIO, f.FUN_NOME
+        GROUP BY CONVERT(date, mc.MOV_DATA), mc.MOV_FUNCIONARIO
     """
     sql_fallback = """
         SELECT
@@ -315,7 +316,7 @@ def job_cash_withdrawals(cfg, cn, company_id, days, dry_run):
         LOG.warning("cash_withdrawals: JOIN FUNCIONARIOS falhou (%s), usando código numérico", e)
         rows = cn.cursor().execute(sql_fallback, cutoff).fetchall()
     payload = []
-    for dia, operador, total, notas in rows:
+    for dia, funcionario_id, operador, total, notas in rows:
         payload.append({
             "company_id": company_id,
             "withdrawal_date": to_iso_date(dia),
@@ -328,6 +329,49 @@ def job_cash_withdrawals(cfg, cn, company_id, days, dry_run):
                      on_conflict="company_id,withdrawal_date,amount,operator,source",
                      dry_run=dry_run)
     LOG.info("cash_withdrawals: %d linhas", sent)
+    return sent
+
+
+def job_register_sessions(cfg, cn, company_id, days, dry_run):
+    """Agrega CUPOM_FISCAL por (dia, PDV, operador) → register_sessions.
+    Idempotente via UPSERT em (company_id, session_date, pdv_id, operador_id).
+    """
+    cutoff = datetime.now() - timedelta(days=days)
+    sql = """
+        SELECT
+            CONVERT(date, cf.CUP_EMISSAO) AS session_date,
+            cf.CUP_PDV AS pdv_id,
+            cf.CUP_FUNCIONARIO AS operador_id,
+            MAX(ISNULL(f.FUN_NOME, CONVERT(varchar(100), cf.CUP_FUNCIONARIO))) AS operador_nome,
+            SUM(cf.CUP_TOTAL) AS total_vendas,
+            COUNT(cf.CUP_CODIGO) AS total_cupons
+        FROM CUPOM_FISCAL cf WITH (NOLOCK)
+        LEFT JOIN FUNCIONARIOS f WITH (NOLOCK) ON f.FUN_CODIGO = cf.CUP_FUNCIONARIO
+        WHERE cf.CUP_EMISSAO >= ?
+          AND ISNULL(cf.CUP_SITUACAO, 'N') <> 'C'
+          AND cf.CUP_PDV IS NOT NULL
+          AND cf.CUP_FUNCIONARIO IS NOT NULL
+        GROUP BY CONVERT(date, cf.CUP_EMISSAO), cf.CUP_PDV, cf.CUP_FUNCIONARIO
+        ORDER BY session_date, pdv_id
+    """
+    rows = cn.cursor().execute(sql, cutoff).fetchall()
+    payload = []
+    for r in rows:
+        payload.append({
+            "company_id":   company_id,
+            "session_date": to_iso_date(r.session_date),
+            "pdv_id":       int(r.pdv_id),
+            "pdv_nome":     f"PDV {r.pdv_id}",
+            "operador_id":  int(r.operador_id),
+            "operador_nome": (r.operador_nome or "").strip()[:200] or f"Op {r.operador_id}",
+            "total_vendas": round(float(r.total_vendas or 0), 2),
+            "total_cupons": int(r.total_cupons or 0),
+            "source":       SOURCE,
+        })
+    sent = sb_upsert(cfg, "register_sessions", payload,
+                     on_conflict="company_id,session_date,pdv_id,operador_id",
+                     dry_run=dry_run)
+    LOG.info("register_sessions: %d linhas (%d dias)", sent, len({p['session_date'] for p in payload}))
     return sent
 
 
@@ -624,7 +668,8 @@ def main():
     p.add_argument("--days-invoices", type=int, default=60, help="janela em dias pra buscar NF-e novas")
     p.add_argument("--max-history-months", type=int, default=24, help="meses de histórico pra receivables (default 24)")
     p.add_argument("--days-card-fees", type=int, default=90, help="janela em dias pra recalcular taxas de cartão")
-    p.add_argument("--only", choices=["sales", "withdrawals", "customers", "receivables", "invoices", "card_fees"], default=None)
+    p.add_argument("--days-sessions", type=int, default=7, help="janela em dias pra recalcular register_sessions")
+    p.add_argument("--only", choices=["sales", "withdrawals", "customers", "receivables", "invoices", "card_fees", "sessions"], default=None)
     args = p.parse_args()
 
     base = Path(__file__).parent
@@ -644,6 +689,8 @@ def main():
             jobs.append(("sales", lambda: job_daily_sales(cfg, cn, company_id, args.days_sales, args.dry_run)))
         if args.only in (None, "withdrawals"):
             jobs.append(("withdrawals", lambda: job_cash_withdrawals(cfg, cn, company_id, args.days_sales, args.dry_run)))
+        if args.only in (None, "sessions"):
+            jobs.append(("sessions", lambda: job_register_sessions(cfg, cn, company_id, args.days_sessions, args.dry_run)))
         if args.only in (None, "receivables"):
             jobs.append(("receivables", lambda: job_receivables(cfg, cn, company_id, args.days_receivables, args.dry_run, args.max_history_months)))
         if args.only in (None, "card_fees"):

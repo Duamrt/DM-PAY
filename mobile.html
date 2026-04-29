@@ -291,6 +291,14 @@ div[style*="monospace"]{display:none!important}
 
 <!-- VIEW: VENDAS -->
 <div class="view" id="viewVendas">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:10px 16px">
+    <button onclick="navDate(-1)" style="width:36px;height:36px;border-radius:8px;background:var(--bg-elevated);color:var(--text-primary);font-size:18px;display:grid;place-items:center;border:none;cursor:pointer">←</button>
+    <div style="text-align:center">
+      <div id="svDataLabel" style="font-size:15px;font-weight:600;letter-spacing:-0.02em">—</div>
+      <div id="svDataSub" style="font-size:11px;color:var(--text-muted);margin-top:2px">—</div>
+    </div>
+    <button onclick="navDate(+1)" style="width:36px;height:36px;border-radius:8px;background:var(--bg-elevated);color:var(--text-primary);font-size:18px;display:grid;place-items:center;border:none;cursor:pointer">→</button>
+  </div>
   <div class="summary-row">
     <div class="sum-box"><div class="sum-label">Total</div><div class="sum-val c-success num" id="svTotal">—</div></div>
     <div class="sum-box"><div class="sum-label">Cupons</div><div class="sum-val num" id="svCupons">—</div></div>
@@ -378,14 +386,79 @@ const hoje = () => { const d = new Date(); return `${d.getFullYear()}-${String(d
 document.getElementById('hdrDate').textContent = new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'});
 
 let CID = null, DATA = {};
+let dataSel = hoje();
 
-/* NAVEGAÇÃO */
+/* NAVEGAÇÃO DE DATAS (view Vendas) */
+const DIAS_SEM = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MESES_ABR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function atualizarDataLabel() {
+  const [y,m,d] = dataSel.split('-');
+  const dt = new Date(+y, +m-1, +d);
+  document.getElementById('svDataLabel').textContent = `${d}/${m}/${y}`;
+  document.getElementById('svDataSub').textContent = dataSel === hoje() ? 'Hoje' : DIAS_SEM[dt.getDay()] + ' · ' + MESES_ABR[+m-1];
+}
+
+async function reloadVendasView(d) {
+  ['svFormas','svSangrias','svCaixas'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = '<div class="empty">Carregando…</div>';
+  });
+  const [vRes, cRes, sRes] = await Promise.all([
+    sb.from('daily_sales').select('payment_method,amount').eq('company_id',CID).eq('sale_date',d),
+    sb.from('register_sessions').select('pdv_id,pdv_nome,operador_id,operador_nome,total_vendas,total_cupons').eq('company_id',CID).eq('session_date',d).order('pdv_id'),
+    sb.from('cash_withdrawals').select('amount,operator,notes').eq('company_id',CID).eq('withdrawal_date',d),
+  ]);
+  const vendas = vRes.data || [];
+  const total = vendas.reduce((s,r)=>s+Number(r.amount||0),0);
+  const svT = document.getElementById('svTotal'); if(svT) svT.textContent = fmt(total);
+  const svC = document.getElementById('svCupons'); if(svC) svC.textContent = vendas.length;
+  // formas
+  const grupos = {};
+  vendas.forEach(r=>{ const k=r.payment_method||'outro'; grupos[k]=(grupos[k]||0)+Number(r.amount||0); });
+  const pos = Object.entries(grupos).filter(([,v])=>v>=0).sort((a,b)=>b[1]-a[1]);
+  const neg = Object.entries(grupos).filter(([,v])=>v<0);
+  const elF = document.getElementById('svFormas');
+  if(elF) elF.innerHTML = (pos.length+neg.length)===0
+    ? '<div class="empty">Sem vendas neste dia.</div>'
+    : `<div class="list-card">${[...pos,...neg].map(([k,v])=>`<div class="list-item"><div class="li-name">${nomeForma(k)}</div><div class="li-val ${v<0||k==='troco'?'c-danger':'c-success'}">${fmt(v)}</div></div>`).join('')}</div>`;
+  // sangrias
+  const sang = sRes.data || [];
+  const totSang = sang.reduce((s,r)=>s+Number(r.amount||0),0);
+  const elS = document.getElementById('svSangrias');
+  if(elS) elS.innerHTML = !sang.length ? '<div class="empty">Nenhuma sangria.</div>'
+    : `<div class="list-card">${sang.map(r=>`<div class="list-item"><div><div class="li-name" style="color:var(--danger)">${r.operator||'Operador'}</div><div class="li-sub">${r.notes||'Retirada de caixa'}</div></div><div class="li-val c-danger">−${fmt(r.amount)}</div></div>`).join('')}<div class="list-item" style="border-top:1px solid var(--border-strong)"><div class="li-name" style="font-weight:700">Total sangrias</div><div class="li-val c-danger">−${fmt(totSang)}</div></div></div>`;
+  // caixas
+  const pdvs = {};
+  (cRes.data||[]).forEach(r=>{
+    if(!pdvs[r.pdv_id]) pdvs[r.pdv_id]={nome:r.pdv_nome||`PDV ${r.pdv_id}`,total:0,cupons:0,ops:{}};
+    const k=r.operador_id||r.operador_nome||'?';
+    if(!pdvs[r.pdv_id].ops[k]) pdvs[r.pdv_id].ops[k]={nome:r.operador_nome||`Op #${r.operador_id}`,total:0,cupons:0};
+    pdvs[r.pdv_id].ops[k].total+=Number(r.total_vendas||0);
+    pdvs[r.pdv_id].ops[k].cupons+=Number(r.total_cupons||0);
+    pdvs[r.pdv_id].total+=Number(r.total_vendas||0);
+    pdvs[r.pdv_id].cupons+=Number(r.total_cupons||0);
+  });
+  const elCx = document.getElementById('svCaixas');
+  if(elCx) elCx.innerHTML = Object.keys(pdvs).length===0 ? '<div class="empty">Nenhum caixa para este dia.</div>'
+    : Object.entries(pdvs).map(([pid,p],i)=>`<div class="pdv-card"><div class="pdv-head" onclick="togglePdv('pdv2-${i}')"><div><div class="pdv-nome">${p.nome}</div><div class="pdv-cupons">${p.cupons} cupons</div></div><div class="pdv-total">${fmt(p.total)}</div></div><div class="pdv-ops" id="pdv2-${i}">${Object.values(p.ops).map(op=>`<div class="op-row"><span class="op-nome">${op.nome}</span><span class="op-val">${fmt(op.total)}</span></div>`).join('')}</div></div>`).join('');
+}
+
+function navDate(delta) {
+  const [y,m,d] = dataSel.split('-').map(Number);
+  const dt = new Date(y, m-1, d+delta);
+  dataSel = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+  atualizarDataLabel();
+  if (CID) reloadVendasView(dataSel);
+}
+
+/* NAVEGAÇÃO DE VIEWS */
 const navMap = {viewResumo:'nb-resumo',viewVendas:'nb-vendas',viewReceber:'nb-receber',viewPagar:'nb-pagar'};
 function irPara(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
   if (navMap[viewId]) document.getElementById(navMap[viewId]).classList.add('active');
+  if (viewId === 'viewVendas') { atualizarDataLabel(); if (CID) reloadVendasView(dataSel); }
 }
 
 /* AUTH */
@@ -398,7 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => document.querySelectorAll('body > div').forEach(d => { if(d.style.position==='fixed')d.style.display='none'; }), 500);
 });
 
-waitAuth(() => Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado(), loadYoY()]));
+waitAuth(() => { atualizarDataLabel(); Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado(), loadYoY()]); });
 
 /* ── VENDAS ── */
 async function loadVendas() {
