@@ -31,7 +31,7 @@
     }
     if (CR_PQ.from) document.getElementById('cr-pq-from').value = CR_PQ.from;
     if (CR_PQ.to)   document.getElementById('cr-pq-to').value   = CR_PQ.to;
-    load();
+    load().then(render);
   }
 
   function isoToday(){ return new Date().toISOString().split('T')[0]; }
@@ -214,7 +214,7 @@
           <div style="margin-top:6px;font-size:12px;color:var(--text-soft)">Clique em <b>Nova conta a receber</b> pra cadastrar fiado</div>
         </td></tr>`;
       lucide.createIcons();
-      atualizaKPIs(); atualizaChips();
+      atualizaKPIs(list); atualizaChips();
       return;
     }
 
@@ -250,19 +250,20 @@
         </tr>`;
     }).join('');
     lucide.createIcons();
-    atualizaKPIs(); atualizaChips();
+    atualizaKPIs(list); atualizaChips();
   }
 
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
-  function atualizaKPIs() {
-    const abertas = RECVS.filter(r => r.status === 'open' || r.status === 'overdue');
+  function atualizaKPIs(filteredList) {
+    const base = filteredList || RECVS;
+    const abertas = base.filter(r => r.status === 'open' || r.status === 'overdue');
     const totalOpen = abertas.reduce((s,r)=>s+Number(r.amount), 0);
     const atrasadas = abertas.filter(r => diffDays(r.due_date) < 0);
     const overdue = atrasadas.reduce((s,r)=>s+Number(r.amount), 0);
     const next7 = abertas.filter(r => { const dd = diffDays(r.due_date); return dd >= 0 && dd <= 7; }).reduce((s,r)=>s+Number(r.amount), 0);
     const ymThis = isoToday().slice(0,7);
-    const recvMes = RECVS.filter(r => r.status === 'received' && r.received_at && r.received_at.startsWith(ymThis)).reduce((s,r)=>s+Number(r.amount), 0);
+    const recvMes = base.filter(r => r.status === 'received' && r.received_at && r.received_at.startsWith(ymThis)).reduce((s,r)=>s+Number(r.amount), 0);
 
     const ks = document.querySelectorAll('.kpi-value');
     if (ks[0]) ks[0].textContent = fmtBRL(totalOpen);
@@ -567,6 +568,43 @@
     }
     const btnNovo = document.getElementById('btn-novo');
     if (btnNovo) btnNovo.onclick = () => openCreate();
+
+    // Dropdown filtro status na coluna — portado pro body pra escapar do overflow:hidden
+    const sfTrigger = document.getElementById('cr-status-filter');
+    const sfLabel   = document.getElementById('cr-status-label');
+    const SF_LABELS = { open:'Em aberto', overdue:'Atrasado', today:'Vence hoje', received:'Recebidos' };
+    if (sfTrigger) {
+      const sfDrop = document.createElement('div');
+      sfDrop.id = 'cr-status-drop';
+      sfDrop.style.cssText = 'display:none;position:fixed;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;min-width:148px;padding:4px';
+      sfDrop.innerHTML = `
+        <div class="cr-sd-item" data-sf="open">Em aberto</div>
+        <div class="cr-sd-item" data-sf="overdue">Atrasado</div>
+        <div class="cr-sd-item" data-sf="today">Vence hoje</div>
+        <div class="cr-sd-item" data-sf="received">Recebidos</div>
+        <div class="cr-sd-item cr-sd-clear" data-sf="">Todos</div>`;
+      document.body.appendChild(sfDrop);
+
+      sfTrigger.addEventListener('click', e => {
+        e.stopPropagation();
+        if (sfDrop.style.display !== 'none') { sfDrop.style.display = 'none'; return; }
+        const r = sfTrigger.getBoundingClientRect();
+        sfDrop.style.top  = (r.bottom + 4) + 'px';
+        sfDrop.style.left = r.left + 'px';
+        sfDrop.style.display = 'block';
+        sfDrop.querySelectorAll('.cr-sd-item').forEach(i => i.classList.toggle('active', i.dataset.sf === FILTRO));
+      });
+      sfDrop.addEventListener('click', e => {
+        const item = e.target.closest('.cr-sd-item');
+        if (!item) return;
+        FILTRO = item.dataset.sf || 'open';
+        sfLabel.textContent = item.dataset.sf ? SF_LABELS[item.dataset.sf] : 'Status';
+        sfLabel.style.color = item.dataset.sf ? 'var(--accent)' : '';
+        sfDrop.style.display = 'none';
+        render();
+      });
+      document.addEventListener('click', () => { sfDrop.style.display = 'none'; });
+    }
 
     const periodBar = document.getElementById('cr-period-bar');
     if (periodBar) {

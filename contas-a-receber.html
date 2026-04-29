@@ -159,6 +159,10 @@
     .busca-resumo-kpi.danger .busca-resumo-kpi-val{color:var(--danger)}
     .busca-resumo-kpi.success .busca-resumo-kpi-val{color:var(--success)}
     @media (max-width:780px){.busca-resumo{grid-template-columns:1fr 1fr;gap:12px}.busca-resumo-nome{grid-column:span 2}}
+    .cr-sd-item{padding:7px 12px;font-size:13px;border-radius:6px;cursor:pointer;color:var(--text)}
+    .cr-sd-item:hover{background:var(--bg-soft)}
+    .cr-sd-item.active{font-weight:600;color:var(--accent)}
+    .cr-sd-clear{color:var(--text-muted);border-top:1px solid var(--border);margin-top:4px;padding-top:8px}
   </style>
   <script src="js/theme.js"></script>
   <script src="js/ui-modal.js"></script>
@@ -281,7 +285,12 @@
               <th class="num">Valor</th>
               <th>Vencimento</th>
               <th>Forma</th>
-              <th>Status</th>
+              <th>
+                <div id="cr-status-filter" style="display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none;white-space:nowrap" title="Filtrar por status">
+                  <span id="cr-status-label">Status</span>
+                  <i data-lucide="chevron-down" style="width:13px;height:13px;color:var(--text-muted)"></i>
+                </div>
+              </th>
               <th>Recebido em</th>
               <th></th>
             </tr>

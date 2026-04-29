@@ -7,6 +7,7 @@
   let PAYABLES = [];
   let FILTRO = 'open';   // open | today | overdue | week | paid
   let BUSCA = '';
+  let FILTRO_MES = '';   // '' = todos | 'YYYY-MM'
   let SUPPLIERS_CACHE = null;
   let CATEGORIES_CACHE = {}; // id -> {name, color}
 
@@ -129,6 +130,7 @@
       return p.status === 'open' && dd >= 0 && dd <= 7;
     });
     if (FILTRO === 'paid') out = out.filter(p => p.status === 'paid');
+    if (FILTRO_MES) out = out.filter(p => p.due_date && p.due_date.slice(0,7) === FILTRO_MES);
     if (BUSCA) {
       const q = BUSCA.toLowerCase();
       out = out.filter(p =>
@@ -153,7 +155,7 @@
           <div style="margin-top:6px;font-size:12px;color:var(--text-muted)">Clique em <b>Nova conta</b> ou <b>Importar histórico</b></div>
         </td></tr>`;
       window.lucide && lucide.createIcons();
-      atualizaKPIs();
+      atualizaKPIs(list);
       atualizaChips(list.length);
       return;
     }
@@ -165,11 +167,14 @@
       const sup = p.suppliers?.legal_name || _descSup || 'Sem fornecedor';
       const supShort = sup.length > 36 ? sup.slice(0,33)+'…' : sup;
       const cat = p.expense_categories?.name || '—';
+      const nfNum = p.invoices?.nf_number
+        || (p.description && p.description !== '—' ? p.description : null)
+        || '—';
       return `
         <tr data-id="${p.id}" onclick="DMPAY_CP.openDrawer('${p.id}')">
           <td><span class="check" role="checkbox" aria-checked="false" tabindex="0" data-row="${p.id}" onclick="event.stopPropagation()"></span></td>
           <td><div class="supplier"><span class="supplier-avatar tone-${tone(sup)}">${iniciais(sup)}</span><span class="supplier-name">${supShort}</span></div></td>
-          <td><span class="nf-badge">${p.invoices?.nf_number || (p.description?.match(/^NF\s+(\S+)/i)?.[1]) || '—'}</span></td>
+          <td><span class="nf-badge" title="${p.description || ''}">${nfNum}</span></td>
           <td class="date">${brDate(p.invoices?.issue_date || p.created_at)}</td>
           <td class="date">${brDate(p.due_date)}</td>
           <td>${cat}</td>
@@ -180,21 +185,21 @@
     }).join('');
 
     lucide.createIcons();
-    atualizaKPIs();
+    atualizaKPIs(list);
     atualizaChips(list.length);
   }
 
   // ==================== KPIs / CHIPS ====================
-  function atualizaKPIs() {
-    const opens = PAYABLES.filter(p => p.status === 'open');
+  function atualizaKPIs(filteredList) {
+    const base = filteredList || (FILTRO_MES ? PAYABLES.filter(p => p.due_date?.slice(0,7) === FILTRO_MES) : PAYABLES);
+    const opens = base.filter(p => p.status === 'open');
     const totalOpen = opens.reduce((s,p) => s + Number(p.amount), 0);
     const semana = opens.filter(p => { const dd = diffDays(p.due_date); return dd >= 0 && dd <= 7; })
       .reduce((s,p) => s + Number(p.amount), 0);
     const atrasado = opens.filter(p => diffDays(p.due_date) < 0)
       .reduce((s,p) => s + Number(p.amount), 0);
-    // Pagos no mes
-    const ymThis = isoToday().slice(0,7);
-    const pagosMes = PAYABLES
+    const ymThis = FILTRO_MES || isoToday().slice(0,7);
+    const pagosMes = base
       .filter(p => p.status === 'paid' && p.paid_at && p.paid_at.startsWith(ymThis))
       .reduce((s,p) => s + Number(p.amount), 0);
 
@@ -204,11 +209,14 @@
     if (ks[2]) ks[2].textContent = fmtBRL(atrasado);
     if (ks[3]) ks[3].textContent = fmtBRL(pagosMes);
 
+    const nomesMes = { '01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez' };
+    const labelMes = FILTRO_MES ? `${nomesMes[FILTRO_MES.slice(5,7)]}/${FILTRO_MES.slice(0,4)}` : 'este mês';
+
     const metas = document.querySelectorAll('.kpi-card .kpi-meta');
     if (metas[0]) metas[0].innerHTML = `<strong>${opens.length}</strong> boletos em aberto`;
     if (metas[1]) metas[1].innerHTML = `próximos <strong>7</strong> dias`;
     if (metas[2]) metas[2].innerHTML = `<strong>${opens.filter(p => diffDays(p.due_date) < 0).length}</strong> em atraso`;
-    if (metas[3]) metas[3].innerHTML = `pagos · este mês`;
+    if (metas[3]) metas[3].innerHTML = `pagos · ${labelMes}`;
 
     const chip = document.querySelector('.count-chip');
     if (chip) chip.textContent = opens.length + ' em aberto';
@@ -517,6 +525,22 @@
     }
 
     await loadPayables();
+
+    // Popular select de meses com os meses que existem nos dados
+    const selMes = document.getElementById('filtro-mes');
+    if (selMes) {
+      const meses = [...new Set(PAYABLES.map(p => p.due_date?.slice(0,7)).filter(Boolean))].sort();
+      const nomes = { '01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez' };
+      meses.forEach(m => {
+        const [y, mo] = m.split('-');
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = `${nomes[mo] || mo}/${y}`;
+        selMes.appendChild(opt);
+      });
+      selMes.addEventListener('change', () => { FILTRO_MES = selMes.value; render(); });
+    }
+
     render();
   }
 

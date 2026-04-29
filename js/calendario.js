@@ -116,11 +116,34 @@
   }
 
   function atualizaKPIs(porDia) {
+    const DIAS_SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     const totMes = Object.values(porDia).reduce((s,d)=>s+d.total, 0);
-    const totHoje = porDia[HOJE.getDate()] && HOJE.getMonth() === MES_REF ? porDia[HOJE.getDate()].total : 0;
+    const diasComVenc = Object.keys(porDia).length;
+
+    // Maior dia do mês — segunda acumula Sáb+Dom (bancos não processam no FDS)
+    let maiorDia = 0, maiorTotal = 0, maiorCount = 0;
+    Object.entries(porDia).forEach(([dia, agg]) => {
+      const dt = new Date(ANO_REF, MES_REF, +dia);
+      const dow = dt.getDay();
+      if (dow === 6 || dow === 0) return; // Sáb/Dom não são candidatos — entram na segunda
+      let efTotal = agg.total, efCount = agg.count || 0;
+      if (dow === 1) { // Segunda: soma sábado e domingo anteriores
+        const sabDia = +dia - 2, domDia = +dia - 1;
+        efTotal += (porDia[sabDia]?.total || 0) + (porDia[domDia]?.total || 0);
+        efCount += (porDia[sabDia]?.count || 0) + (porDia[domDia]?.count || 0);
+      }
+      if (efTotal > maiorTotal) { maiorTotal = efTotal; maiorDia = +dia; maiorCount = efCount; }
+    });
+    const dtMaior = maiorDia ? new Date(ANO_REF, MES_REF, maiorDia) : null;
+    const isSeg = dtMaior && dtMaior.getDay() === 1;
+    const maiorLabel = dtMaior
+      ? `${DIAS_SEMANA[dtMaior.getDay()]} ${String(maiorDia).padStart(2,'0')}/${String(MES_REF+1).padStart(2,'0')} · ${maiorCount} boleto${maiorCount!==1?'s':''}${isSeg?' (inclui Sáb+Dom)':''}`
+      : '—';
 
     // Pagos no mes
-    const pagosMes = PAYABLES.filter(p => p.status === 'paid' && p.paid_at && p.paid_at.startsWith(`${ANO_REF}-${String(MES_REF+1).padStart(2,'0')}`)).reduce((s,p)=>s+Number(p.amount), 0);
+    const pagosList = PAYABLES.filter(p => p.status === 'paid' && p.paid_at && p.paid_at.startsWith(`${ANO_REF}-${String(MES_REF+1).padStart(2,'0')}`));
+    const pagosMes = pagosList.reduce((s,p)=>s+Number(p.amount), 0);
+    const mediaDiaria = pagosList.length && diasComVenc ? Math.round(pagosMes / diasComVenc) : 0;
 
     // Próximo mês
     const proxMes = MES_REF + 1 > 11 ? 0 : MES_REF + 1;
@@ -130,14 +153,19 @@
       return d.getMonth() === proxMes && d.getFullYear() === proxAno;
     }).reduce((s,p)=>s+Number(p.amount), 0);
 
-    const ks = document.querySelectorAll('.kpi-value');
-    if (ks[0]) ks[0].textContent = fmtBRL(totMes);
-    if (ks[1]) ks[1].textContent = fmtBRL(totHoje);
-    if (ks[2]) ks[2].textContent = fmtBRL(pagosMes);
-    if (ks[3]) ks[3].textContent = fmtBRL(totProx);
+    const ks  = document.querySelectorAll('.kpi-value');
+    const sub = document.querySelectorAll('.kpi-sub');
+    if (ks[0])  ks[0].textContent  = fmtBRL(totMes);
+    if (sub[0]) sub[0].innerHTML   = `${diasComVenc} dias com vencimento`;
+    if (ks[1])  ks[1].textContent  = fmtBRL(maiorTotal);
+    if (sub[1]) sub[1].textContent = maiorLabel;
+    if (ks[2])  ks[2].textContent  = fmtBRL(pagosMes);
+    if (sub[2]) sub[2].innerHTML   = `${pagosList.length} boletos pagos · ${fmtBRL(mediaDiaria)}/dia em média`;
+    if (ks[3])  ks[3].textContent  = fmtBRL(totProx);
+    if (sub[3]) sub[3].textContent = `Previsão para ${MESES[proxMes]}/${proxAno}`;
 
     const heroSub = document.querySelector('.hero-sub') || document.querySelector('.hero p');
-    if (heroSub) heroSub.innerHTML = `${MESES[MES_REF]}/${ANO_REF} · <b>dados reais</b> do banco · ${Object.keys(porDia).length} dias com vencimento`;
+    if (heroSub) heroSub.innerHTML = `${MESES[MES_REF]}/${ANO_REF} · <b>dados reais</b> do banco · ${diasComVenc} dias com vencimento`;
   }
 
   function openDia(dia) {
