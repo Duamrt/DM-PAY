@@ -118,7 +118,7 @@ def load_config(path: Path) -> configparser.ConfigParser:
     if not path.exists():
         sys.exit(f"config nao encontrado: {path}")
     cfg = configparser.ConfigParser()
-    cfg.read(path, encoding="utf-8")
+    cfg.read(path, encoding="utf-8-sig")
     return cfg
 
 
