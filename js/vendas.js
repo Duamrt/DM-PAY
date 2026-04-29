@@ -266,7 +266,7 @@
         const hojeIso = HOJE.toISOString().slice(0,10);
         const isHoje = ultimoDia === hojeIso;
         const sufixo = isHoje ? `<span style="color:var(--text-soft);font-weight:500">hoje · ${dtLabel}</span>` : `<span style="color:var(--warn);font-weight:500">último dia com venda · ${dtLabel}</span>`;
-        payTitle.innerHTML = `<i data-lucide="wallet"></i> Formas de pagamento — ${sufixo} <span class="auto-tag"><i data-lucide="zap"></i>Auto · iCommerce</span>`;
+        payTitle.innerHTML = `<i data-lucide="wallet"></i> Formas de pagamento — ${sufixo} <span class="auto-tag"><i data-lucide="zap"></i>Auto · ${window._DMPAY_ERP_LABEL || 'iCommerce'}</span>`;
       }
       // Banner se último dia ≠ hoje (indica gap de sincronização / caixa fechado)
       const hojeIso = HOJE.toISOString().slice(0,10);
@@ -283,7 +283,7 @@
         }
         const [yU, mU, dU] = ultimoDia.split('-');
         const dtLabel = `${dU}/${mU}`;
-        bannerGap.innerHTML = `<i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--warn);flex-shrink:0;margin-top:1px"></i><div style="flex:1"><b style="color:var(--warn)">Sem vendas registradas há ${diffDias} dia${diffDias>1?'s':''}.</b> A última venda é de <b>${dtLabel}</b>. Verifique se o caixa foi aberto no Mercadinho ou se a sincronização com o iCommerce travou.</div>`;
+        bannerGap.innerHTML = `<i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--warn);flex-shrink:0;margin-top:1px"></i><div style="flex:1"><b style="color:var(--warn)">Sem vendas registradas há ${diffDias} dia${diffDias>1?'s':''}.</b> A última venda é de <b>${dtLabel}</b>. Verifique se o caixa foi aberto ou se a sincronização com o ${window._DMPAY_ERP_LABEL || 'ERP'} travou.</div>`;
       } else {
         const bannerGap = document.getElementById('vendas-gap-banner');
         if (bannerGap) bannerGap.remove();
@@ -421,9 +421,20 @@
       });
     }
 
-    // Banner sync: atualiza última sincronização
+    // Banner sync: atualiza label ERP baseado no source_system real
+    const { data: syncStateRows } = await sb.from('sync_state')
+      .select('source_system').eq('company_id', COMPANY_ID).limit(1);
+    const sourceSystem = syncStateRows?.[0]?.source_system || 'icommerce';
+    const erpLabel = sourceSystem === 'omsys' ? 'OMSYS' : 'iCommerce';
+    const autoTagHtml = `<span class="auto-tag"><i data-lucide="zap"></i>Auto · ${erpLabel}</span>`;
+    // Atualiza todos os badges estáticos da página
+    document.querySelectorAll('.auto-tag').forEach(el => {
+      el.innerHTML = `<i data-lucide="zap"></i>Auto · ${erpLabel}`;
+    });
     const syncTitle = document.querySelector('.sync-title b');
-    if (syncTitle) syncTitle.textContent = `Sincronizado com iCommerce`;
+    if (syncTitle) syncTitle.textContent = `Integração ${erpLabel} ativa.`;
+    window._DMPAY_ERP_LABEL = erpLabel;
+    window._DMPAY_AUTO_TAG_HTML = autoTagHtml;
 
     // === Fechamento do dia: Recebimentos de Fiado + Sangrias + Caixa líquido ===
     await carregarFechamentoDia(COMPANY_ID, ultimoDia, porDia[ultimoDia] || 0);
