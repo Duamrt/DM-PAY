@@ -59,13 +59,13 @@
     const janelaISO = janela.toISOString().slice(0,10);
     const [abertasR, pagasR] = await Promise.all([
       sb.from('payables')
-        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series), profiles(name)')
+        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
         .eq('company_id', COMPANY_ID)
         .in('status', ['open'])
         .order('due_date', { ascending: true })
         .limit(2000),
       sb.from('payables')
-        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series), profiles(name)')
+        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
         .eq('company_id', COMPANY_ID)
         .eq('status', 'paid')
         .gte('paid_at', janelaISO)
@@ -91,6 +91,15 @@
       PAYABLES.forEach(p => { p.expense_categories = p.category_id ? CATEGORIES_CACHE[p.category_id] : null; });
     } catch (e) {
       console.warn('categorias não carregaram, seguindo sem', e);
+    }
+    // Carrega nomes de usuários pra "Lançado por"
+    try {
+      const prof = await sb.from('profiles').select('id, name').eq('company_id', COMPANY_ID);
+      const profMap = {};
+      (prof.data || []).forEach(p => profMap[p.id] = p.name);
+      PAYABLES.forEach(p => { p._criado_por_nome = p.created_by ? (profMap[p.created_by] || null) : null; });
+    } catch (e) {
+      console.warn('profiles não carregaram', e);
     }
     return PAYABLES;
   }
@@ -168,7 +177,7 @@
       const supShort = sup.length > 36 ? sup.slice(0,33)+'…' : sup;
       const cat = p.expense_categories?.name || '—';
       const nfNum = p.invoices?.nf_number
-        || (p.description && p.description !== '—' ? p.description : null)
+        || p.description?.match(/^NF\s+(\S+)/i)?.[1]
         || '—';
       return `
         <tr data-id="${p.id}" onclick="DMPAY_CP.openDrawer('${p.id}')">
@@ -396,7 +405,7 @@
         <div class="field-row"><span class="k">Vencimento</span><span class="v">${brDate(p.due_date)}</span></div>
         <div class="field-row"><span class="k">Forma</span><span class="v">${p.payment_method || '—'}</span></div>
         <div class="field-row"><span class="k">Criado em</span><span class="v">${brDate(p.created_at)}</span></div>
-        ${p.profiles?.name ? `<div class="field-row"><span class="k">Lançado por</span><span class="v">${p.profiles.name}</span></div>` : ''}
+        ${p._criado_por_nome ? `<div class="field-row"><span class="k">Lançado por</span><span class="v">${p._criado_por_nome}</span></div>` : ''}
         ${p.paid_at ? `<div class="field-row"><span class="k">Pago em</span><span class="v">${brDate(p.paid_at)}</span></div>` : ''}
         ${p.boleto_line ? `<div class="field-row"><span class="k">Linha digitável</span><span class="v mono" style="font-size:11px">${p.boleto_line}</span></div>` : ''}
       </div>
