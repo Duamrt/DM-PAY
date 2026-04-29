@@ -121,7 +121,7 @@
     const total = _ultimoFiadoItens.reduce((s,i)=>s+Number(i.valor||0),0);
     abrirDrawer(
       'Clientes que quitaram fiado',
-      `${_ultimoFiadoItens.length} parcela${_ultimoFiadoItens.length!==1?'s':''} recebida${_ultimoFiadoItens.length!==1?'s':''} em ${dt}`,
+      `${_ultimoFiadoItens.length} cliente${_ultimoFiadoItens.length!==1?'s':''} quitou${_ultimoFiadoItens.length!==1?'ram':''} fiado em ${dt}`,
       _ultimoFiadoItens,
       'R$ ' + fmtBRLfull(total)
     );
@@ -480,11 +480,26 @@
       .limit(5000);
     if (errR) { console.error('fechamento fiado', errR); }
 
-    const fiadoRows = (recs || []).map(r => ({
-      nome: (r.customers && r.customers.name) || 'Cliente sem nome',
-      meta: `${r.description || '—'} · ${new Date(r.received_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`,
-      valor: Number(r.amount || 0)
-    }));
+    // Agrupa por cliente: soma valores e concatena descrições
+    const fiadoMap = new Map();
+    for (const r of (recs || [])) {
+      const nome = (r.customers && r.customers.name) || 'Cliente sem nome';
+      const valor = Number(r.amount || 0);
+      const desc = r.description || '—';
+      // Horário: só mostra se não for meia-noite UTC (dado do OMSYS sem hora real)
+      const dt = new Date(r.received_at);
+      const horaStr = (dt.getUTCHours() === 0 && dt.getUTCMinutes() === 0)
+        ? 'OMSYS' : dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      if (fiadoMap.has(nome)) {
+        const ex = fiadoMap.get(nome);
+        ex.valor += valor;
+        ex.parcelas++;
+        ex.meta = `${ex.parcelas} parcelas · ${horaStr}`;
+      } else {
+        fiadoMap.set(nome, { nome, valor, parcelas: 1, meta: `${desc} · ${horaStr}` });
+      }
+    }
+    const fiadoRows = [...fiadoMap.values()];
     _ultimoFiadoItens = fiadoRows;
 
     let totalFiado = fiadoRows.reduce((s,i)=>s+i.valor, 0);
@@ -515,7 +530,7 @@
     if (fiadoDetEl) fiadoDetEl.textContent = qtdFiado === 0
       ? 'Nenhum recebimento registrado neste dia.'
       : fiadoRows.length > 0
-        ? `${qtdFiado} parcela${qtdFiado!==1?'s':''} quitada${qtdFiado!==1?'s':''}`
+        ? `${qtdFiado} cliente${qtdFiado!==1?'s':''} quitou${qtdFiado!==1?'ram':''} fiado`
         : 'Total consolidado pelo ERP';
     if (btnFiado) btnFiado.disabled = qtdFiado === 0;
 
