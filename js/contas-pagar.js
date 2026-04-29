@@ -59,13 +59,13 @@
     const janelaISO = janela.toISOString().slice(0,10);
     const [abertasR, pagasR] = await Promise.all([
       sb.from('payables')
-        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
+        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series), profiles(name)')
         .eq('company_id', COMPANY_ID)
         .in('status', ['open'])
         .order('due_date', { ascending: true })
         .limit(2000),
       sb.from('payables')
-        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
+        .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series), profiles(name)')
         .eq('company_id', COMPANY_ID)
         .eq('status', 'paid')
         .gte('paid_at', janelaISO)
@@ -345,7 +345,8 @@
         payment_method: method,
         boleto_line: method === 'boleto' && line ? line : null,
         tipo_lancamento: tipo,
-        status: 'open'
+        status: 'open',
+        created_by: window.DMPAY_USER?.id || null
       };
       const { data, error } = await sb.from('payables').insert(payload).select('id').single();
       if (error) throw error;
@@ -395,6 +396,7 @@
         <div class="field-row"><span class="k">Vencimento</span><span class="v">${brDate(p.due_date)}</span></div>
         <div class="field-row"><span class="k">Forma</span><span class="v">${p.payment_method || '—'}</span></div>
         <div class="field-row"><span class="k">Criado em</span><span class="v">${brDate(p.created_at)}</span></div>
+        ${p.profiles?.name ? `<div class="field-row"><span class="k">Lançado por</span><span class="v">${p.profiles.name}</span></div>` : ''}
         ${p.paid_at ? `<div class="field-row"><span class="k">Pago em</span><span class="v">${brDate(p.paid_at)}</span></div>` : ''}
         ${p.boleto_line ? `<div class="field-row"><span class="k">Linha digitável</span><span class="v mono" style="font-size:11px">${p.boleto_line}</span></div>` : ''}
       </div>
@@ -684,7 +686,8 @@
         tipo_lancamento: 'despesa',
         category_id:     DESP_VAR_CAT_ID,
         notes:           data !== due ? `Emissão: ${data}` : null,
-        status:          'open'
+        status:          'open',
+        created_by:      window.DMPAY_USER?.id || null
       };
       const { data: row, error } = await sb.from('payables').insert(payload).select('id').single();
       if (error) throw error;

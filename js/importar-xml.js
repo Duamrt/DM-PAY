@@ -465,7 +465,8 @@
           boleto_line: codigo,
           notes: nfeObs,
           tipo_lancamento: 'compra',
-          status: 'open'
+          status: 'open',
+          created_by: window.DMPAY_USER?.id || null
         };
       });
       const payRes = await sb.from('payables').insert(payables).select('id');
