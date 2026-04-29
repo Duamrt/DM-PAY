@@ -458,7 +458,8 @@
     const inicio = dataIso + 'T00:00:00Z';
     const fim    = proxDia + 'T00:00:00Z';
 
-    // 1) Recebimentos de fiado: parcelas com received_at no dia
+    // 1) Recebimentos de fiado: parcelas com received_at no dia (iCommerce)
+    //    Fallback: daily_sales payment_method='recebimento' (OMSYS/Ducal)
     const { data: recs, error: errR } = await sb.from('receivables')
       .select('id, amount, received_at, description, customer_id, customers(name)')
       .eq('company_id', companyId)
@@ -475,8 +476,25 @@
     }));
     _ultimoFiadoItens = fiadoRows;
 
-    const totalFiado = fiadoRows.reduce((s,i)=>s+i.valor, 0);
-    const qtdFiado = fiadoRows.length;
+    let totalFiado = fiadoRows.reduce((s,i)=>s+i.valor, 0);
+    let qtdFiado = fiadoRows.length;
+
+    // Fallback OMSYS: se não há receivables, usa daily_sales 'recebimento'
+    if (totalFiado === 0) {
+      const { data: recDS } = await sb.from('daily_sales')
+        .select('amount')
+        .eq('company_id', companyId)
+        .eq('sale_date', dataIso)
+        .eq('payment_method', 'recebimento')
+        .limit(1);
+      if (recDS && recDS.length > 0) {
+        totalFiado = recDS.reduce((s,r) => s + Number(r.amount || 0), 0);
+        if (totalFiado > 0) {
+          _ultimoFiadoItens = [{ nome: 'Recebimentos do dia (caixa)', meta: 'Total consolidado pelo ERP', valor: totalFiado }];
+          qtdFiado = 1;
+        }
+      }
+    }
 
     const fiadoValEl = document.getElementById('fiado-valor');
     const fiadoDetEl = document.getElementById('fiado-detalhe');
@@ -484,8 +502,10 @@
     const btnFiado = document.getElementById('btn-fiado-detalhes');
     if (fiadoValEl) fiadoValEl.textContent = 'R$ ' + fmtBRLfull(totalFiado);
     if (fiadoDetEl) fiadoDetEl.textContent = qtdFiado === 0
-      ? 'Nenhum cliente quitou fiado neste dia.'
-      : `${qtdFiado} parcela${qtdFiado!==1?'s':''} quitada${qtdFiado!==1?'s':''}`;
+      ? 'Nenhum recebimento registrado neste dia.'
+      : fiadoRows.length > 0
+        ? `${qtdFiado} parcela${qtdFiado!==1?'s':''} quitada${qtdFiado!==1?'s':''}`
+        : 'Total consolidado pelo ERP';
     if (btnFiado) btnFiado.disabled = qtdFiado === 0;
 
     // Alerta operacional: iCommerce só permite marcar DINHEIRO/PIX/PIX-POS na quitação.
