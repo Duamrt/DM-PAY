@@ -521,7 +521,7 @@
     if (cpSfTrigger) {
       const cpSfDrop = document.createElement('div');
       cpSfDrop.id = 'cp-status-drop';
-      cpSfDrop.style.cssText = 'display:none;position:fixed;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;min-width:148px;padding:4px';
+      cpSfDrop.style.cssText = 'display:none;position:fixed;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:9999;min-width:148px;padding:4px';
       cpSfDrop.innerHTML = `
         <div class="cr-sd-item" data-sf="open">Em aberto</div>
         <div class="cr-sd-item" data-sf="overdue">Atrasado</div>
