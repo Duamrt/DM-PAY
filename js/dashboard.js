@@ -57,8 +57,11 @@
     const inicio2y = new Date(HOJE); inicio2y.setFullYear(inicio2y.getFullYear() - 2);
     const inicio2yISO = inicio2y.toISOString().slice(0, 10);
 
-    const [pagsR, recsR, salesR, sangR] = await Promise.all([
-      qPay(sb.from('payables').select('id, amount, due_date, paid_at, status, description, suppliers(legal_name)')).limit(2000),
+    const [pagsR, pagsPaidR, recsR, salesR, sangR] = await Promise.all([
+      qPay(sb.from('payables').select('id, amount, due_date, paid_at, status, description, suppliers(legal_name)'))
+        .in('status', ['open', 'overdue']).limit(5000),
+      qPay(sb.from('payables').select('id, amount, due_date, paid_at'))
+        .eq('status', 'paid').gte('paid_at', inicio30iso).limit(2000),
       qPay(sb.from('receivables').select('id, amount, due_date, status')
         .in('status', ['open', 'overdue'])
         .gte('due_date', inicio2yISO)
@@ -66,10 +69,12 @@
       qPay(sb.from('daily_sales').select('sale_date, payment_method, amount').gte('sale_date', inicio30iso)).limit(2000),
       qPay(sb.from('cash_withdrawals').select('withdrawal_date, amount').gte('withdrawal_date', inicio30iso)).limit(500)
     ]);
-    warnIfTruncated(pagsR.data,  2000, 'dashboard payables');
-    warnIfTruncated(recsR.data,  5000, 'dashboard receivables');
-    warnIfTruncated(salesR.data, 2000, 'dashboard daily_sales');
+    warnIfTruncated(pagsR.data,     5000, 'dashboard payables');
+    warnIfTruncated(pagsPaidR.data, 2000, 'dashboard payables-paid');
+    warnIfTruncated(recsR.data,     5000, 'dashboard receivables');
+    warnIfTruncated(salesR.data,    2000, 'dashboard daily_sales');
     const PAGS = pagsR.data || [];
+    const PAGS_PAID = pagsPaidR.data || [];
     const RECS = recsR.data || [];
     const SALES = salesR.data || [];
     const SANG = sangR.data || [];
@@ -252,7 +257,7 @@
         const vendasDia = SALES.filter(s => s.sale_date === iso).reduce((s,v)=>s+Number(v.amount), 0);
         const recebDia = RECS.filter(r => r.received_at?.slice(0,10) === iso).reduce((s,r)=>s+Number(r.amount), 0);
         const ent = vendasDia + recebDia;
-        const pagDia = PAGS.filter(p => p.paid_at?.slice(0,10) === iso || (p.due_date === iso && p.status === 'paid')).reduce((s,p)=>s+Number(p.amount), 0);
+        const pagDia = PAGS_PAID.filter(p => p.paid_at?.slice(0,10) === iso).reduce((s,p)=>s+Number(p.amount), 0);
         const sangDia = SANG.filter(w => w.withdrawal_date === iso).reduce((s,w)=>s+Number(w.amount), 0);
         const sai = pagDia + sangDia;
         ent30.push(ent / 1000);
