@@ -246,41 +246,45 @@
       }
     });
 
-    // === ENTRADAS X SAÍDAS CHART (real, últimos 30 dias) ===
+    // === FATURADO / RECEBIDO / SAÍDAS CHART (real, últimos 30 dias) ===
     if (typeof Chart !== 'undefined' && document.getElementById('chart-entradas-saidas')) {
-      // Histórico real dos últimos 30 dias — entrada = vendas (daily_sales) + receivables recebidos; saída = payables pagos + sangrias
-      const labels30 = []; const ent30 = []; const sai30 = [];
+      const labels30 = []; const fat30 = []; const rec30 = []; const sai30 = [];
       for (let i = 29; i >= 0; i--) {
         const d = new Date(HOJE); d.setDate(d.getDate() - i);
         const iso = d.toISOString().slice(0,10);
         labels30.push(d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}));
-        const vendasDia = SALES.filter(s => s.sale_date === iso).reduce((s,v)=>s+Number(v.amount), 0);
-        const recebDia = RECS.filter(r => r.received_at?.slice(0,10) === iso).reduce((s,r)=>s+Number(r.amount), 0);
-        const ent = vendasDia + recebDia;
-        const pagDia = PAGS_PAID.filter(p => p.paid_at?.slice(0,10) === iso).reduce((s,p)=>s+Number(p.amount), 0);
+        // Faturado = vendas geradas (a_prazo e à vista), exclui 'recebimento'
+        const faturadoDia = SALES.filter(s => s.sale_date === iso && s.payment_method !== 'recebimento').reduce((s,v)=>s+Number(v.amount), 0);
+        // Recebido = Bx.Saldo OMSYS (payment_method='recebimento') + receivables pagos iCommerce
+        const recebidoDia = SALES.filter(s => s.sale_date === iso && s.payment_method === 'recebimento').reduce((s,v)=>s+Number(v.amount), 0)
+          + RECS.filter(r => r.received_at?.slice(0,10) === iso).reduce((s,r)=>s+Number(r.amount), 0);
+        const pagDia  = PAGS_PAID.filter(p => p.paid_at?.slice(0,10) === iso).reduce((s,p)=>s+Number(p.amount), 0);
         const sangDia = SANG.filter(w => w.withdrawal_date === iso).reduce((s,w)=>s+Number(w.amount), 0);
-        const sai = pagDia + sangDia;
-        ent30.push(ent / 1000);
-        sai30.push(sai / 1000);
+        fat30.push(faturadoDia / 1000);
+        rec30.push(recebidoDia / 1000);
+        sai30.push((pagDia + sangDia) / 1000);
       }
-      const totE = ent30.reduce((a,b)=>a+b, 0);
+      const totF = fat30.reduce((a,b)=>a+b, 0);
+      const totR = rec30.reduce((a,b)=>a+b, 0);
       const totS = sai30.reduce((a,b)=>a+b, 0);
       const totEEl = document.getElementById('tot-entradas');
+      const totREl = document.getElementById('tot-recebido');
       const totSEl = document.getElementById('tot-saidas');
       const saldoEl = document.getElementById('saldo-periodo');
-      if (totEEl) totEEl.textContent = 'Entradas R$ ' + Math.round(totE) + 'k';
+      if (totEEl) totEEl.textContent = 'Faturado R$ ' + Math.round(totF) + 'k';
+      if (totREl) totREl.textContent = 'Recebido R$ ' + Math.round(totR) + 'k';
       if (totSEl) totSEl.textContent = 'Saídas R$ ' + Math.round(totS) + 'k';
-      const saldoP = totE - totS;
+      const saldoP = totR - totS;
       if (saldoEl) {
         saldoEl.textContent = (saldoP >= 0 ? '+' : '−') + 'R$ ' + Math.round(Math.abs(saldoP)) + 'k';
         saldoEl.style.color = saldoP >= 0 ? 'var(--success)' : 'var(--danger)';
         const cvs = document.getElementById('chart-entradas-saidas');
-        if (cvs) cvs.setAttribute('aria-label', `Gráfico de entradas e saídas — Entradas R$ ${Math.round(totE)}k, Saídas R$ ${Math.round(totS)}k, Saldo ${(saldoP >= 0 ? '+' : '-')}R$ ${Math.round(Math.abs(saldoP))}k`);
+        if (cvs) cvs.setAttribute('aria-label', `Gráfico — Faturado R$ ${Math.round(totF)}k, Recebido R$ ${Math.round(totR)}k, Saídas R$ ${Math.round(totS)}k`);
       }
-      // Re-renderiza o chart com os dados reais (substitui os mocks DATA_*)
       if (window.DATA_LABELS) {
         DATA_LABELS.length = 0; DATA_LABELS.push(...labels30);
-        DATA_ENTRADAS.length = 0; DATA_ENTRADAS.push(...ent30);
+        DATA_ENTRADAS.length = 0; DATA_ENTRADAS.push(...fat30);
+        if (window.DATA_RECEBIDO) { DATA_RECEBIDO.length = 0; DATA_RECEBIDO.push(...rec30); }
         DATA_SAIDAS.length = 0; DATA_SAIDAS.push(...sai30);
         if (typeof renderChart === 'function') setTimeout(renderChart, 50);
       }

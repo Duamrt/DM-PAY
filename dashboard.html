@@ -382,7 +382,8 @@
             <div class="bar-meta">
               <div class="bar-meta-left">
                 <span class="bar-total"><b id="saldo-periodo">—</b> saldo do período</span>
-                <span class="bar-legend"><span class="legend-dot" style="background:var(--accent)"></span><span id="tot-entradas">Entradas —</span></span>
+                <span class="bar-legend"><span class="legend-dot" style="background:var(--accent)"></span><span id="tot-entradas">Faturado —</span></span>
+                <span class="bar-legend"><span class="legend-dot" style="background:var(--success)"></span><span id="tot-recebido">Recebido —</span></span>
                 <span class="bar-legend"><span class="legend-dot" style="background:var(--warn)"></span><span id="tot-saidas">Saídas —</span></span>
               </div>
               <div class="tab-group" id="tabs-periodo">
@@ -412,8 +413,9 @@
     const saved = localStorage.getItem('dmpay-theme');
     if (saved) document.documentElement.setAttribute('data-theme', saved);
 
-    window.DATA_LABELS  = [];
+    window.DATA_LABELS   = [];
     window.DATA_ENTRADAS = [];
+    window.DATA_RECEBIDO = [];
     window.DATA_SAIDAS   = [];
 
     let chart;
@@ -432,26 +434,32 @@
       const warn = css.getPropertyValue('--warn').trim();
 
       const slice = -currentPeriod;
-      const labels = DATA_LABELS.slice(slice);
-      const entradas = DATA_ENTRADAS.slice(slice);
-      const saidas = DATA_SAIDAS.slice(slice);
+      const labels   = DATA_LABELS.slice(slice);
+      const faturado = DATA_ENTRADAS.slice(slice);
+      const recebido = DATA_RECEBIDO.slice(slice);
+      const saidas   = DATA_SAIDAS.slice(slice);
 
-      const totE = entradas.reduce((a,b) => a+b, 0);
+      const totF = faturado.reduce((a,b) => a+b, 0);
+      const totR = recebido.reduce((a,b) => a+b, 0);
       const totS = saidas.reduce((a,b) => a+b, 0);
-      document.getElementById('tot-entradas').textContent = 'Entradas ' + fmtK(totE);
+      document.getElementById('tot-entradas').textContent = 'Faturado ' + fmtK(totF);
+      const recEl = document.getElementById('tot-recebido');
+      if (recEl) recEl.textContent = 'Recebido ' + fmtK(totR);
       document.getElementById('tot-saidas').textContent = 'Saídas ' + fmtK(totS);
-      const saldo = totE - totS;
+      const saldo = totR - totS;
       const saldoEl = document.getElementById('saldo-periodo');
       saldoEl.textContent = (saldo >= 0 ? '+' : '−') + fmtK(Math.abs(saldo));
       saldoEl.style.color = saldo >= 0 ? 'var(--success)' : 'var(--danger)';
 
+      const success = css.getPropertyValue('--success').trim();
       chart = new Chart(ctx, {
         type: 'bar',
         data: {
           labels,
           datasets: [
-            { label: 'Entradas', data: entradas, backgroundColor: accent, borderRadius: 3, borderSkipped: false, maxBarThickness: 14 },
-            { label: 'Saídas',   data: saidas,   backgroundColor: warn,   borderRadius: 3, borderSkipped: false, maxBarThickness: 14 }
+            { label: 'Faturado', data: faturado, backgroundColor: accent,  borderRadius: 3, borderSkipped: false, maxBarThickness: 10 },
+            { label: 'Recebido', data: recebido, backgroundColor: success, borderRadius: 3, borderSkipped: false, maxBarThickness: 10 },
+            { label: 'Saídas',   data: saidas,   backgroundColor: warn,    borderRadius: 3, borderSkipped: false, maxBarThickness: 10 }
           ]
         },
         options: {
