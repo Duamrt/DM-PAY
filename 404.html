@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redirecionando · DM Pay</title>
+<style>
+  body{margin:0;height:100vh;background:#0A0B0D;color:#F5F7FA;
+    font-family:-apple-system,'Segoe UI',sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+  .logo{width:64px;height:64px;border-radius:16px;
+    background:linear-gradient(135deg,#3B82F6,#60A5FA);
+    display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px;
+    box-shadow:0 12px 40px -8px rgba(59,130,246,.5)}
+  .msg{font-size:14px;color:#9CA3AF;font-weight:500}
+  .spin{width:18px;height:18px;border:2px solid rgba(255,255,255,.15);
+    border-top-color:#3B82F6;border-radius:50%;animation:s 1s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="logo">DM</div>
+<div class="spin"></div>
+<div class="msg">Redirecionando...</div>
+<script>
+(function(){
+  var p = location.pathname;
+  // Path antigo do GitHub Pages: /DM-PAY/algo.html → reescreve sem o prefixo
+  var fixed = p.replace(/^\/DM-PAY\//, '/');
+  if (fixed !== p) {
+    location.replace(fixed + location.search + location.hash);
+    return;
+  }
+  // Outros 404s: manda pro mobile (PWA) se for mobile, senao login
+  var isMobile = /iPhone|Android|Mobile/i.test(navigator.userAgent);
+  setTimeout(function(){
+    location.replace(isMobile ? '/mobile.html' : '/login.html');
+  }, 600);
+})();
+</script>
+</body>
+</html>
