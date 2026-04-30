@@ -420,6 +420,16 @@
     const { data: allInvs } = await sb.from('invoices').select('issue_date,total')
       .eq('company_id', CID).order('issue_date', { ascending: true });
 
+    // Busca impostos reais de todos os meses (usa quando disponível, senão estimado)
+    const { data: allTaxes } = await sb.from('dre_taxes')
+      .select('year,month,icms_net,pis_net,cofins_net,devolucoes')
+      .eq('company_id', CID);
+    const taxByMes = {};
+    (allTaxes||[]).forEach(t => {
+      const k = `${t.year}-${String(t.month).padStart(2,'0')}`;
+      taxByMes[k] = Number(t.icms_net||0) + Number(t.pis_net||0) + Number(t.cofins_net||0) + Number(t.devolucoes||0);
+    });
+
     const byMes = {}, invByMes = {};
     (allSales||[]).forEach(r => {
       const d = new Date(r.sale_date + 'T12:00:00');
@@ -436,7 +446,14 @@
     const keys = Object.keys(byMes).sort().slice(-12);
     const labels = keys.map(k => { const [a,m]=k.split('-'); return `${MESES_CURTO[+m-1]}/${String(a).slice(2)}`; });
     const rbData = keys.map(k => Math.round((byMes[k]||0)/1000));
-    const rlData = rbData.map(v => Math.round(v * (1 - ICMS_EST - PIS_EST - COF_EST)));
+    // Receita Líquida: usa imposto REAL se houver no mês, senão estimado
+    const rlData = keys.map((k, i) => {
+      const rbReal = byMes[k] || 0;
+      if (taxByMes[k] != null && taxByMes[k] > 0) {
+        return Math.round((rbReal - taxByMes[k]) / 1000);
+      }
+      return Math.round(rbData[i] * (1 - ICMS_EST - PIS_EST - COF_EST));
+    });
     const lbData = keys.map((k,i) => {
       const cmvK = invByMes[k]||0;
       if (!cmvK) return null;

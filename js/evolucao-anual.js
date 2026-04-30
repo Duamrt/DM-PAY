@@ -352,10 +352,6 @@
     return ((vAtual - vAnterior) / vAnterior) * 100;
   }
 
-  function pctStr(v) {
-    return (v >= 0 ? '+' : '') + v.toFixed(1).replace('.', ',') + '%';
-  }
-
   function esc(str) {
     return window.esc ? window.esc(str) : String(str || '');
   }

@@ -940,9 +940,10 @@ window.DMPAY_EXPORT = (() => {
     });
 
     let lastClient = null, colorToggle = false;
-    sorted.forEach(r => {
+    sorted.forEach((r, idx) => {
       const nome = r.customers?.name || r.description || 'Sem cliente';
       const cpf  = r.customers?.cpf_cnpj || '—';
+      const prevNome = idx > 0 ? (sorted[idx-1].customers?.name || sorted[idx-1].description || 'Sem cliente') : null;
       if (nome !== lastClient) { colorToggle = !colorToggle; lastClient = nome; }
       const band = colorToggle ? CINZA_CLR : BRANCO;
 
@@ -962,7 +963,7 @@ window.DMPAY_EXPORT = (() => {
         r.status === 'received' ? '—' : (dias > 0 ? dias : '—')
       ]);
       row.height = 19;
-      row.getCell(1).font      = { name:'Arial', size:9, bold: nome !== (sorted[sorted.indexOf(r)-1]?.customers?.name) };
+      row.getCell(1).font      = { name:'Arial', size:9, bold: nome !== prevNome };
       row.getCell(2).font      = { name:'Arial', size:8, color:{argb:MUTED} };
       row.getCell(2).alignment = { horizontal:'center', vertical:'middle' };
       row.getCell(3).alignment = { horizontal:'center', vertical:'middle' };

@@ -183,10 +183,15 @@
       </div>`).join('');
   }
 
-  function editSaldo() {
-    const v = prompt('Saldo bancário inicial (R$):', SALDO_INICIAL);
-    if (v === null) return;
-    const n = parseFloat(String(v).replace(',','.'));
+  async function editSaldo() {
+    const r = await DMPAY_UI.open({
+      title: 'Saldo bancário inicial',
+      desc: 'Valor base para o cálculo do fluxo de caixa.',
+      fields: [{ key: 'saldo', label: 'Saldo (R$)', type: 'text', value: String(SALDO_INICIAL || ''), placeholder: '0,00' }],
+      submitLabel: 'Salvar'
+    });
+    if (!r) return;
+    const n = parseFloat(String(r.saldo).replace(/[^\d,.-]/g, '').replace(',', '.'));
     if (isNaN(n)) return;
     SALDO_INICIAL = n;
     localStorage.setItem('dmpay-saldo-' + window.DMPAY_COMPANY.id, n);
