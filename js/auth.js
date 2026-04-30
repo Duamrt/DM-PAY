@@ -62,6 +62,16 @@ window.DMPAY = (function() {
         return null;
       }
     }
+    // Bloqueio por inadimplência: empresa com status 'bloqueado' ou 'suspensa' só pode
+    // acessar meu-plano.html (pra regularizar) ou sair (signOut). Platform admin escapa.
+    // 'suspensa' é setado pelo cron asaas-checar-atrasos quando dias_atraso > GRACE_DAYS (7)
+    const PAGINAS_LIVRES_BLOQUEIO = ['meu-plano.html', 'login.html', 'wizard.html'];
+    const STATUS_BLOQUEIO = ['bloqueado', 'suspensa'];
+    if (!isPlatformAdmin && s.company && STATUS_BLOQUEIO.includes(s.company.status) && !PAGINAS_LIVRES_BLOQUEIO.includes(path)) {
+      console.warn('[DMPAY] empresa com status "' + s.company.status + '" — redirecionando pra meu-plano');
+      location.replace('meu-plano.html');
+      return null;
+    }
     return s;
   }
 
