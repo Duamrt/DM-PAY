@@ -137,7 +137,7 @@ window.DMPAY_EXPORT = (() => {
     // KPIs resumo
     const abertas   = payables.filter(p => p.status !== 'paid');
     const pagas     = payables.filter(p => p.status === 'paid');
-    const atrasadas = abertas.filter(p => new Date(p.due_date) < new Date());
+    const atrasadas = abertas.filter(p => new Date(p.due_date + 'T00:00:00') < new Date());
     const totAberto = abertas.reduce((s, p) => s + Number(p.amount), 0);
     const totPago   = pagas.reduce((s, p) => s + Number(p.amount), 0);
 
@@ -180,7 +180,7 @@ window.DMPAY_EXPORT = (() => {
 
     // Dados
     payables.forEach((p, i) => {
-      const diff = (new Date(p.due_date) - new Date()) / 86400000;
+      const diff = (new Date(p.due_date + 'T00:00:00') - new Date()) / 86400000;
       let stLabel = 'A pagar', stBg = AMARELO_BG, stFg = AMARELO_FG;
       if (p.status === 'paid')    { stLabel = 'Pago';     stBg = VERDE_BG;  stFg = VERDE; }
       else if (diff < 0)          { stLabel = 'Atrasado'; stBg = VERM_BG;   stFg = VERMELHO; }

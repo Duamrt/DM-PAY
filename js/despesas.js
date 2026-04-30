@@ -5,6 +5,13 @@
   let FILTRO_CAT = 'all';
   let BUSCA = '';
 
+  // Parser tolerante: aceita "1.200,50" (BR) e "1200.50" (intl) e "R$ 1200,50"
+  function parseValor(s) {
+    let v = String(s||'').replace(/[^\d.,]/g, '');
+    if (v.includes(',')) v = v.replace(/\./g, '').replace(',', '.');
+    return parseFloat(v) || 0;
+  }
+
   function catColor(name) {
     const map = { 'Geral':'#6B7280', 'Vendas':'#2563EB', 'Administrativa':'#7C3AED', 'Comercial':'#10B981', 'Financeira':'#D97706' };
     return map[name] || '#6B7280';
@@ -169,7 +176,7 @@
   async function salvarNova(form) {
     const COMPANY_ID = window.DMPAY_COMPANY.id;
     const nome = form.nome.trim();
-    const amount = parseFloat(String(form.valor).replace(/[^\d,]/g,'').replace(',','.'));
+    const amount = parseValor(form.valor);
     const due = parseInt(form.dia, 10);
     if (!nome || !amount || !due) { alert('Preencha descrição, valor e dia'); return; }
     const categoria = form.categoria || 'Geral';
@@ -240,7 +247,7 @@
           categoria: document.querySelector('.cat-option.selected')?.dataset.cat || 'Geral'
         };
         if (editId) {
-          const amount = parseFloat(String(form.valor).replace(/[^\d,]/g,'').replace(',','.'));
+          const amount = parseValor(form.valor);
           const due = parseInt(form.dia, 10);
           const { error } = await sb.from('fixed_expenses').update({
             description: form.nome, amount, due_day: due

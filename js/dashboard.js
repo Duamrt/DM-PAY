@@ -36,7 +36,7 @@
     const heroP = document.querySelector('.hero p');
     if (heroP) {
       const dia = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-      const planoTxt = isPlatformAdmin ? '🛡 visão global · todos os tenants' : (company.plan === 'trial' ? `trial até ${new Date(company.trial_until).toLocaleDateString('pt-BR')}` : 'plano ' + company.plan);
+      const planoTxt = isPlatformAdmin ? '🛡 visão global · todos os tenants' : (company.plan === 'trial' ? `trial até ${new Date(String(company.trial_until).slice(0,10) + 'T00:00:00').toLocaleDateString('pt-BR')}` : 'plano ' + company.plan);
       heroP.innerHTML = `<span class="dot-success"></span> <b>${dia}</b> · <b>${esc(empresaNome)}</b> · ${esc(planoTxt)}`;
     }
 
@@ -57,7 +57,7 @@
     const inicio2y = new Date(HOJE); inicio2y.setFullYear(inicio2y.getFullYear() - 2);
     const inicio2yISO = inicio2y.toISOString().slice(0, 10);
 
-    const [pagsR, pagsPaidR, recsR, salesR, sangR] = await Promise.all([
+    const [pagsR, pagsPaidR, recsR, recsReceivedR, salesR, sangR] = await Promise.all([
       qPay(sb.from('payables').select('id, amount, due_date, paid_at, status, description, suppliers(legal_name)'))
         .in('status', ['open', 'overdue']).limit(5000),
       qPay(sb.from('payables').select('id, amount, due_date, paid_at'))
@@ -66,16 +66,20 @@
         .in('status', ['open', 'overdue'])
         .gte('due_date', inicio2yISO)
       ).limit(5000),
+      qPay(sb.from('receivables').select('id, amount, received_at'))
+        .eq('status', 'received').gte('received_at', inicio30iso).limit(2000),
       qPay(sb.from('daily_sales').select('sale_date, payment_method, amount').gte('sale_date', inicio30iso)).limit(2000),
       qPay(sb.from('cash_withdrawals').select('withdrawal_date, amount').gte('withdrawal_date', inicio30iso)).limit(500)
     ]);
     warnIfTruncated(pagsR.data,     5000, 'dashboard payables');
     warnIfTruncated(pagsPaidR.data, 2000, 'dashboard payables-paid');
     warnIfTruncated(recsR.data,     5000, 'dashboard receivables');
+    warnIfTruncated(recsReceivedR.data, 2000, 'dashboard receivables-received');
     warnIfTruncated(salesR.data,    2000, 'dashboard daily_sales');
     const PAGS = pagsR.data || [];
     const PAGS_PAID = pagsPaidR.data || [];
     const RECS = recsR.data || [];
+    const RECS_RECEIVED = recsReceivedR.data || [];
     const SALES = salesR.data || [];
     const SANG = sangR.data || [];
 
@@ -257,7 +261,7 @@
         const faturadoDia = SALES.filter(s => s.sale_date === iso && s.payment_method !== 'recebimento').reduce((s,v)=>s+Number(v.amount), 0);
         // Recebido = Bx.Saldo OMSYS (payment_method='recebimento') + receivables pagos iCommerce
         const recebidoDia = SALES.filter(s => s.sale_date === iso && s.payment_method === 'recebimento').reduce((s,v)=>s+Number(v.amount), 0)
-          + RECS.filter(r => r.received_at?.slice(0,10) === iso).reduce((s,r)=>s+Number(r.amount), 0);
+          + RECS_RECEIVED.filter(r => r.received_at?.slice(0,10) === iso).reduce((s,r)=>s+Number(r.amount), 0);
         const pagDia  = PAGS_PAID.filter(p => p.paid_at?.slice(0,10) === iso).reduce((s,p)=>s+Number(p.amount), 0);
         const sangDia = SANG.filter(w => w.withdrawal_date === iso).reduce((s,w)=>s+Number(w.amount), 0);
         fat30.push(faturadoDia / 1000);
