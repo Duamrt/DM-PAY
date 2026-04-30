@@ -2,7 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 const SUPABASE_URL=Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY=(Deno.env.get("SB_SECRET_KEY")??Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const CRON_SECRET=Deno.env.get("CRON_SECRET")??"";
-const GRACE_DAYS=7;const AVISO=[1,3,6];const WA_SUP="5587981456565";
+const GRACE_DAYS=7;const AVISO=[1,3,6];
+// WhatsApp do suporte (se necessário no futuro): Deno.env.get("WA_SUPORTE")
 function json(b:unknown,s=200){return new Response(JSON.stringify(b),{status:s,headers:{"content-type":"application/json"}});}
 Deno.serve(async(req)=>{
   if(req.method!=="POST")return json({error:"method_not_allowed"},405);
