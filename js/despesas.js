@@ -173,6 +173,58 @@
 
   function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+  // Gera lançamentos em payables para os meses indicados (mês atual + 2 futuros).
+  // Usa dedupe_hash = fe_{id}_{YYYY-MM} para nunca duplicar.
+  async function syncFixedToPayables() {
+    const COMPANY_ID = window.DMPAY_COMPANY.id;
+    if (!EXPENSES.length) return;
+
+    const now = new Date();
+    const allHashes = [];
+    const rowsByHash = {};
+
+    for (let mo = 0; mo < 3; mo++) {
+      const ref      = new Date(now.getFullYear(), now.getMonth() + mo, 1);
+      const year     = ref.getFullYear();
+      const month    = ref.getMonth() + 1;
+      const lastDay  = new Date(year, month, 0).getDate();
+
+      for (const exp of EXPENSES) {
+        const day         = Math.min(exp.due_day, lastDay);
+        const due_date    = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const dedupe_hash = `fe_${exp.id}_${year}_${String(month).padStart(2,'0')}`;
+        allHashes.push(dedupe_hash);
+        rowsByHash[dedupe_hash] = {
+          company_id:      COMPANY_ID,
+          category_id:     exp.category_id || null,
+          description:     exp.description,
+          amount:          exp.amount,
+          due_date,
+          payment_method:  'debito_automatico',
+          tipo_lancamento: 'despesa',
+          status:          'open',
+          dedupe_hash,
+        };
+      }
+    }
+
+    // Descobre quais hashes já existem para não duplicar
+    const { data: existing } = await sb.from('payables')
+      .select('dedupe_hash')
+      .eq('company_id', COMPANY_ID)
+      .in('dedupe_hash', allHashes);
+
+    const existingSet = new Set((existing || []).map(r => r.dedupe_hash));
+    const toCreate = allHashes
+      .filter(h => !existingSet.has(h))
+      .map(h => rowsByHash[h]);
+
+    if (!toCreate.length) return;
+
+    const { error } = await sb.from('payables').insert(toCreate);
+    if (error) console.warn('[DM Pay] syncFixedToPayables:', error.message);
+  }
+
   async function salvarNova(form) {
     const COMPANY_ID = window.DMPAY_COMPANY.id;
     const nome = form.nome.trim();
@@ -199,7 +251,9 @@
     });
     if (error) { alert('Erro ao salvar: '+error.message); return; }
     document.getElementById('modal')?.classList.remove('open');
-    await load(); render();
+    await load();
+    await syncFixedToPayables();
+    render();
   }
 
   async function desativar(id) {
@@ -225,6 +279,7 @@
   async function init() {
     if (!window.sb || !window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
     await load();
+    await syncFixedToPayables();
     render();
     // Busca
     const search = document.querySelector('.toolbar .search input');
@@ -255,7 +310,9 @@
           if (error) { alert(error.message); return; }
           delete document.getElementById('modal').dataset.editId;
           document.getElementById('modal').classList.remove('open');
-          await load(); render();
+          await load();
+          await syncFixedToPayables();
+          render();
         } else {
           await salvarNova(form);
         }
