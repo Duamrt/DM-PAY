@@ -477,7 +477,8 @@
       closeCreate();
       await load(); render();
     } catch (e) {
-      alert('Erro: ' + e.message);
+      console.error('[CR] erro ao salvar:', e);
+      await DMPAY_UI.alert({ title: 'Erro ao salvar', desc: 'Não foi possível salvar a conta. Tente novamente.', danger: true });
       btn.disabled = false;
     }
   }
@@ -529,7 +530,7 @@
     const _n = new Date(), _p = n => String(n).padStart(2,'0');
     const received_at = `${_n.getFullYear()}-${_p(_n.getMonth()+1)}-${_p(_n.getDate())}T${_p(_n.getHours())}:${_p(_n.getMinutes())}:${_p(_n.getSeconds())}`;
     const { error } = await sb.from('receivables').update({ status:'received', received_at }).eq('id', id);
-    if (error) { alert(error.message); return; }
+    if (error) { console.error('[CR] markReceived:', error); await DMPAY_UI.alert({ title: 'Erro', desc: 'Não foi possível marcar como recebido.', danger: true }); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.receive('receivable', id,
       before ? { status: before.status, received_at: before.received_at } : null,
       { status: 'received', received_at });
@@ -538,7 +539,7 @@
   async function markOpen(id) {
     const before = RECVS.find(x => x.id === id) || null;
     const { error } = await sb.from('receivables').update({ status:'open', received_at: null }).eq('id', id);
-    if (error) { alert(error.message); return; }
+    if (error) { console.error('[CR] markOpen:', error); await DMPAY_UI.alert({ title: 'Erro', desc: 'Não foi possível desfazer o recebimento.', danger: true }); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.estorno('receivable', id,
       before ? { status: before.status, received_at: before.received_at } : null,
       { status: 'open', received_at: null });

@@ -153,7 +153,7 @@
     const max = Math.max(...Object.values(porDia), 1);
     const labelsShown = new Set([1,5,10,15,20,25,30]);
     const labelRow = document.createElement('div');
-    labelRow.className = 'distrib-labels';
+    labelRow.className = 'distrib-day-label';
     for (let d = 1; d <= 31; d++) {
       const val = porDia[d] || 0;
       const bar = document.createElement('div');

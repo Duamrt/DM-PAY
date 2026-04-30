@@ -112,11 +112,13 @@
     alertsBanner.style.display = 'none';
   }
 
-  // Render tabela
+  // Render tabela — botões usam data-* (sem onclick inline) pra evitar XSS
   const tbody = document.getElementById('tenants-tbody');
+  window._TENANTS_MAP = {};
   if (!companies.length) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">Nenhum tenant encontrado</td></tr>';
   } else {
+    companies.forEach(c => { window._TENANTS_MAP[c.id] = c; });
     tbody.innerHTML = companies.map(c => {
       const lastSync = syncMap[c.id] || null;
       const st = syncStatus(lastSync);
@@ -166,11 +168,25 @@
             : '<span style="color:var(--text-soft);font-size:12px">—</span>'}
         </td>
         <td style="display:flex;gap:6px;align-items:center">
-          <button class="btn-gerenciar" onclick="openDrawer(${JSON.stringify(c).replace(/"/g,'&quot;')})">Gerenciar</button>
-          <button class="btn-gerenciar" style="background:var(--accent-soft);color:var(--accent);border-color:var(--accent)" onclick="(function(){sessionStorage.setItem('dmpay-view-as',JSON.stringify({id:'${c.id}',name:'${esc(c.trade_name||c.legal_name||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}'}));location.href='dashboard.html'})()">Entrar →</button>
+          <button class="btn-gerenciar" data-action="manage" data-tenant-id="${esc(c.id)}">Gerenciar</button>
+          <button class="btn-gerenciar" style="background:var(--accent-soft);color:var(--accent);border-color:var(--accent)" data-action="enter" data-tenant-id="${esc(c.id)}" data-tenant-name="${esc(c.trade_name||c.legal_name||'')}">Entrar →</button>
         </td>
       </tr>`;
     }).join('');
+
+    // Event delegation: substitui onclick inline (evita XSS via interpolação de UUID/nome)
+    tbody.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const id = btn.dataset.tenantId;
+      if (btn.dataset.action === 'manage') {
+        const c = window._TENANTS_MAP[id];
+        if (c) openDrawer(c);
+      } else if (btn.dataset.action === 'enter') {
+        sessionStorage.setItem('dmpay-view-as', JSON.stringify({ id, name: btn.dataset.tenantName }));
+        location.href = 'dashboard.html';
+      }
+    });
   }
 
   if (window.lucide) lucide.createIcons();
