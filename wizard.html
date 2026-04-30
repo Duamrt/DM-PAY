@@ -2,7 +2,7 @@
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="utf-8">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%232563EB%27/><text x=%2716%27 y=%2722%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27700%27 font-size=%2718%27>D</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><defs><linearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%2732%27 y2=%2732%27 gradientUnits=%27userSpaceOnUse%27><stop offset=%270%27 stop-color=%27%233B82F6%27/><stop offset=%271%27 stop-color=%27%2360A5FA%27/></linearGradient></defs><rect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27url(%23g)%27/><text x=%2716%27 y=%2721%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27800%27 font-size=%2712%27>DM</text></svg>">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Configuração inicial · DM Pay</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,7 @@
     /* Header */
     .head{display:flex;justify-content:space-between;align-items:center}
     .brand{display:flex;align-items:center;gap:10px}
-    .brand-logo{width:32px;height:32px;border-radius:7px;background:var(--accent);color:white;display:grid;place-items:center;font-weight:700;font-size:14px}
+    .brand-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#60A5FA);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px;letter-spacing:-.02em;box-shadow:0 4px 14px -2px rgba(59,130,246,.35),inset 0 1px 0 rgba(255,255,255,.2)}
     .brand-name{font-weight:600;font-size:16px;letter-spacing:-.01em}
     .skip{font-size:12.5px;color:var(--text-muted);background:transparent;border:none;cursor:pointer;font-family:inherit}
     .skip:hover{color:var(--text)}
@@ -111,7 +111,7 @@
   <div class="wrap">
     <div class="head">
       <div class="brand">
-        <div class="brand-logo">D</div>
+        <div class="brand-logo">DM</div>
         <div class="brand-name">DM Pay</div>
       </div>
       <button class="skip" onclick="DMPAY.signOut()">Sair</button>
