@@ -2,6 +2,7 @@
 // Input: { action: "cancelar" | "proxima_cobranca", assinatura_id }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { corsHeaders } from "../_shared/cors.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 const ASAAS_BASE = Deno.env.get("ASAAS_BASE_URL") ?? "https://sandbox.asaas.com/api/v3";
 const ASAAS_KEY = Deno.env.get("ASAAS_API_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -20,6 +21,9 @@ Deno.serve(async(req)=>{
   const jwt=(req.headers.get("authorization")??"").replace("Bearer ","");
   if(!jwt)return json({error:"unauthorized"},401);
   const sb=createClient(SUPABASE_URL,SUPABASE_SERVICE_KEY);
+  // Rate limit: gerenciar assinatura (cancelar/consultar), 30/min por IP.
+  const ip=getClientIp(req);
+  if(!(await checkRateLimit(sb,ip,"asaas-gerenciar-assinatura",30)))return json({error:"rate_limited"},429);
   const {data:u,error:ue}=await sb.auth.getUser(jwt);
   if(ue||!u?.user)return json({error:"unauthorized"},401);
   const body=await req.json().catch(()=>({}));

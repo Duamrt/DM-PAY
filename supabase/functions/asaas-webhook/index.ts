@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 import { corsHeaders } from "../_shared/cors.ts";
+import { checkRateLimit, getClientIp } from "../_shared/rate-limit.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const WEBHOOK_TOKEN = Deno.env.get("ASAAS_WEBHOOK_TOKEN") ?? "";
@@ -8,10 +9,14 @@ Deno.serve(async(req)=>{
   const json = (b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers:{...cors,"content-type":"application/json"}});
   if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
   if(req.method!=="POST")return json({error:"method_not_allowed"},405);
-  if(WEBHOOK_TOKEN&&req.headers.get("asaas-access-token")!==WEBHOOK_TOKEN)return json({error:"invalid_token"},401);
+  // Token obrigatório (não condicional). Sem token configurado, recusa por segurança.
+  if(!WEBHOOK_TOKEN||req.headers.get("asaas-access-token")!==WEBHOOK_TOKEN)return json({error:"invalid_token"},401);
+  const sb=createClient(SUPABASE_URL,SUPABASE_SERVICE_KEY);
+  // Rate limit: webhook do Asaas pode ter burst legítimo (vários eventos quase simultâneos), 300/min.
+  const ip=getClientIp(req);
+  if(!(await checkRateLimit(sb,ip,"asaas-webhook",300)))return json({error:"rate_limited"},429);
   const payload=await req.json().catch(()=>null);
   if(!payload)return json({error:"invalid_payload"},400);
-  const sb=createClient(SUPABASE_URL,SUPABASE_SERVICE_KEY);
   const evento=payload.event as string;
   const payment=payload.payment??{};
   const subId=payment.subscription??payload.subscription?.id??null;
