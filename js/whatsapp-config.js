@@ -169,7 +169,7 @@
         title: 'Adicionar destinatário',
         desc: 'Quem vai receber o briefing matinal por WhatsApp.',
         fields: [
-          { key:'name', label:'Nome', placeholder:'ex: Reginaldo Liberato' },
+          { key:'name', label:'Nome', placeholder:'nome do destinatário' },
           { key:'phone', label:'WhatsApp', placeholder:'+55 87 98888-1234' },
           { key:'role', label:'Papel (opcional)', placeholder:'ex: Dono, Contador' }
         ],

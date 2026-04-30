@@ -201,7 +201,6 @@
 
     <div class="sidebar-label">Config</div>
     <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
-    <a class="nav-item" href="meu-plano.html"><i data-lucide="credit-card"></i> Meu Plano</a>
     <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
   </aside>
 
@@ -209,7 +208,10 @@
     <header class="topbar">
       <div class="breadcrumb">Financeiro / <b>Contas a receber</b></div>
       <div class="topbar-actions">
-        <button class="icon-btn" onclick="toggleTheme()"><i data-lucide="moon"></i></button>
+        <button class="icon-btn" onclick="toggleTheme()" aria-label="Alternar tema">
+          <i data-lucide="sun" class="theme-icon-dark"></i>
+          <i data-lucide="moon" class="theme-icon-light" style="display:none"></i>
+        </button>
         <div class="avatar">MS</div>
       </div>
     </header>
@@ -325,15 +327,24 @@
       });
     }
 
+    function applyThemeIcons(theme) {
+      const isDark = theme === 'dark';
+      const sun = document.querySelector('.theme-icon-dark');
+      const moon = document.querySelector('.theme-icon-light');
+      if (sun) sun.style.display = isDark ? '' : 'none';
+      if (moon) moon.style.display = isDark ? 'none' : '';
+    }
     function toggleTheme() {
       const h = document.documentElement;
       const next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       h.setAttribute('data-theme', next);
       localStorage.setItem('dmpay-theme', next);
+      applyThemeIcons(next);
     }
-    const saved = localStorage.getItem('dmpay-theme');
-    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    const saved = localStorage.getItem('dmpay-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
     lucide.createIcons();
+    applyThemeIcons(saved);
   </script>
 </body>
 </html>

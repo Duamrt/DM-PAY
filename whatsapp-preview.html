@@ -275,7 +275,6 @@
 
     <div class="sidebar-label">Config</div>
     <a class="nav-item" href="equipe.html"><i data-lucide="users"></i> Equipe</a>
-    <a class="nav-item" href="meu-plano.html"><i data-lucide="credit-card"></i> Meu Plano</a>
     <a class="nav-item" href="configuracoes.html"><i data-lucide="settings"></i> Configurações</a>
   </aside>
 
@@ -296,7 +295,7 @@
     <main>
       <div class="hero">
         <h1>Briefing matinal via WhatsApp</h1>
-        <p>Toda manhã às 6h15 o DM Pay manda um resumo pro Reginaldo no WhatsApp. Ele lê tomando café, sabe o tamanho do dia antes de sair de casa. <b>Sem app novo pra aprender.</b></p>
+        <p>Toda manhã às 6h15 o DM Pay manda um resumo pro dono no WhatsApp. Ele lê tomando café, sabe o tamanho do dia antes de sair de casa. <b>Sem app novo pra aprender.</b></p>
       </div>
 
       <!-- Insight -->
@@ -304,7 +303,7 @@
         <div class="insight-ico"><i data-lucide="lightbulb"></i></div>
         <div>
           <h3>Por que WhatsApp e não e-mail ou notificação push?</h3>
-          <p>O Reginaldo já vive no WhatsApp — conversa com fornecedor, família, cliente. Mensagem do DM Pay chega no <b>mesmo lugar que ele já confere 30× por dia</b>. Abertura é praticamente garantida. E-mail e app novo exigem hábito novo — WhatsApp já tem.</p>
+          <p>O dono já vive no WhatsApp — conversa com fornecedor, família, cliente. Mensagem do DM Pay chega no <b>mesmo lugar que ele já confere 30× por dia</b>. Abertura é praticamente garantida. E-mail e app novo exigem hábito novo — WhatsApp já tem.</p>
         </div>
       </div>
 
@@ -345,7 +344,7 @@
                 <div class="wa-date">HOJE</div>
 
                 <div class="wa-bubble received">
-                  <span class="wa-ttl"><span class="wa-emoji">🌅</span> Bom dia, Reginaldo!</span>
+                  <span class="wa-ttl"><span class="wa-emoji">🌅</span> Bom dia, <span class="wa-dono-name">dono</span>!</span>
                   Segunda-feira, 20/04/2026.
                   <div class="wa-time">6:15</div>
                 </div>
@@ -457,10 +456,10 @@
             <div class="card-title"><i data-lucide="users"></i> Quem recebe</div>
 
             <div class="recipient">
-              <div class="recipient-av" style="background:#8b5cf6">R</div>
+              <div class="recipient-av wa-dono-initial" style="background:#8b5cf6">D</div>
               <div class="recipient-info">
-                <div class="recipient-name">Reginaldo (Dono)</div>
-                <div class="recipient-phone">+55 87 98888-1234</div>
+                <div class="recipient-name"><span class="wa-dono-name">Dono</span> (Dono)</div>
+                <div class="recipient-phone wa-dono-phone">—</div>
               </div>
               <label class="toggle">
                 <input type="checkbox" checked>
@@ -555,7 +554,7 @@
 
           <div class="card">
             <div class="card-title"><i data-lucide="zap"></i> Comandos respondendo o bot</div>
-            <p style="margin:0 0 12px;font-size:12.5px;color:var(--text-muted);line-height:1.55">Reginaldo pode responder o bot com atalhos. O sistema processa a resposta e devolve confirmação.</p>
+            <p style="margin:0 0 12px;font-size:12.5px;color:var(--text-muted);line-height:1.55">O dono pode responder o bot com atalhos. O sistema processa a resposta e devolve confirmação.</p>
             <div style="display:flex;flex-direction:column;gap:6px">
               <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:var(--bg-soft);border-radius:6px">
                 <code style="font-family:'Geist Mono',monospace;font-size:12px;background:var(--bg-card);padding:3px 7px;border-radius:4px;border:1px solid var(--border);flex-shrink:0;color:var(--accent)">pago 1</code>
@@ -590,6 +589,19 @@
 
   <script>
     lucide.createIcons();
+
+    // Popula nome do dono dinamicamente (evita ver "Reginaldo" em outro tenant)
+    (function populaDono(){
+      const tryFill = () => {
+        const p = window.DMPAY_PROFILE;
+        if (!p) { setTimeout(tryFill, 200); return; }
+        const firstName = (p.name || p.email || 'Dono').split(' ')[0];
+        document.querySelectorAll('.wa-dono-name').forEach(el => el.textContent = firstName);
+        document.querySelectorAll('.wa-dono-initial').forEach(el => el.textContent = firstName[0].toUpperCase());
+        document.querySelectorAll('.wa-dono-phone').forEach(el => { if (p.phone) el.textContent = p.phone; });
+      };
+      tryFill();
+    })();
 
     const saved = localStorage.getItem('dmpay-theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);

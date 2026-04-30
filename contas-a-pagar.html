@@ -127,6 +127,10 @@ a{color:var(--accent);text-decoration:none}
 .chip:hover{border-color:var(--border)}
 .chip.active{background:var(--accent-soft);color:var(--accent)}
 .chip .icon{width:12px;height:12px}
+/* Dark mode: aumentar contraste dos chips de filtro de status */
+:root[data-theme="dark"] .chip{background:#1F2229;color:#E5E7EB;border:1px solid #2A2F38}
+:root[data-theme="dark"] .chip:hover{background:#262A33;border-color:#3A4150}
+:root[data-theme="dark"] .chip.active{background:rgba(59,130,246,.30);color:#93C5FD;border-color:rgba(59,130,246,.45)}
 .toolbar-right{display:flex;gap:8px;align-items:center}
 .input{padding:7px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border);color:var(--text-primary);font-size:13px;transition:all 120ms ease;width:100%}
 .input::placeholder{color:var(--text-muted)}
@@ -301,16 +305,7 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
     <div class="nav-group">
       <div class="nav-group-title">Config</div>
       <a class="nav-item" href="equipe.html"><i data-lucide="users" class="icon"></i>Equipe</a>
-      <a class="nav-item" href="meu-plano.html"><i data-lucide="credit-card"></i> Meu Plano</a>
       <a class="nav-item" href="configuracoes.html"><i data-lucide="settings" class="icon"></i>Configurações</a>
-    </div>
-    <div class="user-card" id="user-card">
-      <div class="user-avatar">—</div>
-      <div class="user-info">
-        <div class="name">—</div>
-        <div class="email">—</div>
-      </div>
-      <button class="icon-btn" style="width:26px;height:26px" aria-label="Conta"><i data-lucide="more-horizontal" class="icon" style="width:12px;height:12px"></i></button>
     </div>
   </aside>
 
@@ -323,12 +318,6 @@ table.dm .supplier-name{font-weight:500;white-space:nowrap;overflow:hidden;text-
         <strong>Contas a pagar</strong>
       </div>
       <div class="topbar-actions">
-        <button class="search-btn">
-          <i data-lucide="search" class="icon"></i>
-          <span>Buscar boleto, fornecedor...</span>
-          <span class="kbd">⌘K</span>
-        </button>
-        <button class="icon-btn" aria-label="Notificações"><i data-lucide="bell" class="icon"></i></button>
         <button class="icon-btn" onclick="toggleTheme()" aria-label="Alternar tema">
           <i data-lucide="sun" class="icon theme-icon-dark"></i>
           <i data-lucide="moon" class="icon theme-icon-light" style="display:none"></i>
