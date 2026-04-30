@@ -8,9 +8,9 @@
   const isPlatformAdmin = session.company && session.company.id === PLATFORM_ID;
   if (!isPlatformAdmin) { location.replace('dashboard.html'); return; }
 
-  // Datas
+  // Datas (todayISO em horário local — não usar toISOString direto, vira UTC)
   const now = new Date();
-  const todayISO = now.toISOString().slice(0, 10);
+  const todayISO = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
   const ago24 = new Date(now.getTime() - 86400000).toISOString();
   const ago26h = new Date(now.getTime() - 26 * 3600000);
   const ago72h = new Date(now.getTime() - 72 * 3600000);

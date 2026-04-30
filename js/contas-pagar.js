@@ -208,7 +208,17 @@
     const atrasado = opens.filter(p => diffDays(p.due_date) < 0)
       .reduce((s,p) => s + Number(p.amount), 0);
     const ymThis = FILTRO_MES || isoToday().slice(0,7);
-    const pagosMes = base
+    // pagosMes: usar PAYABLES inteiro filtrando por paid_at (não due_date),
+    // pra incluir contas com vencimento em outro mês mas pagas no mês corrente
+    let basePag = PAYABLES;
+    if (BUSCA) {
+      const q = BUSCA.toLowerCase();
+      basePag = basePag.filter(p =>
+        (p.suppliers?.legal_name||'').toLowerCase().includes(q) ||
+        (p.description||'').toLowerCase().includes(q)
+      );
+    }
+    const pagosMes = basePag
       .filter(p => p.status === 'paid' && p.paid_at && p.paid_at.startsWith(ymThis))
       .reduce((s,p) => s + Number(p.amount), 0);
 

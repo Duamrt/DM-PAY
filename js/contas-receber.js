@@ -525,7 +525,9 @@
 
   async function markReceived(id) {
     const before = RECVS.find(x => x.id === id) || null;
-    const received_at = new Date().toISOString();
+    // received_at em horário local — evita pagamento às 22h cair no dia seguinte (UTC)
+    const _n = new Date(), _p = n => String(n).padStart(2,'0');
+    const received_at = `${_n.getFullYear()}-${_p(_n.getMonth()+1)}-${_p(_n.getDate())}T${_p(_n.getHours())}:${_p(_n.getMinutes())}:${_p(_n.getSeconds())}`;
     const { error } = await sb.from('receivables').update({ status:'received', received_at }).eq('id', id);
     if (error) { alert(error.message); return; }
     if (window.DMPAY_AUDIT) window.DMPAY_AUDIT.receive('receivable', id,
