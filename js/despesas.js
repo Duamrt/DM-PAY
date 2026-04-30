@@ -195,15 +195,14 @@
         const dedupe_hash = `fe_${exp.id}_${year}_${String(month).padStart(2,'0')}`;
         allHashes.push(dedupe_hash);
         rowsByHash[dedupe_hash] = {
-          company_id:       COMPANY_ID,
-          fixed_expense_id: exp.id,
-          category_id:      exp.category_id || null,
-          description:      exp.description,
-          amount:           exp.amount,
+          company_id:      COMPANY_ID,
+          category_id:     exp.category_id || null,
+          description:     exp.description,
+          amount:          exp.amount,
           due_date,
-          payment_method:   'debito_automatico',
-          tipo_lancamento:  'despesa',
-          status:           'open',
+          payment_method:  'debito_automatico',
+          tipo_lancamento: 'despesa',
+          status:          'open',
           dedupe_hash,
         };
       }
