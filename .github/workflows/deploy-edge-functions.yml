@@ -1,0 +1,54 @@
+name: Deploy Edge Functions
+
+# Deploy manual (botão "Run workflow" no GitHub) das Supabase Edge Functions.
+# Requer secret SUPABASE_ACCESS_TOKEN configurado em Settings → Secrets → Actions.
+
+on:
+  workflow_dispatch:
+    inputs:
+      function:
+        description: "Qual function deployar (ou 'todas')"
+        required: true
+        default: "todas"
+        type: choice
+        options:
+          - todas
+          - asaas-webhook
+          - asaas-criar-assinatura
+          - asaas-gerenciar-assinatura
+          - asaas-checar-atrasos
+
+env:
+  SUPABASE_PROJECT_REF: ufxldjdppaonskxhmosi
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy todas
+        if: ${{ inputs.function == 'todas' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -e
+          for fn in asaas-webhook asaas-criar-assinatura asaas-gerenciar-assinatura asaas-checar-atrasos; do
+            echo "▶ Deploying $fn"
+            supabase functions deploy "$fn" \
+              --project-ref "$SUPABASE_PROJECT_REF" \
+              --no-verify-jwt
+          done
+
+      - name: Deploy uma function específica
+        if: ${{ inputs.function != 'todas' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase functions deploy "${{ inputs.function }}" \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            --no-verify-jwt
