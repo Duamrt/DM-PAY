@@ -232,6 +232,7 @@
     const ontem = iso(new Date(Date.now() - 86400000));
     const mesIni = iso(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
+    const flags = SETTINGS.content_flags || {};
     const [donoR, pagsR, bankR, salesOntemR, pagosR, mesR] = await Promise.all([
       sb.from('profiles').select('name').eq('company_id', COMPANY_ID).eq('role','dono').limit(1).maybeSingle(),
       sb.from('payables').select('amount, due_date, description, suppliers(legal_name, trade_name)').eq('company_id', COMPANY_ID).eq('status','open').gte('due_date', iso(inicio)).lte('due_date', iso(fim)).order('amount',{ascending:false}).limit(200),
@@ -278,7 +279,6 @@
     }
     const h = new Date().getHours();
     const saud = h<12?'Bom dia':(h<18?'Boa tarde':'Boa noite');
-    const flags = SETTINGS.content_flags || {};
 
     // Agrupa boletos por dia (sáb/dom/seg quando for segunda)
     const porDia = {};

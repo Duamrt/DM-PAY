@@ -35,8 +35,8 @@
   }
 
   function isoToday(){ return new Date().toISOString().split('T')[0]; }
-  function diffDays(iso){ return window.diffDaysUtil ? window.diffDaysUtil(iso) : 0; }
-  function iniciais(n){ const w = (n||'?').trim().split(/\s+/); return ((w[0]||'')[0]+(w[1]||'')[0]||(w[0]||'??').slice(0,2)).toUpperCase(); }
+  function diffDays(iso){ if (!iso) return 0; if (window.diffDaysUtil) return window.diffDaysUtil(iso); const [y,m,d]=String(iso).slice(0,10).split('-').map(Number); const hj=new Date(); hj.setHours(0,0,0,0); return Math.round((new Date(y,m-1,d)-hj)/86400000); }
+  function iniciais(n){ const w = (n||'?').trim().split(/\s+/); return (w.length >= 2 ? (w[0][0]+w[1][0]) : (w[0]||'??').slice(0,2)).toUpperCase(); }
   const _toneCache = {};
   function tone(n){ if (_toneCache[n] !== undefined) return _toneCache[n]; let h=0; const s=n||''; for (let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0; const cores=['#DC2626','#D97706','#7C3AED','#2563EB','#EA580C','#0891B2','#10B981','#4B5563']; return (_toneCache[n] = cores[Math.abs(h)%cores.length]); }
 

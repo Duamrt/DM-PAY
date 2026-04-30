@@ -385,10 +385,9 @@
     // Wire month nav
     const navBtns = document.querySelectorAll('.month-nav button');
     navBtns.forEach((b, i) => {
-      b.onclick = null; // limpa handler antigo
-      if (i === 0) b.addEventListener('click', () => nav(-1));
-      else if (b.classList.contains('today-btn')) b.addEventListener('click', () => nav('today'));
-      else b.addEventListener('click', () => nav(1));
+      if (i === 0) b.onclick = () => nav(-1);
+      else if (b.classList.contains('today-btn')) b.onclick = () => nav('today');
+      else b.onclick = () => nav(1);
     });
     await load(); render();
   }

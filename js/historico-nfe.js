@@ -25,12 +25,12 @@
 
   const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-  const fmtBRL = window.fmtBRL;
-  const brDate = window.brDate;
-  const esc    = window.esc;
+  const fmtBRL = window.fmtBRL || (v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}));
+  const brDate = window.brDate || (iso => { if (!iso) return '—'; const [y,m,d] = String(iso).split('T')[0].split('-'); return `${d}/${m}/${y}`; });
+  const esc    = window.esc    || (s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'));
   function iniciais(nome) {
     const w = (nome || '?').replace(/[^\wÀ-ÿ ]/g, '').trim().split(/\s+/);
-    return ((w[0] || '')[0] + (w[1] || '')[0] || (w[0] || '??').slice(0, 2)).toUpperCase();
+    return (w.length >= 2 ? (w[0][0] + w[1][0]) : (w[0] || '??').slice(0, 2)).toUpperCase();
   }
   function tone(nome) {
     let h = 0; const s = nome || '';
