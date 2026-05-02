@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+  <script src="https://js.hcaptcha.com/1/api.js?onload=onHcaptchaLoad" async defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="dmpay-version.js"></script>
   <script src="js/supabase.js"></script>
@@ -198,16 +198,12 @@
 
     // Inicializa captcha invisível no login assim que hcaptcha estiver pronto
     var _loginCaptchaId = null;
-    (function waitHcaptcha() {
-      if (window.hcaptcha) {
-        _loginCaptchaId = hcaptcha.render('hcaptcha-login', {
-          sitekey: '399a1136-6f52-4454-a4a0-d4de42eef8e0',
-          size: 'invisible'
-        });
-      } else {
-        setTimeout(waitHcaptcha, 100);
-      }
-    })();
+    function onHcaptchaLoad() {
+      _loginCaptchaId = hcaptcha.render('hcaptcha-login', {
+        sitekey: '399a1136-6f52-4454-a4a0-d4de42eef8e0',
+        size: 'invisible'
+      });
+    }
 
     document.getElementById('form-login').addEventListener('submit', async function(e) {
       e.preventDefault();
