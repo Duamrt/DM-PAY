@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="dmpay-version.js?v=v05020639"></script>
+  <script src="dmpay-version.js?v=v05020855"></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <style>
@@ -75,7 +75,7 @@
     .pick .pick-desc{font-size:11px;color:var(--text-muted)}
 
     /* Convites */
-    .invite-row{display:grid;grid-template-columns:1.1fr 1.1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end}
+    .invite-row{display:grid;grid-template-columns:1fr 1.2fr 1fr 0.9fr auto;gap:8px;margin-bottom:8px;align-items:end}
     .invite-row .field{margin-bottom:0}
     .invite-row .field input,.invite-row .field select{padding:9px 11px;font-size:13.5px}
     .rm{padding:9px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer}
@@ -216,9 +216,14 @@
               <input type="email" name="email" placeholder="mikael@empresa.com">
             </div>
             <div class="field">
+              <label>Senha temp.</label>
+              <input type="password" name="password" placeholder="Mín. 8 caracteres" autocomplete="new-password">
+            </div>
+            <div class="field">
               <label>Papel</label>
               <select name="role">
                 <option value="admin">Admin</option>
+                <option value="financeiro">Financeiro</option>
                 <option value="viewer">Visualizador</option>
               </select>
             </div>
@@ -226,7 +231,7 @@
           </div>
         </div>
         <button type="button" class="add-line" onclick="addInvite()"><i data-lucide="plus"></i> Adicionar mais</button>
-        <p class="hint" style="margin-top:8px">Cada pessoa recebe um e-mail pra criar a senha. <b>Admin</b> faz tudo, <b>Visualizador</b> só lê (ideal pro contador).</p>
+        <p class="hint" style="margin-top:8px">A pessoa acessa com a senha temporária e pode trocar depois. <b>Admin</b> faz tudo, <b>Financeiro</b> só lança, <b>Visualizador</b> só lê.</p>
       </div>
 
       <!-- PASSO 5 — finalizar -->
@@ -329,7 +334,8 @@
       div.innerHTML = `
         <div class="field"><label>Nome</label><input type="text" name="name"></div>
         <div class="field"><label>E-mail</label><input type="email" name="email"></div>
-        <div class="field"><label>Papel</label><select name="role"><option value="admin">Admin</option><option value="viewer">Visualizador</option></select></div>
+        <div class="field"><label>Senha temp.</label><input type="password" name="password" autocomplete="new-password"></div>
+        <div class="field"><label>Papel</label><select name="role"><option value="admin">Admin</option><option value="financeiro">Financeiro</option><option value="viewer">Visualizador</option></select></div>
         <button type="button" class="rm" onclick="rmInvite(this)"><i data-lucide="x"></i></button>`;
       wrap.appendChild(div);
       lucide.createIcons();
@@ -404,7 +410,26 @@
         after: updates
       });
 
-      // (convites de equipe ficam pra Fase 1c — exigem Edge Function)
+      // Processar convites de equipe
+      const rows = Array.from(document.querySelectorAll('#invites .invite-row'));
+      const { data: { session: wSession } } = await sb.auth.getSession();
+      for (const row of rows) {
+        const email    = row.querySelector('[name=email]')?.value?.trim();
+        const name     = row.querySelector('[name=name]')?.value?.trim() || null;
+        const password = row.querySelector('[name=password]')?.value?.trim();
+        const role     = row.querySelector('[name=role]')?.value || 'viewer';
+        if (!email || !password || password.length < 8) continue;
+        try {
+          await fetch(window.DMPAY_CONFIG.SUPABASE_URL + '/functions/v1/criar-membro', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + wSession.access_token,
+            },
+            body: JSON.stringify({ email, name, password, role, company_id: session.company.id }),
+          });
+        } catch (_) { /* silencioso — não bloqueia o wizard */ }
+      }
     }
 
     // INIT

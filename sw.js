@@ -1,4 +1,4 @@
-const CACHE = 'dmpay-mobile-v05020639';
+const CACHE = 'dmpay-mobile-v05020855';
 
 self.addEventListener('install', e => {
   // Ativa novo SW imediatamente, sem esperar fechar abas

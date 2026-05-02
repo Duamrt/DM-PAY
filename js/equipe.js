@@ -91,6 +91,53 @@
     });
   }
 
+  async function enviarConvite() {
+    const email  = (document.getElementById('inv-email')?.value || '').trim();
+    const nome   = (document.getElementById('inv-nome')?.value  || '').trim();
+    const senha  = (document.getElementById('inv-senha')?.value || '').trim();
+    const role   = document.querySelector('.role-picker .role-opt.selected')?.dataset?.role || 'viewer';
+    const errEl  = document.getElementById('invite-err');
+
+    function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+    errEl.style.display = 'none';
+
+    if (!email) return showErr('E-mail obrigatório');
+    if (senha.length < 8) return showErr('Senha deve ter ao menos 8 caracteres');
+
+    const btn = document.getElementById('btn-enviar-convite');
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader-2"></i> Criando...';
+    if (window.lucide) lucide.createIcons();
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(window.DMPAY_CONFIG.SUPABASE_URL + '/functions/v1/criar-membro', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token,
+        },
+        body: JSON.stringify({ email, name: nome || null, password: senha, role, company_id: window.DMPAY_COMPANY.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) return showErr(json.error || 'Erro ao criar acesso');
+
+      // Fecha drawer e recarrega lista
+      document.querySelector('.drawer-backdrop')?.classList.remove('open');
+      document.getElementById('drawer')?.classList.remove('open');
+      const membros = await load();
+      renderKPIs(membros);
+      renderLista(membros);
+    } catch (e) {
+      showErr('Erro de conexão: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="send"></i> Criar acesso';
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+  window.enviarConvite = enviarConvite;
+
   async function init() {
     if (!window.sb || !window.DMPAY_COMPANY) { setTimeout(init, 100); return; }
     if (!document.querySelector('.mbr-avatar')) return; // não é tela de equipe

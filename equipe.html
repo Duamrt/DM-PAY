@@ -217,7 +217,7 @@
     @media (max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}
     @media (max-width:600px){body{grid-template-columns:1fr}.sidebar{display:none}.drawer{width:100%}.mbr-row{grid-template-columns:auto 1fr;gap:10px}.mbr-row .role-badge,.mbr-row .mbr-access,.mbr-row .mbr-actions{grid-column:2;justify-self:start}}
   </style>
-  <script src="dmpay-version.js?v=v05020639"></script>
+  <script src="dmpay-version.js?v=v05020855"></script>
   <script src="dmpay-mobile.js" defer></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
@@ -530,26 +530,27 @@
         </label>`).join('');
 
       document.getElementById('dr-body').innerHTML = `
+        <div id="invite-err" style="display:none;background:#FEE2E2;border:1px solid #DC2626;color:#DC2626;border-radius:8px;padding:10px 12px;font-size:12.5px;margin-bottom:4px"></div>
+
         <div class="field">
           <div class="field-label"><i data-lucide="at-sign"></i> E-mail</div>
-          <input type="email" placeholder="nome@empresa.com.br">
-          <div class="hint">Um link de convite vai ser enviado pra este e-mail. Expira em 7 dias.</div>
+          <input id="inv-email" type="email" placeholder="nome@empresa.com.br" autocomplete="off">
         </div>
 
         <div class="field">
           <div class="field-label"><i data-lucide="user"></i> Nome (opcional)</div>
-          <input placeholder="Ex: Dona Maria — fechamento">
-          <div class="hint">Só pra você identificar na lista. Quem aceitar o convite pode trocar depois.</div>
+          <input id="inv-nome" placeholder="Ex: Mikael — administrativo">
+        </div>
+
+        <div class="field">
+          <div class="field-label"><i data-lucide="lock"></i> Senha temporária</div>
+          <input id="inv-senha" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+          <div class="hint">A pessoa usa essa senha no primeiro acesso. Pode trocar depois em Configurações.</div>
         </div>
 
         <div class="field">
           <div class="field-label"><i data-lucide="shield-check"></i> Papel</div>
           <div class="role-picker">${rolesHtml}</div>
-        </div>
-
-        <div class="field">
-          <div class="field-label"><i data-lucide="message-square"></i> Mensagem (opcional)</div>
-          <input placeholder="Ex: Bem-vindo ao DM Pay!">
         </div>
 
         <div style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
@@ -562,7 +563,7 @@
 
       document.getElementById('dr-foot').innerHTML = `
         <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
-        <button class="btn btn-primary" style="margin-left:auto"><i data-lucide="send"></i> Enviar convite</button>
+        <button id="btn-enviar-convite" class="btn btn-primary" style="margin-left:auto" onclick="enviarConvite()"><i data-lucide="send"></i> Criar acesso</button>
       `;
       lucide.createIcons();
     }
