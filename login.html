@@ -96,6 +96,7 @@
             <label>Senha</label>
             <input type="password" name="password" required autocomplete="current-password" minlength="6">
           </div>
+          <div id="hcaptcha-login"></div>
           <button class="btn" type="submit">
             <i data-lucide="log-in"></i> Entrar
           </button>
@@ -195,13 +196,32 @@
       }
     });
 
+    // Inicializa captcha invisível no login assim que hcaptcha estiver pronto
+    var _loginCaptchaId = null;
+    (function waitHcaptcha() {
+      if (window.hcaptcha) {
+        _loginCaptchaId = hcaptcha.render('hcaptcha-login', {
+          sitekey: '399a1136-6f52-4454-a4a0-d4de42eef8e0',
+          size: 'invisible'
+        });
+      } else {
+        setTimeout(waitHcaptcha, 100);
+      }
+    })();
+
     document.getElementById('form-login').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const btn = e.target.querySelector('button');
+      const btn = e.target.querySelector('button[type=submit]');
       btn.disabled = true;
       try {
+        var captchaToken = null;
+        if (_loginCaptchaId !== null) {
+          var result = await hcaptcha.execute(_loginCaptchaId, { async: true });
+          captchaToken = result.response;
+          hcaptcha.reset(_loginCaptchaId);
+        }
         const fd = new FormData(e.target);
-        await DMPAY.signIn(fd.get('email'), fd.get('password'));
+        await DMPAY.signIn(fd.get('email'), fd.get('password'), captchaToken);
         const s = await DMPAY.session(true);
         const _isPa2 = s.company && s.company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
         location.replace(_isPa2 ? 'admin.html' : s.company && s.company.cnpj ? DMPAY.postLoginRedirect() : 'wizard.html');

@@ -82,9 +82,11 @@ window.DMPAY = (function() {
     });
   }, { once: true });
 
-  async function signIn(email, senha) {
+  async function signIn(email, senha, captchaToken) {
     await ready();
-    const { data, error } = await sb.auth.signInWithPassword({ email: email, password: senha });
+    const opts = { email: email, password: senha };
+    if (captchaToken) opts.options = { captchaToken: captchaToken };
+    const { data, error } = await sb.auth.signInWithPassword(opts);
     if (error) throw error;
     _session = null;
     return data;
