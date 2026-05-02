@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="dmpay-version.js"></script>
   <script src="js/supabase.js"></script>
@@ -130,6 +131,10 @@
             <label>Senha (mín. 8 caracteres)</label>
             <input type="password" name="password" required minlength="8" autocomplete="new-password">
           </div>
+          <div class="h-captcha" id="hcaptcha-dmpay"
+            data-sitekey="399a1136-6f52-4454-a4a0-d4de42eef8e0"
+            style="margin-bottom:16px">
+          </div>
           <button class="btn" type="submit">
             <i data-lucide="user-plus"></i> Criar minha conta
           </button>
@@ -208,11 +213,13 @@
 
     document.getElementById('form-signup').addEventListener('submit', async function(e) {
       e.preventDefault();
+      const captchaToken = hcaptcha.getResponse();
+      if (!captchaToken) { showAlert('Confirme que você não é um robô.'); return; }
       const btn = e.target.querySelector('button');
       btn.disabled = true;
       try {
         const fd = new FormData(e.target);
-        await DMPAY.signUp(fd.get('email'), fd.get('password'), fd.get('name'), fd.get('company'));
+        await DMPAY.signUp(fd.get('email'), fd.get('password'), fd.get('name'), fd.get('company'), captchaToken);
         // signUp dispara trigger handle_new_user que cria company + profile
         // Faz signIn imediatamente (Supabase pode exigir confirm email — se exigir, mostra mensagem)
         try {
@@ -225,6 +232,7 @@
       } catch (err) {
         showAlert(err.message);
         btn.disabled = false;
+        hcaptcha.reset();
       }
     });
 

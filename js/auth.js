@@ -90,12 +90,13 @@ window.DMPAY = (function() {
     return data;
   }
 
-  async function signUp(email, senha, nome, companyName) {
+  async function signUp(email, senha, nome, companyName, captchaToken) {
     await ready();
     const { data, error } = await sb.auth.signUp({
       email: email,
       password: senha,
       options: {
+        captchaToken,
         data: {
           name: nome,
           company_name: companyName,
