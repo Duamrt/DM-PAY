@@ -347,7 +347,7 @@
       .today-actions{flex-wrap:wrap}
     }
   </style>
-  <script src="dmpay-version.js"></script>
+  <script src="dmpay-version.js?v=v05020639"></script>
   <script src="dmpay-mobile.js" defer></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
@@ -434,8 +434,8 @@
             <div class="sync-title"><b>Integração iCommerce ativa.</b> <span style="color:var(--text-muted);font-weight:400">Vendas são importadas automaticamente do PDV a cada 15 minutos.</span></div>
             <div class="sync-meta">
               <span><span class="sync-dot"></span>Conectado</span>
-              <span><i data-lucide="clock" style="width:11px;height:11px;display:inline"></i> Última sincronização: hoje 14:28 (há 4 min)</span>
-              <span><i data-lucide="database" style="width:11px;height:11px;display:inline"></i> Servidor: —</span>
+              <span id="sync-last-time"><i data-lucide="clock" style="width:11px;height:11px;display:inline"></i> Última sincronização: —</span>
+              <span id="sync-server"><i data-lucide="database" style="width:11px;height:11px;display:inline"></i> Servidor: —</span>
             </div>
           </div>
         </div>

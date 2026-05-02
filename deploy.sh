@@ -11,6 +11,9 @@ sed -i "s/dmpay-mobile-v[^']*/dmpay-mobile-${VERSION}/" sw.js
 # Atualiza apenas a linha da versao em dmpay-version.js (preserva auto-update logic)
 sed -i "s/DMPAY_VERSION = 'v[^']*'/DMPAY_VERSION = '${VERSION}'/" dmpay-version.js
 
+# Atualiza ?v= do script tag dmpay-version.js em todos os HTMLs (evita loop de reload por cache)
+find . -name "*.html" -not -path "./.git/*" -exec sed -i "s|dmpay-version\.js[^\"']*|dmpay-version.js?v=${VERSION}|g" {} \;
+
 git add -A
 git commit -m "${VERSION} ${MSG}"
 git push origin dev

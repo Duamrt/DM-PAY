@@ -437,8 +437,8 @@
     window._DMPAY_AUTO_TAG_HTML = autoTagHtml;
     // Atualiza horário real da última sync no banner
     const lastSyncTs = syncStateRows?.[0]?.last_sync_at;
-    const syncMetaSpans = document.querySelectorAll('.sync-meta span');
-    if (lastSyncTs && syncMetaSpans.length >= 2) {
+    const syncTimeEl = document.getElementById('sync-last-time');
+    if (lastSyncTs && syncTimeEl) {
       const dtSync = new Date(lastSyncTs);
       const agora = new Date();
       const diffMin = Math.round((agora - dtSync) / 60000);
@@ -446,7 +446,7 @@
       const hoje = agora.toDateString() === dtSync.toDateString();
       const diaLabel = hoje ? 'hoje' : dtSync.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
       const haLabel = diffMin <= 0 ? 'agora' : diffMin < 60 ? `há ${diffMin} min` : `há ${Math.round(diffMin/60)}h`;
-      syncMetaSpans[1].innerHTML = `<i data-lucide="clock" style="width:11px;height:11px;display:inline"></i> Última sincronização: ${diaLabel} ${horaFmt} (${haLabel})`;
+      syncTimeEl.innerHTML = `<i data-lucide="clock" style="width:11px;height:11px;display:inline"></i> Última sincronização: ${diaLabel} ${horaFmt} (${haLabel})`;
     }
 
     // === Fechamento do dia: Recebimentos de Fiado + Sangrias + Caixa líquido ===
