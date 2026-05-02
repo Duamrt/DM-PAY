@@ -421,13 +421,13 @@
       });
     }
 
-    // Banner sync: atualiza label ERP baseado no source_system real
+    // Banner sync: atualiza label ERP e horário real da última sincronização
     const { data: syncStateRows } = await sb.from('sync_state')
-      .select('source_system').eq('company_id', COMPANY_ID).limit(1);
+      .select('source_system, last_sync_at, entity').eq('company_id', COMPANY_ID)
+      .order('last_sync_at', { ascending: false }).limit(10);
     const sourceSystem = syncStateRows?.[0]?.source_system || 'icommerce';
     const erpLabel = sourceSystem === 'omsys' ? 'OMSYS' : 'iCommerce';
     const autoTagHtml = `<span class="auto-tag"><i data-lucide="zap"></i>Auto · ${erpLabel}</span>`;
-    // Atualiza todos os badges estáticos da página
     document.querySelectorAll('.auto-tag').forEach(el => {
       el.innerHTML = `<i data-lucide="zap"></i>Auto · ${erpLabel}`;
     });
@@ -435,6 +435,19 @@
     if (syncTitle) syncTitle.textContent = `Integração ${erpLabel} ativa.`;
     window._DMPAY_ERP_LABEL = erpLabel;
     window._DMPAY_AUTO_TAG_HTML = autoTagHtml;
+    // Atualiza horário real da última sync no banner
+    const lastSyncTs = syncStateRows?.[0]?.last_sync_at;
+    const syncMetaSpans = document.querySelectorAll('.sync-meta span');
+    if (lastSyncTs && syncMetaSpans.length >= 2) {
+      const dtSync = new Date(lastSyncTs);
+      const agora = new Date();
+      const diffMin = Math.round((agora - dtSync) / 60000);
+      const horaFmt = dtSync.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const hoje = agora.toDateString() === dtSync.toDateString();
+      const diaLabel = hoje ? 'hoje' : dtSync.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const haLabel = diffMin <= 0 ? 'agora' : diffMin < 60 ? `há ${diffMin} min` : `há ${Math.round(diffMin/60)}h`;
+      syncMetaSpans[1].innerHTML = `<i data-lucide="clock" style="width:11px;height:11px;display:inline"></i> Última sincronização: ${diaLabel} ${horaFmt} (${haLabel})`;
+    }
 
     // === Fechamento do dia: Recebimentos de Fiado + Sangrias + Caixa líquido ===
     await carregarFechamentoDia(COMPANY_ID, ultimoDia, porDia[ultimoDia] || 0);
