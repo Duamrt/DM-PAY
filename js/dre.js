@@ -689,7 +689,7 @@
   /* ── HEADER PLACA ── */
   .header-placa { background: #0a1628; color: white; padding: 13px 22px 11px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1e3a8a; }
   .placa-left { display: flex; align-items: center; gap: 14px; }
-  .placa-logo { background: #1e3a8a; border: 2px solid #3b82f6; color: #93c5fd; font-weight: 800; font-size: 14px; padding: 7px 12px; letter-spacing: 0.06em; flex-shrink: 0; }
+  .placa-logo { background: linear-gradient(135deg, #2563EB 0%, #60A5FA 100%); border-radius: 10px; color: #fff; font-weight: 800; font-size: 14px; padding: 8px 13px; letter-spacing: 0.04em; flex-shrink: 0; box-shadow: 0 4px 14px -2px rgba(59,130,246,.45); }
   .placa-sys  { font-size: 8px; font-weight: 500; color: #475569; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 3px; }
   .placa-title { font-size: 17px; font-weight: 800; letter-spacing: 0.02em; color: #f8fafc; text-transform: uppercase; }
   .placa-sub  { font-size: 8.5px; color: #64748b; margin-top: 2px; letter-spacing: 0.04em; }
