@@ -567,7 +567,14 @@
     document.getElementById('btn-lancar-impostos')?.addEventListener('click', lancarImpostos);
 
     document.querySelector('.btn[data-action="exportar"]')?.addEventListener('click', () => {
-      alert('Exportar PDF: em construção. Os dados reais já estão na tela para copiar.');
+      const mes  = MESES_LONGO[MES-1];
+      const nome = window.DMPAY_COMPANY?.trade_name || window.DMPAY_COMPANY?.name || '';
+      const modo = document.querySelector('.mode-toggle button.active')?.textContent?.trim() || '';
+      document.getElementById('print-periodo').textContent  = `${mes} / ${ANO}${modo ? ' · ' + modo : ''}`;
+      document.getElementById('print-empresa').textContent  = nome;
+      document.getElementById('print-data').textContent     = new Date().toLocaleDateString('pt-BR');
+      document.getElementById('print-subtitulo').textContent = `CMV: custo do vendido via PDV · Despesas: categorias cadastradas`;
+      window.print();
     });
 
     await buildMonthSelect();
