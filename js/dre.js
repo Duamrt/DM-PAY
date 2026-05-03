@@ -605,149 +605,225 @@
         { label:'LUCRO LÍQUIDO DO PERÍODO', val:v('v-ll'),     pct:v('p-ll'),     tipo:'grand' },
       ];
 
+      const parsePct = s => parseFloat((s||'0').replace(',','.').replace('%','').replace('—','0')) || 0;
+      const parseVal = s => parseFloat((s||'0').replace(/\./g,'').replace(',','.').replace('—','0').replace(/[^\d.\-]/g,'')) || 0;
+
       const rows = linhas.map(l => {
-        const isNeg = l.val.startsWith('-');
-        let trClass, valColor;
-        if (l.tipo === 'grand') {
-          trClass  = 'row-grand' + (isNeg ? ' neg' : '');
-          valColor = isNeg ? '#DC2626' : '#10B981';
-        } else if (l.tipo === 'subtotal' || l.tipo === 'total') {
-          trClass  = 'row-subtotal';
-          valColor = isNeg ? '#DC2626' : '#111827';
-        } else if (l.tipo === 'item') {
-          trClass  = 'row-item row-indent';
-          valColor = '#6B7280';
+        const isNeg  = l.val.startsWith('-');
+        const isItem = l.tipo === 'item';
+        const isGrand = l.tipo === 'grand';
+        const isSub  = l.tipo === 'subtotal' || l.tipo === 'total';
+        const isGrupo = l.tipo === 'grupo';
+        const displayVal = l.val === '—' && isItem ? '' : l.val;
+        const emptyRow = !displayVal && !l.pct;
+
+        let bg = '', fontW = '', border = '', labelColor = '#1a1a1a', valColor = '#1a1a1a', fontSize = '11.5px';
+        if (isGrand) {
+          bg = isNeg ? '#1a1a1a' : '#1a1a1a';
+          fontW = '700'; border = 'border-top: 2.5px solid #000;';
+          valColor = labelColor = isNeg ? '#ff4444' : '#00cc66';
+          fontSize = '12.5px';
+        } else if (isSub) {
+          bg = '#f0f0f0'; fontW = '700'; border = 'border-top: 1.5px solid #000; border-bottom: 1.5px solid #000;';
+          valColor = isNeg ? '#cc0000' : '#000';
+        } else if (isGrupo) {
+          bg = '#fafafa'; fontW = '600'; fontSize = '11px';
+          valColor = isNeg ? '#cc0000' : '#555';
+          labelColor = '#333';
+        } else if (isItem) {
+          fontSize = '11px'; labelColor = '#555'; valColor = '#444';
         } else {
-          trClass  = 'row-item';
-          valColor = l.tipo === 'ded' ? '#DC2626' : '#374151';
+          valColor = l.tipo === 'ded' ? '#cc0000' : '#222';
         }
-        const displayVal = l.val === '—' && l.tipo === 'item' ? '' : l.val;
-        return `<tr class="${trClass}">
-          <td>${l.label}</td>
-          <td style="color:${valColor}">${displayVal}</td>
-          <td>${l.pct}</td>
+
+        const negBox = isNeg && displayVal && (isSub || isGrand) ?
+          `style="display:inline-block;${isGrand ? 'color:#ff4444;' : 'color:#cc0000;'}font-weight:700"` : '';
+
+        return `<tr style="background:${bg};${border}">
+          <td style="padding:${isItem?'4px 8px 4px 24px':'5.5px 8px'};font-size:${fontSize};color:${labelColor};font-weight:${fontW||'400'};border-right:1px solid #ddd;text-transform:${isGrand?'uppercase':'none'}">${isGrand ? `<span style="color:${isNeg?'#ff4444':'#00cc66'}">${l.label}</span>` : l.label}</td>
+          <td style="padding:5.5px 10px;text-align:right;font-size:${fontSize};color:${isGrand?(isNeg?'#ff4444':'#00cc66'):valColor};font-weight:${fontW||'400'};border-right:1px solid #ddd;font-variant-numeric:tabular-nums;white-space:nowrap">${isGrand && displayVal ? `<span ${negBox}>${displayVal}</span>` : (emptyRow ? '' : displayVal)}</td>
+          <td style="padding:5.5px 8px;text-align:right;font-size:10px;color:#888;white-space:nowrap">${l.pct}</td>
         </tr>`;
       }).join('');
 
-      const mbColor  = v('v-mb').startsWith('-')  ? '#DC2626' : '#10B981';
-      const mopColor = v('v-mop').startsWith('-') ? '#DC2626' : '#10B981';
-      const mlColor  = v('v-ml').startsWith('-')  ? '#DC2626' : '#10B981';
+      const mbColor  = v('v-mb').startsWith('-')  ? '#DC2626' : '#16a34a';
+      const mopColor = v('v-mop').startsWith('-') ? '#DC2626' : '#16a34a';
+      const mlColor  = v('v-ml').startsWith('-')  ? '#DC2626' : '#16a34a';
+
+      const parseMargem = s => parseFloat((s||'0').replace(',','.').replace('%','')) || 0;
+      const mbNum  = parseMargem(v('v-mb'));
+      const mopNum = parseMargem(v('v-mop'));
+      const mlNum  = parseMargem(v('v-ml'));
+      const rlNum  = parseVal(v('v-rl'));
+      const llNum  = parseVal(v('v-ll'));
+
+      const barMb  = Math.min(Math.max(mbNum  / 35 * 100, 0), 100).toFixed(1);
+      const barMop = Math.min(Math.max(mopNum / 15 * 100, 0), 100).toFixed(1);
+      const barMl  = Math.min(Math.max(mlNum  /  8 * 100, 0), 100).toFixed(1);
+
+      const insightMb  = mbNum >= 35 ? `✓ Margem bruta ${v('v-mb')} — acima do benchmark varejista (25–35%). Excelente controle de custo.`
+                       : mbNum >= 25 ? `~ Margem bruta ${v('v-mb')} — dentro do benchmark varejista (25–35%).`
+                       : `⚠ Margem bruta ${v('v-mb')} — abaixo do benchmark (25–35%). Revisar política de preços ou CMV.`;
+      const insightMop = mopNum >= 5  ? `✓ Resultado operacional ${v('v-mop')} — positivo e acima do benchmark (5–15%). Despesas controladas.`
+                       : mopNum >= 0  ? `~ Resultado operacional ${v('v-mop')} — dentro do benchmark mínimo. Despesas merecem atenção.`
+                       : `⚠ Resultado operacional ${v('v-mop')} — negativo. Despesas operacionais superam o Lucro Bruto.`;
+      const insightLl  = llNum >= 0   ? `✓ Período positivo — R$ ${fmt(llNum)} de Lucro Líquido após tributos.`
+                       : `⚠ Período com prejuízo — R$ ${fmt(Math.abs(llNum))} de perda líquida após tributos.`;
+
+      const qrData = encodeURIComponent(`DM Pay|${empresa}|DRE ${periodo}|RL:${v('v-rl')}|LL:${v('v-ll')}`);
+      const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${qrData}&bgcolor=ffffff&color=0a1628&margin=4`;
 
       const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <title>DRE — ${empresa} — ${periodo}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4 portrait; margin: 16mm 14mm; }
+  @page { size: A4 portrait; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Geist', -apple-system, sans-serif; font-size: 13px; color: #111827; background: #F9FAFB; -webkit-font-smoothing: antialiased; padding: 0; }
-  .page { background: white; min-height: 100vh; padding: 28px 28px 24px; }
+  body { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #0a1628; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-  /* Header */
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
-  .brand-row { display: flex; align-items: center; gap: 12px; }
-  .logo { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #2563EB, #60A5FA); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 12px; letter-spacing: -0.02em; flex-shrink: 0; box-shadow: 0 4px 14px -2px rgba(59,130,246,.35); }
-  .brand-label { font-size: 10px; font-weight: 600; color: #6B7280; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
-  .doc-title { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: #111827; line-height: 1.1; }
-  .doc-sub { font-size: 12px; color: #6B7280; margin-top: 3px; font-weight: 400; }
-  .header-right { text-align: right; }
-  .empresa-nome { font-size: 14px; font-weight: 600; color: #111827; }
-  .header-meta { font-size: 11.5px; color: #6B7280; margin-top: 4px; line-height: 1.7; }
-  .periodo-pill { display: inline-flex; align-items: center; background: #DBEAFE; color: #2563EB; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 999px; margin-bottom: 4px; letter-spacing: 0.01em; }
+  .watermark { position: fixed; top: 46%; left: 50%; transform: translate(-50%,-50%) rotate(-35deg); font-family: 'JetBrains Mono', monospace; font-size: 88px; font-weight: 800; color: rgba(10,22,40,0.045); letter-spacing: 0.12em; white-space: nowrap; pointer-events: none; z-index: 0; user-select: none; }
 
-  /* Tabela */
-  .card { background: white; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06); }
-  .card-header { background: #111827; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
-  .card-header-title { color: white; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
-  .card-header-cols { display: flex; gap: 0; }
-  .col-label { color: #9CA3AF; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; width: 110px; text-align: right; padding-right: 16px; }
-  table { width: 100%; border-collapse: collapse; }
-  .row-item td { padding: 5px 16px; font-size: 12.5px; color: #374151; border-bottom: 1px solid #F3F4F6; }
-  .row-item td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
-  .row-item td:last-child { color: #9CA3AF; font-size: 11px; width: 80px; }
-  .row-item td:nth-child(2) { width: 120px; }
-  .row-indent td:first-child { padding-left: 30px; color: #6B7280; font-size: 12px; }
-  .row-subtotal td { padding: 7px 16px; font-size: 13px; font-weight: 600; background: #F9FAFB; border-top: 1.5px solid #E5E7EB; border-bottom: 1px solid #E5E7EB; }
-  .row-subtotal td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
-  .row-grand td { padding: 10px 16px; font-size: 13.5px; font-weight: 700; background: #F0FDF4; border-top: 2px solid #10B981; letter-spacing: -0.01em; }
-  .row-grand td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
-  .row-grand.neg td { background: #FEF2F2; border-top-color: #DC2626; }
-  .txt-red { color: #DC2626; }
-  .txt-green { color: #10B981; }
-  .txt-blue { color: #2563EB; }
-  .txt-muted { color: #9CA3AF; }
+  .content { position: relative; z-index: 1; }
 
-  /* Margens */
-  .margens { display: flex; gap: 10px; margin-bottom: 14px; }
-  .margem-card { flex: 1; border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 14px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
-  .margem-label { font-size: 10.5px; color: #6B7280; margin-bottom: 2px; font-weight: 500; }
-  .margem-bench { font-size: 9.5px; color: #9CA3AF; margin-bottom: 6px; }
-  .margem-val { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+  /* ── HEADER PLACA ── */
+  .header-placa { background: #0a1628; color: white; padding: 13px 22px 11px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1e3a8a; }
+  .placa-left { display: flex; align-items: center; gap: 14px; }
+  .placa-logo { background: #1e3a8a; border: 2px solid #3b82f6; color: #93c5fd; font-weight: 800; font-size: 14px; padding: 7px 12px; letter-spacing: 0.06em; flex-shrink: 0; }
+  .placa-sys  { font-size: 8px; font-weight: 500; color: #475569; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 3px; }
+  .placa-title { font-size: 17px; font-weight: 800; letter-spacing: 0.02em; color: #f8fafc; text-transform: uppercase; }
+  .placa-sub  { font-size: 8.5px; color: #64748b; margin-top: 2px; letter-spacing: 0.04em; }
+  .placa-right { text-align: right; }
+  .placa-flag  { font-size: 26px; line-height: 1; margin-bottom: 3px; }
+  .placa-empresa { font-size: 11.5px; font-weight: 700; color: #e2e8f0; letter-spacing: 0.01em; }
+  .placa-periodo { font-size: 9px; color: #64748b; margin-top: 2px; letter-spacing: 0.06em; }
+  .placa-badge { display: inline-block; background: #0f2040; border: 1px solid #1e3a8a; color: #60a5fa; font-size: 8px; font-weight: 700; padding: 2px 7px; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 5px; }
 
-  /* Nota */
-  .nota { background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 9px 14px; font-size: 11px; color: #92400E; line-height: 1.5; margin-bottom: 16px; }
+  /* ── META BAR ── */
+  .meta-bar { background: #f1f5f9; border-bottom: 2px solid #0a1628; padding: 5px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; color: #64748b; letter-spacing: 0.05em; }
+  .meta-bar b { color: #0a1628; font-weight: 700; }
+  .meta-accent { color: ${mlColor}; font-weight: 700; }
 
-  /* Footer */
-  .footer { border-top: 1px solid #E5E7EB; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #9CA3AF; }
-  .footer-brand { display: flex; align-items: center; gap: 6px; }
-  .footer-logo { width: 18px; height: 18px; border-radius: 4px; background: linear-gradient(135deg, #2563EB, #60A5FA); display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 7px; }
-</style></head><body><div class="page">
+  /* ── BODY ── */
+  .body { padding: 14px 22px 72px; }
 
-<div class="header">
-  <div class="brand-row">
-    <div class="logo">DM</div>
+  /* ── TABLE ── */
+  .tbl-wrap { border: 2px solid #0a1628; margin-bottom: 12px; }
+  .tbl-head { background: #0a1628; color: #f8fafc; display: grid; grid-template-columns: 1fr 136px 76px; padding: 7px 10px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .tbl-head span:not(:first-child) { text-align: right; }
+  table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── MARGENS GRID ── */
+  .margens-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+  .mcard { border: 2px solid #0a1628; padding: 10px 12px; }
+  .mcard-title { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+  .mcard-val   { font-size: 22px; font-weight: 800; line-height: 1.1; margin-bottom: 1px; }
+  .mcard-bench { font-size: 7.5px; color: #94a3b8; margin-bottom: 7px; }
+  .bar-track   { background: #e2e8f0; height: 5px; position: relative; overflow: hidden; }
+  .bar-fill    { height: 5px; position: absolute; left: 0; top: 0; transition: width .3s; }
+  .bar-labels  { display: flex; justify-content: space-between; margin-top: 3px; }
+  .bar-lbl     { font-size: 7px; color: #94a3b8; }
+
+  /* ── INSIGHTS ── */
+  .insights { border: 2px solid #0a1628; padding: 9px 14px; margin-bottom: 12px; background: #f8fafc; }
+  .insights-title { font-size: 8px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #0a1628; margin-bottom: 7px; padding-bottom: 5px; border-bottom: 1px solid #cbd5e1; }
+  .insight-line { font-size: 9px; color: #1e293b; line-height: 1.6; }
+
+  /* ── NOTA ── */
+  .nota { font-size: 8px; color: #64748b; border-left: 3px solid #0a1628; padding: 5px 10px; background: #f8fafc; line-height: 1.55; }
+
+  /* ── FOOTER ── */
+  .footer-bar { background: #0a1628; color: #475569; padding: 8px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; letter-spacing: 0.06em; position: fixed; bottom: 0; left: 0; right: 0; border-top: 3px solid #1e3a8a; }
+  .footer-engine { color: #3b82f6; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+  .footer-right  { display: flex; align-items: center; gap: 14px; }
+  .footer-meta   { text-align: right; }
+  .qr-box { background: white; padding: 4px; display: inline-block; border: 1px solid #1e3a8a; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 0; }
+    body  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; }
+  }
+</style></head>
+<body>
+<div class="watermark">DM PAY</div>
+<div class="content">
+
+<div class="header-placa">
+  <div class="placa-left">
+    <div class="placa-logo">DM</div>
     <div>
-      <div class="brand-label">DM Pay</div>
-      <div class="doc-title">DRE Gerencial</div>
-      <div class="doc-sub">Demonstrativo do Resultado do Exercício · ${modo}</div>
+      <div class="placa-sys">Sistema DM Pay · ERP Integration · iCommerce</div>
+      <div class="placa-title">DRE Gerencial</div>
+      <div class="placa-sub">Demonstrativo do Resultado do Exercício</div>
     </div>
   </div>
-  <div class="header-right">
-    <div class="empresa-nome">${empresa}</div>
-    <div class="header-meta">
-      <div><span class="periodo-pill">${periodo}</span></div>
-      Gerado em ${gerado}
-    </div>
+  <div class="placa-right">
+    <div class="placa-flag">🇧🇷</div>
+    <div class="placa-empresa">${empresa}</div>
+    <div class="placa-periodo">${periodo}</div>
+    <div class="placa-badge">${modo}</div>
   </div>
 </div>
 
-<div class="card">
-  <div class="card-header">
-    <span class="card-header-title">Resultado do Exercício</span>
-    <div class="card-header-cols">
-      <span class="col-label">Valor (R$)</span>
-      <span class="col-label">% RL</span>
+<div class="meta-bar">
+  <div>GERADO EM <b>${gerado}</b> &nbsp;·&nbsp; REGIME <b>${modo.toUpperCase()}</b> &nbsp;·&nbsp; FONTE <b>DM PAY ENGINE v2.0</b></div>
+  <div>REC. BRUTA <b>${v('v-rb')}</b> &nbsp;·&nbsp; REC. LÍQUIDA <b>${v('v-rl')}</b> &nbsp;·&nbsp; LUC. LÍQUIDO <span class="meta-accent">${v('v-ll')}</span></div>
+</div>
+
+<div class="body">
+
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <span>LINHA DO DRE</span><span>VALOR (R$)</span><span>% RL</span>
+    </div>
+    <table>${rows}</table>
+  </div>
+
+  <div class="margens-grid">
+    <div class="mcard">
+      <div class="mcard-title">Margem Bruta</div>
+      <div class="mcard-val" style="color:${mbColor}">${v('v-mb')}</div>
+      <div class="mcard-bench">Benchmark 25–35%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${barMb}%;background:${mbColor}"></div></div>
+      <div class="bar-labels"><span class="bar-lbl">0%</span><span class="bar-lbl">▲25%</span><span class="bar-lbl">35%</span></div>
+    </div>
+    <div class="mcard">
+      <div class="mcard-title">Margem Operacional</div>
+      <div class="mcard-val" style="color:${mopColor}">${v('v-mop')}</div>
+      <div class="mcard-bench">Benchmark 5–15%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${barMop}%;background:${mopColor}"></div></div>
+      <div class="bar-labels"><span class="bar-lbl">0%</span><span class="bar-lbl">▲5%</span><span class="bar-lbl">15%</span></div>
+    </div>
+    <div class="mcard">
+      <div class="mcard-title">Margem Líquida</div>
+      <div class="mcard-val" style="color:${mlColor}">${v('v-ml')}</div>
+      <div class="mcard-bench">Benchmark 3–8%</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${barMl}%;background:${mlColor}"></div></div>
+      <div class="bar-labels"><span class="bar-lbl">0%</span><span class="bar-lbl">▲3%</span><span class="bar-lbl">8%</span></div>
     </div>
   </div>
-  <table>${rows}</table>
+
+  <div class="insights">
+    <div class="insights-title">// AUTO INSIGHTS — ANÁLISE AUTOMÁTICA DM PAY</div>
+    <div class="insight-line">${insightMb}</div>
+    <div class="insight-line">${insightMop}</div>
+    <div class="insight-line">${insightLl}</div>
+  </div>
+
+  <div class="nota">⚠ Deduções fiscais estimadas — confirme alíquotas reais com seu contador. CMV calculado via custo do vendido no PDV (iCommerce). Despesas dependem de categorias cadastradas no DM Pay.</div>
+
 </div>
 
-<div class="margens">
-  <div class="margem-card">
-    <div class="margem-label">Margem Bruta</div>
-    <div class="margem-bench">Benchmark 25–35%</div>
-    <div class="margem-val" style="color:${mbColor}">${v('v-mb')}</div>
+<div class="footer-bar">
+  <span class="footer-engine">⚙ PROCESSADO VIA DM PAY ENGINE v2.0</span>
+  <div class="footer-right">
+    <div class="footer-meta">
+      <div>${empresa} · ${periodo}</div>
+      <div style="color:#1e3a8a">dmpayapp.com.br</div>
+    </div>
+    <div class="qr-box"><img src="${qrUrl}" width="52" height="52" alt="QR DRE"></div>
   </div>
-  <div class="margem-card">
-    <div class="margem-label">Margem Operacional</div>
-    <div class="margem-bench">Benchmark 5–15%</div>
-    <div class="margem-val" style="color:${mopColor}">${v('v-mop')}</div>
-  </div>
-  <div class="margem-card">
-    <div class="margem-label">Margem Líquida</div>
-    <div class="margem-bench">Benchmark 3–8%</div>
-    <div class="margem-val" style="color:${mlColor}">${v('v-ml')}</div>
-  </div>
-</div>
-
-<div class="nota">⚠ Deduções fiscais estimadas — confirme alíquotas reais com seu contador. CMV calculado via custo do vendido no PDV (iCommerce). Despesas dependem de categorias cadastradas no DM Pay.</div>
-
-<div class="footer">
-  <div class="footer-brand">
-    <div class="footer-logo">DM</div>
-    <span>DM Pay · dmpayapp.com.br</span>
-  </div>
-  <span>${empresa} · ${periodo}</span>
 </div>
 
 </div><script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
