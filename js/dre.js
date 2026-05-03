@@ -98,6 +98,18 @@
     return data || null;
   }
 
+  async function fetchTaxesAvg() {
+    const { data } = await sb.from('dre_taxes')
+      .select('icms_net,pis_net,cofins_net')
+      .eq('company_id', CID)
+      .order('year', { ascending: false })
+      .order('month', { ascending: false })
+      .limit(6);
+    if (!data || data.length === 0) return null;
+    const avg = f => data.reduce((s,r) => s + Number(r[f]||0), 0) / data.length;
+    return { icms_net: avg('icms_net'), pis_net: avg('pis_net'), cofins_net: avg('cofins_net') };
+  }
+
   async function fetchCmvReal(ano, mes) {
     const mesStr = `${ano}-${String(mes).padStart(2,'0')}-01`;
     const { data } = await sb.from('dre_cmv_real')
@@ -164,7 +176,7 @@
     set('dre-mes-titulo', `${MESES_LONGO[MES-1]} / ${ANO}`);
     try {
     const prev = prevMonth(ANO, MES);
-    const [sales, salesAnt, invs, pays, taxes, cardFees, cmvRealData] = await Promise.all([
+    const [sales, salesAnt, invs, pays, taxes, cardFees, cmvRealData, taxesAvg] = await Promise.all([
       fetchSales(ANO, MES),
       fetchSales(prev.ano, prev.mes),
       fetchInvoices(ANO, MES),
@@ -172,6 +184,7 @@
       fetchTaxes(ANO, MES),
       fetchCardFees(ANO, MES),
       fetchCmvReal(ANO, MES),
+      fetchTaxesAvg(),
     ]);
     cardFees_cache = cardFees;
     sales_cache = sales;
@@ -182,14 +195,14 @@
     set('v-rb', fmt(rb), 1); setClass('v-rb','cas-val plus');
     set('p-rb', '—', 1);
 
-    // Impostos: real (contador) ou estimativa
+    // Impostos: real (contador) → média histórica → fallback alíquota estimada
     const taxReal = taxes !== null;
-    const icmsV = taxReal ? Number(taxes.icms_net)   : rb * ICMS_EST;
-    const pisV  = taxReal ? Number(taxes.pis_net)    : rb * PIS_EST;
-    const cofV  = taxReal ? Number(taxes.cofins_net) : rb * COF_EST;
-    const devV  = taxReal ? Number(taxes.devolucoes) : 0;
+    const icmsV = taxReal ? Number(taxes.icms_net)    : taxesAvg ? Number(taxesAvg.icms_net)    : rb * ICMS_EST;
+    const pisV  = taxReal ? Number(taxes.pis_net)     : taxesAvg ? Number(taxesAvg.pis_net)     : rb * PIS_EST;
+    const cofV  = taxReal ? Number(taxes.cofins_net)  : taxesAvg ? Number(taxesAvg.cofins_net)  : rb * COF_EST;
+    const devV  = taxReal ? Number(taxes.devolucoes)  : 0;
 
-    const tag = taxReal ? '' : ' est.';
+    const tag = taxReal ? '' : (taxesAvg ? ' est. média' : ' est.');
     set('v-icms',   fmt(icmsV), 1); set('p-icms',   pctS(icmsV,rb) + tag, 1);
     set('v-pis',    fmt(pisV),  1); set('p-pis',    pctS(pisV,rb)  + tag, 1);
     set('v-cofins', fmt(cofV),  1); set('p-cofins', pctS(cofV,rb)  + tag, 1);
