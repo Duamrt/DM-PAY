@@ -567,14 +567,135 @@
     document.getElementById('btn-lancar-impostos')?.addEventListener('click', lancarImpostos);
 
     document.querySelector('.btn[data-action="exportar"]')?.addEventListener('click', () => {
-      const mes  = MESES_LONGO[MES-1];
-      const nome = window.DMPAY_COMPANY?.trade_name || window.DMPAY_COMPANY?.name || '';
-      const modo = document.querySelector('.mode-toggle button.active')?.textContent?.trim() || '';
-      document.getElementById('print-periodo').textContent  = `${mes} / ${ANO}${modo ? ' · ' + modo : ''}`;
-      document.getElementById('print-empresa').textContent  = nome;
-      document.getElementById('print-data').textContent     = new Date().toLocaleDateString('pt-BR');
-      document.getElementById('print-subtitulo').textContent = `CMV: custo do vendido via PDV · Despesas: categorias cadastradas`;
-      window.print();
+      const empresa = window.DMPAY_COMPANY?.trade_name || window.DMPAY_COMPANY?.name || '';
+      const periodo = `${MESES_LONGO[MES-1]} / ${ANO}`;
+      const modo    = document.querySelector('.mode-toggle button.active')?.textContent?.trim() || 'Competência';
+      const gerado  = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+      const v = (id) => (document.getElementById(id)?.textContent || '—').trim();
+
+      const linhas = [
+        { label:'Receita Bruta de Vendas', val:v('v-rb'), pct:v('p-rb'), tipo:'total' },
+        { label:'(−) ICMS s/ vendas',      val:v('v-icms'),   pct:v('p-icms'),   tipo:'ded' },
+        { label:'(−) PIS s/ vendas',       val:v('v-pis'),    pct:v('p-pis'),    tipo:'ded' },
+        { label:'(−) COFINS s/ vendas',    val:v('v-cofins'), pct:v('p-cofins'), tipo:'ded' },
+        { label:'(−) Devoluções',           val:v('v-dev'),    pct:v('p-dev'),    tipo:'ded' },
+        { label:'= Receita Líquida',        val:v('v-rl'),     pct:'100,0%',      tipo:'subtotal' },
+        { label:'(−) CMV (custo do vendido)', val:v('v-cmv'), pct:v('p-cmv'),    tipo:'ded' },
+        { label:'= Lucro Bruto',            val:v('v-lb'),     pct:v('p-lb'),     tipo:'subtotal' },
+        { label:'Despesas com Vendas',      val:v('v-dv'),     pct:v('p-dv'),     tipo:'grupo' },
+        { label:'  Folha operacional',      val:v('v-folha'),  pct:'',            tipo:'item' },
+        { label:'  Maquininhas',            val:v('v-maq'),    pct:'',            tipo:'item' },
+        { label:'  Taxas Cielo',            val:v('v-cielo'),  pct:'',            tipo:'item' },
+        { label:'Despesas Administrativas', val:v('v-dadm'),   pct:v('p-dadm'),   tipo:'grupo' },
+        { label:'  Pró-labore sócios',      val:v('v-prolabore'), pct:'',         tipo:'item' },
+        { label:'  Contador + software',    val:v('v-contador'),  pct:'',         tipo:'item' },
+        { label:'Despesas Gerais',          val:v('v-dger'),   pct:v('p-dger'),   tipo:'grupo' },
+        { label:'  Aluguel + Energia + Água', val:v('v-aluguel'), pct:'',         tipo:'item' },
+        { label:'  Internet + Segurança + Limpeza', val:v('v-internet'), pct:'', tipo:'item' },
+        { label:'Despesas Variáveis',       val:v('v-despvar'),pct:v('p-despvar'),tipo:'grupo' },
+        { label:'= Resultado Operacional (EBIT)', val:v('v-ebit'), pct:v('p-ebit'), tipo:'subtotal' },
+        { label:'Receitas Financeiras',     val:v('v-rf'),     pct:v('p-rf'),     tipo:'grupo' },
+        { label:'Despesas Financeiras',     val:v('v-df'),     pct:v('p-df'),     tipo:'grupo' },
+        { label:'= Resultado Financeiro Líq.', val:v('v-resfin'), pct:v('p-resfin'), tipo:'subtotal' },
+        { label:'Outras Receitas e Despesas', val:v('v-outras'), pct:v('p-outras'), tipo:'grupo' },
+        { label:'= Resultado antes dos Impostos (EBT)', val:v('v-ebt'), pct:v('p-ebt'), tipo:'subtotal' },
+        { label:'(−) IRPJ (15%)',           val:v('v-irpj'),   pct:'',            tipo:'ded' },
+        { label:'(−) IRPJ adicional (10%)', val:v('v-irpjad'), pct:'',            tipo:'ded' },
+        { label:'(−) CSLL (9%)',            val:v('v-csll'),   pct:'',            tipo:'ded' },
+        { label:'LUCRO LÍQUIDO DO PERÍODO', val:v('v-ll'),     pct:v('p-ll'),     tipo:'grand' },
+      ];
+
+      const corVal = (tipo, val) => {
+        if (tipo === 'grand' || tipo === 'total' || tipo === 'subtotal') {
+          const neg = val.startsWith('-');
+          return neg ? '#DC2626' : '#111827';
+        }
+        return tipo === 'ded' ? '#DC2626' : '#374151';
+      };
+
+      const rows = linhas.map(l => {
+        const bold   = ['subtotal','grand','total'].includes(l.tipo) ? 'font-weight:700;' : '';
+        const indent = l.tipo === 'item' ? 'padding-left:20px;' : '';
+        const bg     = l.tipo === 'grand' ? 'background:#F0FDF4;' : l.tipo === 'subtotal' ? 'background:#F9FAFB;' : '';
+        const border = ['subtotal','grand'].includes(l.tipo) ? 'border-top:1.5px solid #D1D5DB;' : '';
+        const color  = corVal(l.tipo, l.val);
+        return `<tr style="${bg}${border}">
+          <td style="padding:6px 10px;${indent}${bold}font-size:12px;color:#374151">${l.label}</td>
+          <td style="padding:6px 10px;text-align:right;${bold}font-size:12px;color:${color};font-variant-numeric:tabular-nums">${l.val === '—' && l.tipo === 'item' ? '' : l.val}</td>
+          <td style="padding:6px 10px;text-align:right;font-size:11px;color:#9CA3AF;white-space:nowrap">${l.pct}</td>
+        </tr>`;
+      }).join('');
+
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>DRE — ${empresa} — ${periodo}</title>
+<style>
+  @page { size: A4 portrait; margin: 20mm 18mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #111827; background: white; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 18px; }
+  .header-left .title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .header-left .sub { font-size: 11px; color: #6B7280; margin-top: 3px; }
+  .header-right { text-align: right; font-size: 11px; color: #6B7280; }
+  .header-right .empresa { font-size: 13px; font-weight: 700; color: #111; }
+  table { width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
+  thead th { background: #111827; color: white; padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  thead th:not(:first-child) { text-align: right; }
+  tr:nth-child(even) { background: #FAFAFA; }
+  .margens { margin-top: 16px; display: flex; gap: 12px; }
+  .margem-box { flex: 1; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 14px; }
+  .margem-box .label { font-size: 11px; color: #6B7280; margin-bottom: 4px; }
+  .margem-box .val { font-size: 18px; font-weight: 700; }
+  .footer { margin-top: 20px; font-size: 10px; color: #9CA3AF; border-top: 1px solid #E5E7EB; padding-top: 8px; display: flex; justify-content: space-between; }
+  .nota { margin-top: 14px; font-size: 10.5px; color: #6B7280; background: #FEF3C7; border: 1px solid #D97706; border-radius: 6px; padding: 8px 12px; }
+</style></head><body>
+<div class="header">
+  <div class="header-left" style="display:flex;align-items:center;gap:14px">
+    <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2563EB,#60A5FA);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;flex-shrink:0">DM</div>
+    <div>
+      <div style="font-size:10px;color:#6B7280;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:1px">DM Pay</div>
+      <div class="title">DRE Gerencial</div>
+      <div class="sub">Demonstrativo do Resultado do Exercício · ${modo}</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="empresa">${empresa}</div>
+    <div style="margin-top:4px">${periodo}</div>
+    <div style="margin-top:2px">Gerado em ${gerado}</div>
+  </div>
+</div>
+<table>
+  <thead><tr>
+    <th style="width:60%">Descrição</th>
+    <th style="width:25%">Valor (R$)</th>
+    <th style="width:15%">% RL</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+<div class="margens">
+  <div class="margem-box">
+    <div class="label">Margem Bruta · benchmark 25–35%</div>
+    <div class="val" style="color:${v('v-mb').startsWith('-')?'#DC2626':'#10B981'}">${v('v-mb')}</div>
+  </div>
+  <div class="margem-box">
+    <div class="label">Margem Operacional · benchmark 5–15%</div>
+    <div class="val" style="color:${v('v-mop').startsWith('-')?'#DC2626':'#10B981'}">${v('v-mop')}</div>
+  </div>
+  <div class="margem-box">
+    <div class="label">Margem Líquida · benchmark 3–8%</div>
+    <div class="val" style="color:${v('v-ml').startsWith('-')?'#DC2626':'#10B981'}">${v('v-ml')}</div>
+  </div>
+</div>
+<div class="nota">⚠ Deduções fiscais estimadas — confirme alíquotas reais com seu contador. CMV calculado via custo do vendido (PDV iCommerce). Despesas dependem de categorias cadastradas.</div>
+<div class="footer">
+  <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#2563EB,#60A5FA);display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:8px">DM</span> DM Pay · dmpayapp.com.br</span>
+  <span>${empresa} · ${periodo}</span>
+</div>
+<script>window.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); }; }<\/script>
+</body></html>`;
+
+      const win = window.open('', '_blank', 'width=900,height=700');
+      win.document.write(html);
+      win.document.close();
     });
 
     await buildMonthSelect();
