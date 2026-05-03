@@ -98,6 +98,14 @@
     return data || null;
   }
 
+  async function fetchCmvReal(ano, mes) {
+    const mesStr = `${ano}-${String(mes).padStart(2,'0')}-01`;
+    const { data } = await sb.from('dre_cmv_real')
+      .select('cmv_real,qtd_cupons,qtd_itens')
+      .eq('company_id', CID).eq('mes', mesStr).maybeSingle();
+    return data || null;
+  }
+
   // ── Lançar impostos (modal DMPAY_UI) ─────────────────────────────────────
   async function lancarImpostos() {
     if (!window.DMPAY_UI) { alert('UI não carregada.'); return; }
@@ -156,13 +164,14 @@
     set('dre-mes-titulo', `${MESES_LONGO[MES-1]} / ${ANO}`);
     try {
     const prev = prevMonth(ANO, MES);
-    const [sales, salesAnt, invs, pays, taxes, cardFees] = await Promise.all([
+    const [sales, salesAnt, invs, pays, taxes, cardFees, cmvRealData] = await Promise.all([
       fetchSales(ANO, MES),
       fetchSales(prev.ano, prev.mes),
       fetchInvoices(ANO, MES),
       fetchPayables(ANO, MES),
       fetchTaxes(ANO, MES),
       fetchCardFees(ANO, MES),
+      fetchCmvReal(ANO, MES),
     ]);
     cardFees_cache = cardFees;
     sales_cache = sales;
@@ -191,8 +200,10 @@
     set('v-rl', fmt(rl), 1); setClass('v-rl','cas-val total');
     set('p-rl', '100,0%', 1);
 
-    // CMV via NF-e importadas
-    const cmv = invs.reduce((s,r) => s + Number(r.total||0), 0);
+    // CMV: custo real do PDV se disponível, senão soma de compras (NF-e)
+    const cmvCompras = invs.reduce((s,r) => s + Number(r.total||0), 0);
+    const cmvEhReal  = !!cmvRealData;
+    const cmv        = cmvEhReal ? Number(cmvRealData.cmv_real) : cmvCompras;
     if (cmv > 0) {
       set('v-cmv', fmt(cmv), 1); setClass('v-cmv','cas-val minus');
       set('p-cmv', pctS(cmv,rl), 1);
@@ -302,7 +313,7 @@
         ? `Deduções fiscais <b>reais</b> (lançadas pelo contador${taxes.notes ? ' — ' + taxes.notes : ''}).`
         : `Deduções fiscais <b>estimadas</b> — ICMS ${(ICMS_EST*100).toFixed(1)}% · PIS ${(PIS_EST*100).toFixed(2)}% · COFINS ${(COF_EST*100).toFixed(1)}%. <a href="#" onclick="DMPAY_DRE.lancarImpostos();return false" style="color:var(--warn);font-weight:600">Lançar valores reais →</a>`;
       const cmvNote = cmv > 0
-        ? `CMV: <b>R$ ${fmt(cmv)}</b>.`
+        ? `CMV: <b>R$ ${fmt(cmv)}</b>${cmvEhReal ? ' <span style="color:var(--ok);font-size:0.85em">● custo do vendido (PDV)</span>' : ' · compras do período'}.`
         : 'CMV: <b>—</b> (importe NF-e de compras).';
       disc.innerHTML = `<b>Dados reais onde disponível.</b> ${taxNote} ${cmvNote}`;
     }
@@ -420,6 +431,11 @@
     const { data: allInvs } = await sb.from('invoices').select('issue_date,total')
       .eq('company_id', CID).order('issue_date', { ascending: true });
 
+    const { data: allCmvReal } = await sb.from('dre_cmv_real')
+      .select('mes,cmv_real').eq('company_id', CID);
+    const cmvRealByMes = {};
+    (allCmvReal||[]).forEach(r => { cmvRealByMes[r.mes.slice(0,7)] = Number(r.cmv_real); });
+
     // Busca impostos reais de todos os meses (usa quando disponível, senão estimado)
     const { data: allTaxes } = await sb.from('dre_taxes')
       .select('year,month,icms_net,pis_net,cofins_net,devolucoes')
@@ -455,7 +471,7 @@
       return Math.round(rbData[i] * (1 - ICMS_EST - PIS_EST - COF_EST));
     });
     const lbData = keys.map((k,i) => {
-      const cmvK = invByMes[k]||0;
+      const cmvK = cmvRealByMes[k] ?? invByMes[k] ?? 0;
       if (!cmvK) return null;
       return Math.round((rlData[i]*1000 - cmvK)/1000);
     });
