@@ -761,15 +761,17 @@
 
 <div class="header-placa">
   <div class="placa-left">
-    <div class="placa-logo">DM</div>
-    <div>
+    <div style="display:flex;align-items:center;gap:8px;margin-right:6px">
+      <div class="placa-logo">DM</div>
+      <div style="font-size:13px;font-weight:800;color:#60a5fa;letter-spacing:0.04em">Pay</div>
+    </div>
+    <div style="border-left:1px solid #1e3a8a;padding-left:14px">
       <div class="placa-sys">Sistema DM Pay · ERP Integration · iCommerce</div>
       <div class="placa-title">DRE Gerencial</div>
       <div class="placa-sub">Demonstrativo do Resultado do Exercício</div>
     </div>
   </div>
   <div class="placa-right">
-    <div class="placa-flag">🇧🇷</div>
     <div class="placa-empresa">${empresa}</div>
     <div class="placa-periodo">${periodo}</div>
     <div class="placa-badge">${modo}</div>
