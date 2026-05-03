@@ -189,6 +189,9 @@
     cardFees_cache = cardFees;
     sales_cache = sales;
     pays_cache = pays;
+    taxes_cache = taxes;
+    taxesAvg_cache = taxesAvg;
+    taxReal_cache = taxes !== null;
 
     const rb    = sales.reduce((s,r) => s + Number(r.amount), 0);
     const rbAnt = salesAnt.reduce((s,r) => s + Number(r.amount), 0);
@@ -387,12 +390,22 @@
       rows.forEach(r => { byPm[r.payment_method] = (byPm[r.payment_method]||0) + Number(r.amount); });
       items = Object.entries(byPm).sort(([,a],[,b])=>b-a).map(([pm,v]) => ({ name: pmLabel[pm]||pm, val: fmt(v) }));
     } else if (['icms','pis','cofins'].includes(key)) {
-      const taxes = await fetchTaxes(ANO, MES);
-      if (taxes) {
+      const getV = (t) => key==='icms' ? Number(t.icms_net) : key==='pis' ? Number(t.pis_net) : Number(t.cofins_net);
+      if (taxReal_cache && taxes_cache) {
         items = [
-          { name: 'Valor líquido (após créditos)', val: fmt(key==='icms'?taxes.icms_net:key==='pis'?taxes.pis_net:taxes.cofins_net) },
+          { name: 'Valor real (lançado pelo contador)', val: fmt(getV(taxes_cache)) },
           { name: 'Regime: Lucro Real não-cumulativo', val: '' },
-          { name: 'Obs', val: taxes.notes || '—' }
+          { name: taxes_cache.notes || '', val: '' }
+        ].filter(i => i.name);
+      } else if (taxesAvg_cache) {
+        const rb = Number($v('v-rb')?.textContent?.replace(/\./g,'').replace(',','.')) || 0;
+        const v = getV(taxesAvg_cache);
+        const aliq = rb > 0 ? ((v / rb) * 100).toFixed(2) : '—';
+        items = [
+          { name: 'Estimativa — média dos meses reais anteriores', val: '' },
+          { name: `Alíquota efetiva média`, val: `${aliq}%` },
+          { name: 'Valor', val: fmt(v) },
+          { name: '⚠️ Lance os impostos do mês para usar dados reais', val: '' }
         ];
       } else {
         const rb = Number($v('v-rb')?.textContent?.replace(/\./g,'').replace(',','.')) || 0;
@@ -432,8 +445,7 @@
       const kws = kwMap[key] || [];
       const filtered = (pays_cache||[]).filter(p => {
         const cat = (p.expense_categories?.name || '').toLowerCase();
-        const desc = (p.description || '').toLowerCase();
-        return kws.some(kw => cat.includes(kw.toLowerCase()) || desc.includes(kw.toLowerCase()));
+        return kws.some(kw => cat.includes(kw.toLowerCase()));
       }).sort((a,b) => Number(b.amount||0) - Number(a.amount||0));
 
       if (filtered.length === 0) {
@@ -470,6 +482,9 @@
   let sales_cache = [];
   let cardFees_cache = [];
   let pays_cache = [];
+  let taxes_cache = null;
+  let taxesAvg_cache = null;
+  let taxReal_cache = false;
 
   // ── Chart ────────────────────────────────────────────────────────────────
   let dreChart;
