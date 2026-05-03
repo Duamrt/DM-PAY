@@ -566,12 +566,22 @@
 
     document.getElementById('btn-lancar-impostos')?.addEventListener('click', lancarImpostos);
 
-    document.querySelector('.btn[data-action="exportar"]')?.addEventListener('click', () => {
+    document.querySelector('.btn[data-action="exportar"]')?.addEventListener('click', async () => {
       const empresa = window.DMPAY_COMPANY?.trade_name || window.DMPAY_COMPANY?.name || '';
       const periodo = `${MESES_LONGO[MES-1]} / ${ANO}`;
       const modo    = document.querySelector('.mode-toggle button.active')?.textContent?.trim() || 'Competência';
       const gerado  = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
       const v = (id) => (document.getElementById(id)?.textContent || '—').trim();
+
+      const { ini: cmvIni, prox: cmvProx } = monthRange(ANO, MES);
+      const { data: cmvInvs } = await sb.from('invoices')
+        .select('total,suppliers(legal_name,trade_name)')
+        .eq('company_id', CID).gte('issue_date', cmvIni).lt('issue_date', cmvProx)
+        .order('total', { ascending: false }).limit(15);
+      const topFornecedores = (cmvInvs||[]).map(i => ({
+        nome: i.suppliers?.legal_name || i.suppliers?.trade_name || 'Fornecedor',
+        val: Number(i.total||0)
+      }));
 
       const linhas = [
         { label:'Receita Bruta de Vendas', val:v('v-rb'), pct:v('p-rb'), tipo:'total' },
@@ -803,6 +813,23 @@
       <div class="bar-labels"><span class="bar-lbl">0%</span><span class="bar-lbl">▲3%</span><span class="bar-lbl">8%</span></div>
     </div>
   </div>
+
+  ${topFornecedores.length ? `<div class="tbl-wrap" style="margin-bottom:12px">
+    <div class="tbl-head" style="grid-template-columns:1fr 130px 76px">
+      <span>TOP FORNECEDORES — COMPOSIÇÃO DO CMV</span><span>VALOR (R$)</span><span>% CMV</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace">
+      ${topFornecedores.map((f,i) => {
+        const pct = rlNum ? (f.val / parseVal(v('v-cmv')) * 100).toFixed(1) : '—';
+        const bg  = i % 2 === 0 ? '#fff' : '#f8fafc';
+        return `<tr style="background:${bg};border-bottom:1px solid #e2e8f0">
+          <td style="padding:5px 10px;font-size:10px;color:#1e293b;border-right:1px solid #e2e8f0"><span style="color:#94a3b8;margin-right:8px;font-size:9px">${String(i+1).padStart(2,'0')}</span>${f.nome}</td>
+          <td style="padding:5px 10px;text-align:right;font-size:10px;font-weight:600;color:#0a1628;border-right:1px solid #e2e8f0;font-variant-numeric:tabular-nums">${fmt(f.val)}</td>
+          <td style="padding:5px 10px;text-align:right;font-size:9px;color:#64748b">${pct}%</td>
+        </tr>`;
+      }).join('')}
+    </table>
+  </div>` : ''}
 
   <div class="insights">
     <div class="insights-title">// AUTO INSIGHTS — ANÁLISE AUTOMÁTICA DM PAY</div>
