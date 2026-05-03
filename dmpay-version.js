@@ -1,5 +1,5 @@
 // DM Pay · versao atual + auto-update
-window.DMPAY_VERSION = 'v05031738';
+window.DMPAY_VERSION = 'v05031750';
 (function() {
   // ------- Badge de versao no canto -------
   var el = document.createElement('div');

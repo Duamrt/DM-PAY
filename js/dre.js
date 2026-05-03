@@ -188,6 +188,7 @@
     ]);
     cardFees_cache = cardFees;
     sales_cache = sales;
+    pays_cache = pays;
 
     const rb    = sales.reduce((s,r) => s + Number(r.amount), 0);
     const rbAnt = salesAnt.reduce((s,r) => s + Number(r.amount), 0);
@@ -414,6 +415,38 @@
       const totalVenda = cardFees_cache.reduce((s,r) => s + Number(r.total_amount||0), 0);
       if (items.length) items.push({ name: '────────────', val: '' });
       items.push({ name: `${totalTxn} transações · vendas R$ ${fmt(totalVenda)}`, val: '' });
+    } else if (['op-vendas','op-adm','op-gerais','despvar','desp-fin','folha','maq','prolabore','contador','aluguel','internet'].includes(key)) {
+      const kwMap = {
+        'op-vendas' : ['folha','salário','salario','funcionário','funcionario','trabalhista','holerite','inss','fgts','encargo','guia das','simples nacional','maquininha','cielo','stone','rede','getnet','mensalidade maquina','aluguel maquina'],
+        'op-adm'    : ['pro-labore','pró-labore','prolabore','sócio','socio','retirada','contador','contabilidade','software','sistema'],
+        'op-gerais' : ['aluguel','energia','água','agua','condomínio','condominio','internet','segurança','seguranca','limpeza','telefone'],
+        'despvar'   : ['despesa variável','despesa variavel','variável','variavel'],
+        'desp-fin'  : ['juros','multa','antecip','iof'],
+        'folha'     : ['folha','salário','salario','funcionário','funcionario','trabalhista','holerite','inss','fgts','encargo','guia das','simples nacional'],
+        'maq'       : ['maquininha','cielo','stone','rede','getnet','mensalidade maquina','aluguel maquina'],
+        'prolabore' : ['pro-labore','pró-labore','prolabore','sócio','socio','retirada'],
+        'contador'  : ['contador','contabilidade','software','sistema'],
+        'aluguel'   : ['aluguel','energia','água','agua','condomínio','condominio'],
+        'internet'  : ['internet','segurança','seguranca','limpeza','telefone'],
+      };
+      const kws = kwMap[key] || [];
+      const filtered = (pays_cache||[]).filter(p => {
+        const cat = (p.expense_categories?.name || '').toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        return kws.some(kw => cat.includes(kw.toLowerCase()) || desc.includes(kw.toLowerCase()));
+      }).sort((a,b) => Number(b.amount||0) - Number(a.amount||0));
+
+      if (filtered.length === 0) {
+        items = [{ name: 'Nenhum lançamento encontrado nesta categoria', val: '—' }];
+      } else {
+        items = filtered.map(p => ({
+          name: p.description || p.expense_categories?.name || 'Sem descrição',
+          val: fmt(Number(p.amount||0))
+        }));
+        const total = filtered.reduce((s,p) => s + Number(p.amount||0), 0);
+        items.push({ name: '─────────────', val: '' });
+        items.push({ name: `${filtered.length} lançamento${filtered.length>1?'s':''} · Total`, val: fmt(total) });
+      }
     } else {
       items = [{ name: 'Detalhamento disponível em breve', val: '—' }];
     }
@@ -436,6 +469,7 @@
 
   let sales_cache = [];
   let cardFees_cache = [];
+  let pays_cache = [];
 
   // ── Chart ────────────────────────────────────────────────────────────────
   let dreChart;
