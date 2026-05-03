@@ -204,6 +204,8 @@
     const cmvCompras = invs.reduce((s,r) => s + Number(r.total||0), 0);
     const cmvEhReal  = !!cmvRealData;
     const cmv        = cmvEhReal ? Number(cmvRealData.cmv_real) : cmvCompras;
+    const lblTipo = document.getElementById('lbl-cmv-tipo');
+    if (lblTipo) lblTipo.textContent = cmvEhReal ? '(custo do vendido)' : '(NF-e de compras)';
     if (cmv > 0) {
       set('v-cmv', fmt(cmv), 1); setClass('v-cmv','cas-val minus');
       set('p-cmv', pctS(cmv,rl), 1);
