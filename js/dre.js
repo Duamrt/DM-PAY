@@ -605,92 +605,152 @@
         { label:'LUCRO LÍQUIDO DO PERÍODO', val:v('v-ll'),     pct:v('p-ll'),     tipo:'grand' },
       ];
 
-      const corVal = (tipo, val) => {
-        if (tipo === 'grand' || tipo === 'total' || tipo === 'subtotal') {
-          const neg = val.startsWith('-');
-          return neg ? '#DC2626' : '#111827';
-        }
-        return tipo === 'ded' ? '#DC2626' : '#374151';
-      };
-
       const rows = linhas.map(l => {
-        const bold   = ['subtotal','grand','total'].includes(l.tipo) ? 'font-weight:700;' : '';
-        const indent = l.tipo === 'item' ? 'padding-left:20px;' : '';
-        const bg     = l.tipo === 'grand' ? 'background:#F0FDF4;' : l.tipo === 'subtotal' ? 'background:#F9FAFB;' : '';
-        const border = ['subtotal','grand'].includes(l.tipo) ? 'border-top:1.5px solid #D1D5DB;' : '';
-        const color  = corVal(l.tipo, l.val);
-        return `<tr style="${bg}${border}">
-          <td style="padding:6px 10px;${indent}${bold}font-size:12px;color:#374151">${l.label}</td>
-          <td style="padding:6px 10px;text-align:right;${bold}font-size:12px;color:${color};font-variant-numeric:tabular-nums">${l.val === '—' && l.tipo === 'item' ? '' : l.val}</td>
-          <td style="padding:6px 10px;text-align:right;font-size:11px;color:#9CA3AF;white-space:nowrap">${l.pct}</td>
+        const isNeg = l.val.startsWith('-');
+        let trClass, valColor;
+        if (l.tipo === 'grand') {
+          trClass  = 'row-grand' + (isNeg ? ' neg' : '');
+          valColor = isNeg ? '#DC2626' : '#10B981';
+        } else if (l.tipo === 'subtotal' || l.tipo === 'total') {
+          trClass  = 'row-subtotal';
+          valColor = isNeg ? '#DC2626' : '#111827';
+        } else if (l.tipo === 'item') {
+          trClass  = 'row-item row-indent';
+          valColor = '#6B7280';
+        } else {
+          trClass  = 'row-item';
+          valColor = l.tipo === 'ded' ? '#DC2626' : '#374151';
+        }
+        const displayVal = l.val === '—' && l.tipo === 'item' ? '' : l.val;
+        return `<tr class="${trClass}">
+          <td>${l.label}</td>
+          <td style="color:${valColor}">${displayVal}</td>
+          <td>${l.pct}</td>
         </tr>`;
       }).join('');
 
+      const mbColor  = v('v-mb').startsWith('-')  ? '#DC2626' : '#10B981';
+      const mopColor = v('v-mop').startsWith('-') ? '#DC2626' : '#10B981';
+      const mlColor  = v('v-ml').startsWith('-')  ? '#DC2626' : '#10B981';
+
       const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <title>DRE — ${empresa} — ${periodo}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4 portrait; margin: 20mm 18mm; }
+  @page { size: A4 portrait; margin: 16mm 14mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #111827; background: white; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 18px; }
-  .header-left .title { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-  .header-left .sub { font-size: 11px; color: #6B7280; margin-top: 3px; }
-  .header-right { text-align: right; font-size: 11px; color: #6B7280; }
-  .header-right .empresa { font-size: 13px; font-weight: 700; color: #111; }
-  table { width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
-  thead th { background: #111827; color: white; padding: 8px 10px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-  thead th:not(:first-child) { text-align: right; }
-  tr:nth-child(even) { background: #FAFAFA; }
-  .margens { margin-top: 16px; display: flex; gap: 12px; }
-  .margem-box { flex: 1; border: 1px solid #E5E7EB; border-radius: 8px; padding: 10px 14px; }
-  .margem-box .label { font-size: 11px; color: #6B7280; margin-bottom: 4px; }
-  .margem-box .val { font-size: 18px; font-weight: 700; }
-  .footer { margin-top: 20px; font-size: 10px; color: #9CA3AF; border-top: 1px solid #E5E7EB; padding-top: 8px; display: flex; justify-content: space-between; }
-  .nota { margin-top: 14px; font-size: 10.5px; color: #6B7280; background: #FEF3C7; border: 1px solid #D97706; border-radius: 6px; padding: 8px 12px; }
-</style></head><body>
+  body { font-family: 'Geist', -apple-system, sans-serif; font-size: 13px; color: #111827; background: #F9FAFB; -webkit-font-smoothing: antialiased; padding: 0; }
+  .page { background: white; min-height: 100vh; padding: 28px 28px 24px; }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
+  .brand-row { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #2563EB, #60A5FA); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 12px; letter-spacing: -0.02em; flex-shrink: 0; box-shadow: 0 4px 14px -2px rgba(59,130,246,.35); }
+  .brand-label { font-size: 10px; font-weight: 600; color: #6B7280; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2px; }
+  .doc-title { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; color: #111827; line-height: 1.1; }
+  .doc-sub { font-size: 12px; color: #6B7280; margin-top: 3px; font-weight: 400; }
+  .header-right { text-align: right; }
+  .empresa-nome { font-size: 14px; font-weight: 600; color: #111827; }
+  .header-meta { font-size: 11.5px; color: #6B7280; margin-top: 4px; line-height: 1.7; }
+  .periodo-pill { display: inline-flex; align-items: center; background: #DBEAFE; color: #2563EB; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 999px; margin-bottom: 4px; letter-spacing: 0.01em; }
+
+  /* Tabela */
+  .card { background: white; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06); }
+  .card-header { background: #111827; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .card-header-title { color: white; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .card-header-cols { display: flex; gap: 0; }
+  .col-label { color: #9CA3AF; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; width: 110px; text-align: right; padding-right: 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  .row-item td { padding: 5px 16px; font-size: 12.5px; color: #374151; border-bottom: 1px solid #F3F4F6; }
+  .row-item td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .row-item td:last-child { color: #9CA3AF; font-size: 11px; width: 80px; }
+  .row-item td:nth-child(2) { width: 120px; }
+  .row-indent td:first-child { padding-left: 30px; color: #6B7280; font-size: 12px; }
+  .row-subtotal td { padding: 7px 16px; font-size: 13px; font-weight: 600; background: #F9FAFB; border-top: 1.5px solid #E5E7EB; border-bottom: 1px solid #E5E7EB; }
+  .row-subtotal td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .row-grand td { padding: 10px 16px; font-size: 13.5px; font-weight: 700; background: #F0FDF4; border-top: 2px solid #10B981; letter-spacing: -0.01em; }
+  .row-grand td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .row-grand.neg td { background: #FEF2F2; border-top-color: #DC2626; }
+  .txt-red { color: #DC2626; }
+  .txt-green { color: #10B981; }
+  .txt-blue { color: #2563EB; }
+  .txt-muted { color: #9CA3AF; }
+
+  /* Margens */
+  .margens { display: flex; gap: 10px; margin-bottom: 14px; }
+  .margem-card { flex: 1; border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 14px; background: white; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .margem-label { font-size: 10.5px; color: #6B7280; margin-bottom: 2px; font-weight: 500; }
+  .margem-bench { font-size: 9.5px; color: #9CA3AF; margin-bottom: 6px; }
+  .margem-val { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+
+  /* Nota */
+  .nota { background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 9px 14px; font-size: 11px; color: #92400E; line-height: 1.5; margin-bottom: 16px; }
+
+  /* Footer */
+  .footer { border-top: 1px solid #E5E7EB; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: #9CA3AF; }
+  .footer-brand { display: flex; align-items: center; gap: 6px; }
+  .footer-logo { width: 18px; height: 18px; border-radius: 4px; background: linear-gradient(135deg, #2563EB, #60A5FA); display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 7px; }
+</style></head><body><div class="page">
+
 <div class="header">
-  <div class="header-left" style="display:flex;align-items:center;gap:14px">
-    <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2563EB,#60A5FA);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px;flex-shrink:0">DM</div>
+  <div class="brand-row">
+    <div class="logo">DM</div>
     <div>
-      <div style="font-size:10px;color:#6B7280;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:1px">DM Pay</div>
-      <div class="title">DRE Gerencial</div>
-      <div class="sub">Demonstrativo do Resultado do Exercício · ${modo}</div>
+      <div class="brand-label">DM Pay</div>
+      <div class="doc-title">DRE Gerencial</div>
+      <div class="doc-sub">Demonstrativo do Resultado do Exercício · ${modo}</div>
     </div>
   </div>
   <div class="header-right">
-    <div class="empresa">${empresa}</div>
-    <div style="margin-top:4px">${periodo}</div>
-    <div style="margin-top:2px">Gerado em ${gerado}</div>
+    <div class="empresa-nome">${empresa}</div>
+    <div class="header-meta">
+      <div><span class="periodo-pill">${periodo}</span></div>
+      Gerado em ${gerado}
+    </div>
   </div>
 </div>
-<table>
-  <thead><tr>
-    <th style="width:60%">Descrição</th>
-    <th style="width:25%">Valor (R$)</th>
-    <th style="width:15%">% RL</th>
-  </tr></thead>
-  <tbody>${rows}</tbody>
-</table>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-header-title">Resultado do Exercício</span>
+    <div class="card-header-cols">
+      <span class="col-label">Valor (R$)</span>
+      <span class="col-label">% RL</span>
+    </div>
+  </div>
+  <table>${rows}</table>
+</div>
+
 <div class="margens">
-  <div class="margem-box">
-    <div class="label">Margem Bruta · benchmark 25–35%</div>
-    <div class="val" style="color:${v('v-mb').startsWith('-')?'#DC2626':'#10B981'}">${v('v-mb')}</div>
+  <div class="margem-card">
+    <div class="margem-label">Margem Bruta</div>
+    <div class="margem-bench">Benchmark 25–35%</div>
+    <div class="margem-val" style="color:${mbColor}">${v('v-mb')}</div>
   </div>
-  <div class="margem-box">
-    <div class="label">Margem Operacional · benchmark 5–15%</div>
-    <div class="val" style="color:${v('v-mop').startsWith('-')?'#DC2626':'#10B981'}">${v('v-mop')}</div>
+  <div class="margem-card">
+    <div class="margem-label">Margem Operacional</div>
+    <div class="margem-bench">Benchmark 5–15%</div>
+    <div class="margem-val" style="color:${mopColor}">${v('v-mop')}</div>
   </div>
-  <div class="margem-box">
-    <div class="label">Margem Líquida · benchmark 3–8%</div>
-    <div class="val" style="color:${v('v-ml').startsWith('-')?'#DC2626':'#10B981'}">${v('v-ml')}</div>
+  <div class="margem-card">
+    <div class="margem-label">Margem Líquida</div>
+    <div class="margem-bench">Benchmark 3–8%</div>
+    <div class="margem-val" style="color:${mlColor}">${v('v-ml')}</div>
   </div>
 </div>
-<div class="nota">⚠ Deduções fiscais estimadas — confirme alíquotas reais com seu contador. CMV calculado via custo do vendido (PDV iCommerce). Despesas dependem de categorias cadastradas.</div>
+
+<div class="nota">⚠ Deduções fiscais estimadas — confirme alíquotas reais com seu contador. CMV calculado via custo do vendido no PDV (iCommerce). Despesas dependem de categorias cadastradas no DM Pay.</div>
+
 <div class="footer">
-  <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#2563EB,#60A5FA);display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:8px">DM</span> DM Pay · dmpayapp.com.br</span>
+  <div class="footer-brand">
+    <div class="footer-logo">DM</div>
+    <span>DM Pay · dmpayapp.com.br</span>
+  </div>
   <span>${empresa} · ${periodo}</span>
 </div>
-<script>window.onload = function(){ window.print(); window.onafterprint = function(){ window.close(); }; }<\/script>
+
+</div><script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
 </body></html>`;
 
       const win = window.open('', '_blank', 'width=900,height=700');
