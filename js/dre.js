@@ -715,7 +715,7 @@
   .meta-accent { color: ${mlColor}; font-weight: 700; }
 
   /* ── BODY ── */
-  .body { padding: 14px 22px 72px; }
+  .body { padding: 14px 22px 14px; }
 
   /* ── TABLE ── */
   .tbl-wrap { border: 2px solid #0a1628; margin-bottom: 12px; }
@@ -743,7 +743,7 @@
   .nota { font-size: 8px; color: #64748b; border-left: 3px solid #0a1628; padding: 5px 10px; background: #f8fafc; line-height: 1.55; }
 
   /* ── FOOTER ── */
-  .footer-bar { background: #0a1628; color: #475569; padding: 8px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; letter-spacing: 0.06em; position: fixed; bottom: 0; left: 0; right: 0; border-top: 3px solid #1e3a8a; }
+  .footer-bar { background: #0a1628; color: #475569; padding: 8px 22px; display: flex; justify-content: space-between; align-items: center; font-size: 8px; letter-spacing: 0.06em; border-top: 3px solid #1e3a8a; margin-top: 14px; }
   .footer-engine { color: #3b82f6; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
   .footer-right  { display: flex; align-items: center; gap: 14px; }
   .footer-meta   { text-align: right; }
@@ -752,7 +752,7 @@
   @media print {
     @page { size: A4 portrait; margin: 0; }
     body  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; }
+    .footer-bar { margin-top: 14px; }
   }
 </style></head>
 <body>
