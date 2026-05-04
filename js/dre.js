@@ -91,6 +91,15 @@
     return data || [];
   }
 
+  async function fetchPayablesAudit(ano, mes) {
+    const { ini, prox } = monthRange(ano, mes);
+    const { data } = await sb.from('payables')
+      .select('amount,status,description,due_date,expense_categories(name)')
+      .eq('company_id', CID)
+      .gte('due_date', ini).lt('due_date', prox);
+    return data || [];
+  }
+
   async function fetchTaxes(ano, mes) {
     const { data } = await sb.from('dre_taxes')
       .select('icms_net,pis_net,cofins_net,devolucoes,notes,updated_at')
@@ -176,7 +185,7 @@
     set('dre-mes-titulo', `${MESES_LONGO[MES-1]} / ${ANO}`);
     try {
     const prev = prevMonth(ANO, MES);
-    const [sales, salesAnt, invs, pays, taxes, cardFees, cmvRealData, taxesAvg] = await Promise.all([
+    const [sales, salesAnt, invs, pays, taxes, cardFees, cmvRealData, taxesAvg, paysAudit] = await Promise.all([
       fetchSales(ANO, MES),
       fetchSales(prev.ano, prev.mes),
       fetchInvoices(ANO, MES),
@@ -185,6 +194,7 @@
       fetchCardFees(ANO, MES),
       fetchCmvReal(ANO, MES),
       fetchTaxesAvg(),
+      fetchPayablesAudit(ANO, MES),
     ]);
     cardFees_cache = cardFees;
     sales_cache = sales;
@@ -192,6 +202,8 @@
     taxes_cache = taxes;
     taxesAvg_cache = taxesAvg;
     taxReal_cache = taxes !== null;
+    pays_audit_cache = paysAudit;
+    cmvEhReal_cache = !!cmvRealData;
 
     const rb    = sales.reduce((s,r) => s + Number(r.amount), 0);
     const rbAnt = salesAnt.reduce((s,r) => s + Number(r.amount), 0);
@@ -349,6 +361,7 @@
     }
 
     await renderChart(taxReal);
+    updateAuditBadge();
     } catch(e) {
       console.error('dreLoad error', e);
       const el = document.querySelector('.dre-wrap');
@@ -485,6 +498,162 @@
   let taxes_cache = null;
   let taxesAvg_cache = null;
   let taxReal_cache = false;
+  let pays_audit_cache = [];
+  let cmvEhReal_cache = false;
+
+  // ── Checklist de Fechamento ───────────────────────────────────────────────
+  const FOLHA_KWS    = ['folha','salário','salario','funcionário','funcionario','trabalhista','holerite','inss','fgts','encargo','guia das','simples nacional'];
+  const PRO_KWS      = ['pro-labore','pró-labore','prolabore','sócio','socio','retirada'];
+  const CONTADOR_KWS = ['contador','contabilidade'];
+  const ALUGUEL_KWS  = ['aluguel','energia','água','agua','condomínio','condominio'];
+
+  function catMatch(p, kws) {
+    const cat = (p.expense_categories?.name || '').toLowerCase();
+    return kws.some(kw => cat.includes(kw.toLowerCase()));
+  }
+
+  function buildAuditItems() {
+    const pays = pays_audit_cache;
+    const items = [];
+
+    // 1. Impostos
+    items.push({
+      ok: taxReal_cache,
+      label: 'Impostos (ICMS · PIS · COFINS)',
+      detail: taxReal_cache
+        ? 'Valores reais lançados pelo contador'
+        : 'Usando estimativa — aguardando contador',
+      action: taxReal_cache ? null : 'DMPAY_DRE.lancarImpostos()',
+      actionLabel: 'Lançar agora →'
+    });
+
+    // 2. Folha de pagamento
+    const folhaPays  = pays.filter(p => catMatch(p, FOLHA_KWS));
+    const folhaPaga  = folhaPays.some(p => p.status === 'paid');
+    const folhaLanc  = folhaPays.length > 0;
+    const folhaTotal = folhaPays.reduce((s, p) => s + Number(p.amount || 0), 0);
+    items.push({
+      ok: folhaPaga,
+      warn: folhaLanc && !folhaPaga,
+      label: 'Folha de pagamento',
+      detail: folhaPaga
+        ? `${folhaPays.filter(p => p.status === 'paid').length} lançamento(s) pago(s) — R$ ${fmt(folhaTotal)}`
+        : folhaLanc
+          ? `Lançada mas não confirmada — R$ ${fmt(folhaTotal)}`
+          : 'Não encontrada neste mês — lance nas despesas'
+    });
+
+    // 3. Pró-labore
+    const proPays  = pays.filter(p => catMatch(p, PRO_KWS));
+    const proPago  = proPays.some(p => p.status === 'paid');
+    const proTotal = proPays.reduce((s, p) => s + Number(p.amount || 0), 0);
+    items.push({
+      ok: proPago,
+      warn: proPays.length > 0 && !proPago,
+      label: 'Pró-labore',
+      detail: proPago
+        ? `Confirmado — R$ ${fmt(proTotal)}`
+        : proPays.length > 0
+          ? `Lançado mas não confirmado — R$ ${fmt(proTotal)}`
+          : 'Não encontrado neste mês'
+    });
+
+    // 4. Contador
+    const contPays = pays.filter(p => catMatch(p, CONTADOR_KWS));
+    const contPago = contPays.some(p => p.status === 'paid');
+    if (contPays.length > 0) {
+      items.push({
+        ok: contPago,
+        warn: !contPago,
+        label: 'Contador / Contabilidade',
+        detail: contPago
+          ? `Confirmado — R$ ${fmt(contPays.reduce((s, p) => s + Number(p.amount || 0), 0))}`
+          : `Lançado mas não confirmado — R$ ${fmt(contPays.reduce((s, p) => s + Number(p.amount || 0), 0))}`
+      });
+    }
+
+    // 5. Contas em aberto (exceto categorias já auditadas acima)
+    const SKIP_KWS = [...FOLHA_KWS, ...PRO_KWS, ...CONTADOR_KWS, ...ALUGUEL_KWS];
+    const abertas  = pays.filter(p => !catMatch(p, SKIP_KWS) && (p.status === 'open' || p.status === 'overdue'));
+    if (abertas.length > 0) {
+      const totalAb = abertas.reduce((s, p) => s + Number(p.amount || 0), 0);
+      items.push({
+        ok: false,
+        warn: true,
+        label: `${abertas.length} conta(s) sem baixa`,
+        detail: `Despesas lançadas no mês aguardando pagamento — R$ ${fmt(totalAb)}`
+      });
+    }
+
+    // 6. CMV
+    items.push({
+      ok: cmvEhReal_cache,
+      warn: !cmvEhReal_cache,
+      label: 'CMV — Custo das Mercadorias',
+      detail: cmvEhReal_cache
+        ? 'Custo real importado do PDV'
+        : 'Usando NF-e de compras (aproximação)'
+    });
+
+    return items;
+  }
+
+  function updateAuditBadge() {
+    const items     = buildAuditItems();
+    const pendentes = items.filter(i => !i.ok).length;
+    const badge     = document.getElementById('audit-badge');
+    const btn       = document.getElementById('btn-checklist');
+    if (badge) {
+      badge.textContent    = pendentes;
+      badge.style.display  = pendentes > 0 ? '' : 'none';
+    }
+    if (btn) {
+      btn.style.borderColor = pendentes > 0 ? 'var(--warn)' : 'var(--success)';
+      btn.style.color       = pendentes > 0 ? 'var(--warn)' : 'var(--success)';
+    }
+  }
+
+  function showAudit() {
+    const items     = buildAuditItems();
+    const pendentes = items.filter(i => !i.ok).length;
+    const mesLabel  = `${MESES_LONGO[MES - 1]} / ${ANO}`;
+
+    document.getElementById('drillTitle').innerHTML = '<i data-lucide="clipboard-list"></i> Checklist de Fechamento';
+    document.getElementById('drillCode').textContent = mesLabel;
+
+    const valEl        = document.getElementById('drillValue');
+    valEl.textContent  = pendentes === 0 ? 'Pronto para fechar ✓' : `${pendentes} pendente${pendentes > 1 ? 's' : ''}`;
+    valEl.style.color  = pendentes === 0 ? 'var(--success)' : 'var(--warn)';
+
+    document.getElementById('drillDesc').textContent = pendentes === 0
+      ? 'Todos os itens confirmados — DRE completo'
+      : 'Itens que precisam ser lançados ou confirmados antes de fechar';
+
+    const list = document.getElementById('drillList');
+    list.innerHTML = items.map(item => {
+      const color = item.ok ? 'var(--success)' : item.warn ? 'var(--warn)' : 'var(--danger)';
+      const icon  = item.ok
+        ? `<i data-lucide="check-circle"  style="width:15px;height:15px;color:var(--success);flex-shrink:0;margin-top:2px"></i>`
+        : item.warn
+          ? `<i data-lucide="alert-circle" style="width:15px;height:15px;color:var(--warn);flex-shrink:0;margin-top:2px"></i>`
+          : `<i data-lucide="x-circle"     style="width:15px;height:15px;color:var(--danger);flex-shrink:0;margin-top:2px"></i>`;
+      const actionHtml = item.action
+        ? `<br><a href="#" onclick="${item.action};closeDrill();return false" style="color:var(--warn);font-size:11px;font-weight:600;text-decoration:none">${item.actionLabel}</a>`
+        : '';
+      return `
+        <div class="drill-item" style="align-items:flex-start;padding:11px 0;gap:10px">
+          ${icon}
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px;color:${color};line-height:1.3">${item.label}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.4">${item.detail}${actionHtml}</div>
+          </div>
+        </div>`;
+    }).join('<div style="border-top:1px solid var(--border);margin:0"></div>');
+
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawerBg').classList.add('open');
+    if (window.lucide) lucide.createIcons();
+  }
 
   // ── Chart ────────────────────────────────────────────────────────────────
   let dreChart;
@@ -929,7 +1098,7 @@
     await dreLoad();
   }
 
-  window.DMPAY_DRE = { lancarImpostos, drill };
+  window.DMPAY_DRE = { lancarImpostos, drill, showAudit };
   window.drill = (key, title) => window.DMPAY_DRE.drill(key, title);
   window.closeDrill = () => {
     document.getElementById('drawer')?.classList.remove('open');

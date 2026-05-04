@@ -84,6 +84,10 @@
     .mode-toggle button.active{background:var(--bg-card);color:var(--text);box-shadow:var(--shadow)}
     .month-select{padding:8px 32px 8px 14px;border:1px solid var(--border);border-radius:7px;background:var(--bg) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 10px center;color:var(--text);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;appearance:none;outline:none}
 
+    /* Checklist badge */
+    #audit-badge{display:none;position:absolute;top:-5px;right:-5px;background:var(--warn);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:8px;line-height:15px;text-align:center;padding:0 3px;pointer-events:none}
+    #btn-checklist{position:relative}
+
     /* Disclaimer */
     .disclaimer{background:var(--warn-soft);border:1px solid var(--warn);border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;gap:10px;align-items:flex-start;font-size:12.5px}
     .disclaimer svg{width:16px;height:16px;color:var(--warn);flex-shrink:0;margin-top:1px}
@@ -309,6 +313,7 @@
           <select class="month-select" id="dre-mes-sel">
             <option>Carregando...</option>
           </select>
+          <button id="btn-checklist" class="btn btn-ghost" onclick="DMPAY_DRE.showAudit()" style="border-color:var(--warn);color:var(--warn)"><i data-lucide="clipboard-list"></i> Checklist<span id="audit-badge">0</span></button>
           <button id="btn-lancar-impostos" class="btn btn-ghost" style="border-color:var(--warn);color:var(--warn)"><i data-lucide="calculator"></i> Lançar impostos</button>
           <button class="btn btn-ghost" data-action="exportar"><i data-lucide="download"></i> Exportar PDF</button>
         </div>
