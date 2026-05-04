@@ -20,7 +20,9 @@
   }
   function iniciais(nome){
     const w = (nome||'?').replace(/[^\wÀ-ÿ ]/g,'').trim().split(/\s+/);
-    return ((w[0]||'')[0] + (w[1]||'')[0] || (w[0]||'??').slice(0,2)).toUpperCase();
+    const a = (w[0]||'?')[0] || '?';
+    const b = w.length > 1 ? w[1][0] : ((w[0]||'??')[1] || '');
+    return (a + b).toUpperCase();
   }
   const _toneCache = {};
   function tone(nome){

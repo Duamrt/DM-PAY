@@ -214,9 +214,13 @@
     @media (max-width: 960px) {
       body{grid-template-columns:1fr}
       .sidebar{display:none}
-      .cal-grid{grid-auto-rows:80px}
-      .cal-day{padding:6px 8px}
+      .cal-grid{grid-auto-rows:96px}
+      .cal-day{padding:6px 8px;overflow:hidden}
       .drawer{width:100%}
+    }
+    @media (max-width: 700px) {
+      .cal-grid{grid-auto-rows:80px}
+      .cal-day-count{display:none}
     }
   </style>
   <script src="dmpay-version.js?v=v05031757"></script>

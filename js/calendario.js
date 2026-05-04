@@ -85,15 +85,16 @@
         html += `<span class="cal-day-total" style="color:var(--danger)">−${fmtBRL(agg.total)}</span>`;
         const atrasado = window.DMPAY_DIAUTIL ? window.DMPAY_DIAUTIL.atrasado(isoOfLocal(dt)) : diffDays(dt.toISOString().slice(0,10)) < 0;
         const dots = Math.min(agg.count, 3);
-        let chips = '<div class="cal-day-chips">';
         const allPaid = agg.paid === agg.count;
         const somePaid = agg.paid > 0 && agg.paid < agg.count;
+        const cnt = agg.count > 1 ? `${agg.count} boletos` : '1 boleto';
+        html += `<span class="cal-day-count">${cnt}</span>`;
+        let chips = '<div class="cal-day-chips">';
         for (let i = 0; i < dots; i++) {
           const cls = allPaid ? 'paid' : (somePaid && i < agg.paid ? 'paid' : (atrasado ? 'late' : 'open'));
           chips += `<span class="cal-dot ${cls}"></span>`;
         }
-        const cnt = agg.count > 1 ? `${agg.count} boletos` : '1 boleto';
-        chips += `<span class="cal-day-count">${cnt}</span></div>`;
+        chips += `</div>`;
         html += chips;
         if (ehFds) html += `<span class="cal-day-total" style="font-size:10px;color:var(--text-muted);font-style:italic;font-weight:500">→ paga seg</span>`;
         if (agg.total > 50000) html = html.replace('cal-day', 'cal-day critical');
