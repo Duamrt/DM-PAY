@@ -335,13 +335,14 @@ def job_cash_withdrawals(cfg, cn, company_id, days, dry_run):
 def job_register_sessions(cfg, cn, company_id, days, dry_run):
     """Agrega CUPOM_FISCAL por (dia, PDV, operador) → register_sessions.
     Idempotente via UPSERT em (company_id, session_date, pdv_id, operador_id).
+    Usa ISNULL(0) para PDV/operador ausentes para não descartar cupons sem esses campos.
     """
     cutoff = datetime.now() - timedelta(days=days)
     sql = """
         SELECT
             CONVERT(date, cf.CUP_EMISSAO) AS session_date,
-            cf.CUP_PDV AS pdv_id,
-            cf.CUP_FUNCIONARIO AS operador_id,
+            ISNULL(cf.CUP_PDV, 0) AS pdv_id,
+            ISNULL(cf.CUP_FUNCIONARIO, 0) AS operador_id,
             MAX(ISNULL(f.FUN_NOME, CONVERT(varchar(100), cf.CUP_FUNCIONARIO))) AS operador_nome,
             SUM(cf.CUP_TOTAL) AS total_vendas,
             COUNT(cf.CUP_CODIGO) AS total_cupons
@@ -349,21 +350,21 @@ def job_register_sessions(cfg, cn, company_id, days, dry_run):
         LEFT JOIN FUNCIONARIOS f WITH (NOLOCK) ON f.FUN_CODIGO = cf.CUP_FUNCIONARIO
         WHERE cf.CUP_EMISSAO >= ?
           AND ISNULL(cf.CUP_SITUACAO, 'N') <> 'C'
-          AND cf.CUP_PDV IS NOT NULL
-          AND cf.CUP_FUNCIONARIO IS NOT NULL
-        GROUP BY CONVERT(date, cf.CUP_EMISSAO), cf.CUP_PDV, cf.CUP_FUNCIONARIO
+        GROUP BY CONVERT(date, cf.CUP_EMISSAO), ISNULL(cf.CUP_PDV, 0), ISNULL(cf.CUP_FUNCIONARIO, 0)
         ORDER BY session_date, pdv_id
     """
     rows = cn.cursor().execute(sql, cutoff).fetchall()
     payload = []
     for r in rows:
+        pdv_id = int(r.pdv_id)
+        op_id = int(r.operador_id)
         payload.append({
             "company_id":   company_id,
             "session_date": to_iso_date(r.session_date),
-            "pdv_id":       int(r.pdv_id),
-            "pdv_nome":     f"PDV {r.pdv_id}",
-            "operador_id":  int(r.operador_id),
-            "operador_nome": (r.operador_nome or "").strip()[:200] or f"Op {r.operador_id}",
+            "pdv_id":       pdv_id,
+            "pdv_nome":     f"PDV {pdv_id}" if pdv_id else "PDV desconhecido",
+            "operador_id":  op_id,
+            "operador_nome": (r.operador_nome or "").strip()[:200] or (f"Op {op_id}" if op_id else "Operador desconhecido"),
             "total_vendas": round(float(r.total_vendas or 0), 2),
             "total_cupons": int(r.total_cupons or 0),
             "source":       SOURCE,
