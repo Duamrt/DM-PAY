@@ -259,6 +259,26 @@ div[style*="monospace"]{display:none!important}
 .search-wrap input:focus{border-color:var(--accent)}
 .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);
   width:16px;height:16px;stroke:var(--text-muted);fill:none;stroke-width:2;pointer-events:none}
+
+/* DÍVIDAS */
+.debt-hero{
+  background:linear-gradient(135deg,#7f1d1d 0%,#b91c1c 100%);
+  border-radius:18px;padding:20px;margin-bottom:12px;color:#fff;
+  position:relative;overflow:hidden;
+  box-shadow:0 12px 40px -10px rgba(220,38,38,.45);
+}
+.debt-hero::before{
+  content:'';position:absolute;top:-40%;right:-15%;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.12),transparent 60%);pointer-events:none;
+}
+.debt-hero-label{font-size:11px;font-weight:600;letter-spacing:.04em;opacity:.8;margin-bottom:6px;position:relative}
+.debt-hero-val{font-size:32px;font-weight:700;letter-spacing:-0.03em;line-height:1;position:relative}
+.debt-hero-sub{font-size:12px;opacity:.75;margin-top:8px;position:relative}
+.debt-hero-chips{display:flex;gap:8px;margin-top:14px;position:relative}
+.debt-chip{padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600;
+  backdrop-filter:blur(8px);background:rgba(255,255,255,.18);color:#fff}
+.debt-chip.alert{background:rgba(0,0,0,.25)}
 </style>
 </head>
 <body>
@@ -393,6 +413,32 @@ div[style*="monospace"]{display:none!important}
   <div id="spLista"><div class="empty">Carregando…</div></div>
 </div>
 
+
+<!-- VIEW: DÍVIDAS -->
+<div class="view" id="viewDividas">
+
+  <div class="debt-hero" id="dvHero">
+    <div class="debt-hero-label">DÍVIDAS EM ATRASO — 2021 ATÉ HOJE</div>
+    <div class="debt-hero-val" id="dvTotalHero">—</div>
+    <div class="debt-hero-sub" id="dvTotalSub">carregando…</div>
+    <div class="debt-hero-chips">
+      <div class="debt-chip" id="dvChipCount">— devedores</div>
+      <div class="debt-chip alert" id="dvChipRisco">— risco crítico</div>
+    </div>
+  </div>
+
+  <div class="yoy-trend-card">
+    <div class="yoy-trend-title">Dívida vencida por ano</div>
+    <div id="dvAnoBars"><div style="color:var(--text-muted);font-size:12px">carregando…</div></div>
+  </div>
+
+  <div class="section-title" style="color:var(--danger)">
+    ⚠️ Comprando em 2026 com +120 dias de atraso
+  </div>
+  <div id="dvRiskyLista"><div class="empty">carregando…</div></div>
+
+</div>
+
 </div><!-- /content-area -->
 
 <!-- BOTTOM NAV -->
@@ -413,6 +459,10 @@ div[style*="monospace"]{display:none!important}
     <button class="nav-btn" id="nb-pagar" onclick="irPara('viewPagar')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14"/></svg>
       Pagar
+    </button>
+    <button class="nav-btn" id="nb-dividas" onclick="irPara('viewDividas')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Dívidas
     </button>
   </nav>
 </div>
@@ -494,13 +544,15 @@ function navDate(delta) {
 }
 
 /* NAVEGAÇÃO DE VIEWS */
-const navMap = {viewResumo:'nb-resumo',viewVendas:'nb-vendas',viewReceber:'nb-receber',viewPagar:'nb-pagar'};
+const navMap = {viewResumo:'nb-resumo',viewVendas:'nb-vendas',viewReceber:'nb-receber',viewPagar:'nb-pagar',viewDividas:'nb-dividas'};
+let _dividasCarregadas = false;
 function irPara(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
   if (navMap[viewId]) document.getElementById(navMap[viewId]).classList.add('active');
   if (viewId === 'viewVendas') { atualizarDataLabel(); if (CID) reloadVendasView(dataSel); }
+  if (viewId === 'viewDividas' && CID && !_dividasCarregadas) { _dividasCarregadas = true; loadDividas(); }
 }
 
 /* AUTH */
@@ -885,6 +937,101 @@ function filtrarPagar(f, chipEl) {
 }
 
 function togglePdv(id) { const el=document.getElementById(id); if(el) el.classList.toggle('open'); }
+
+/* ── DÍVIDAS ── */
+const fmtK2 = v => { const n=Number(v||0); if(n>=1000000) return 'R$ '+(n/1000000).toFixed(1).replace('.',',')+'M'; if(n>=1000) return 'R$ '+Math.round(n/1000)+'k'; return fmt(n); };
+
+async function loadDividas() {
+  const [ov1, ov2, ov3, act2026] = await Promise.all([
+    sb.from('receivables').select('id,customer_id,amount,due_date,customers(name)').eq('company_id',CID).eq('status','overdue').gte('due_date','2021-01-01').lt('due_date','2023-01-01').order('due_date').limit(1000),
+    sb.from('receivables').select('id,customer_id,amount,due_date,customers(name)').eq('company_id',CID).eq('status','overdue').gte('due_date','2023-01-01').lt('due_date','2025-01-01').order('due_date').limit(1000),
+    sb.from('receivables').select('id,customer_id,amount,due_date,customers(name)').eq('company_id',CID).eq('status','overdue').gte('due_date','2025-01-01').order('due_date').limit(1000),
+    sb.from('receivables').select('id,customer_id,amount,due_date,customers(name)').eq('company_id',CID).gte('due_date','2026-01-01').order('due_date',{ascending:false}).limit(2000),
+  ]);
+
+  const allOverdue = [...(ov1.data||[]), ...(ov2.data||[]), ...(ov3.data||[])];
+  const all2026    = act2026.data || [];
+
+  const totalOverdue = allOverdue.reduce((s,r) => s + Number(r.amount||0), 0);
+  const uniqueDebtors = new Set(allOverdue.map(r => r.customer_id).filter(Boolean)).size;
+
+  // Por ano
+  const byYear = {};
+  for (const r of allOverdue) {
+    const y = String(r.due_date).slice(0,4);
+    byYear[y] = (byYear[y]||0) + Number(r.amount||0);
+  }
+
+  // Clientes em risco: overdue >120 dias E comprando em 2026
+  const today = new Date(); today.setHours(0,0,0,0);
+  const active2026 = new Set(all2026.map(r => r.customer_id).filter(Boolean));
+  const riskyMap = {};
+  for (const r of allOverdue) {
+    const [y,m,d] = String(r.due_date).slice(0,10).split('-').map(Number);
+    const days = Math.max(0, Math.round((today - new Date(y,m-1,d)) / 86400000));
+    if (days < 120 || !active2026.has(r.customer_id)) continue;
+    const cid = r.customer_id;
+    if (!riskyMap[cid]) riskyMap[cid] = { name: r.customers?.name||'Sem nome', total:0, maxDays:0, count:0 };
+    riskyMap[cid].total   += Number(r.amount||0);
+    riskyMap[cid].maxDays  = Math.max(riskyMap[cid].maxDays, days);
+    riskyMap[cid].count++;
+  }
+  const riskyList = Object.values(riskyMap).sort((a,b) => b.total - a.total);
+
+  renderDividas(totalOverdue, uniqueDebtors, byYear, riskyList, allOverdue.length);
+}
+
+function renderDividas(totalOverdue, uniqueDebtors, byYear, riskyList, totalTitulos) {
+  // Hero
+  const elHeroVal = document.getElementById('dvTotalHero'); if(elHeroVal) elHeroVal.textContent = fmtK2(totalOverdue);
+  const elHeroSub = document.getElementById('dvTotalSub');  if(elHeroSub) elHeroSub.textContent = `${totalTitulos.toLocaleString('pt-BR')} títulos em atraso`;
+  const elCount   = document.getElementById('dvChipCount'); if(elCount)  elCount.textContent  = `${uniqueDebtors} devedores`;
+  const elRisco   = document.getElementById('dvChipRisco'); if(elRisco)  elRisco.textContent  = `${riskyList.length} risco crítico`;
+
+  // Barras por ano
+  const COR_ANO = {2021:'#64748B',2022:'#64748B',2023:'#F59E0B',2024:'#10B981',2025:'#3B82F6',2026:'#EF4444'};
+  const anos = Object.keys(byYear).sort();
+  const maxVal = Math.max(...Object.values(byYear), 1);
+  const barsEl = document.getElementById('dvAnoBars');
+  if (barsEl) {
+    barsEl.innerHTML = anos.map(ano => {
+      const v = byYear[ano];
+      const w = Math.round(v / maxVal * 100);
+      const cor = COR_ANO[parseInt(ano)] || '#64748B';
+      return `<div class="yoy-bar-row">
+        <div class="yoy-bar-label">${ano}</div>
+        <div class="yoy-bar-track"><div class="yoy-bar-fill" style="width:${w}%;background:${cor}"></div></div>
+        <div class="yoy-bar-val">${fmtK2(v)}</div>
+      </div>`;
+    }).join('') || '<div style="color:var(--text-muted);font-size:12px">Sem dados</div>';
+  }
+
+  // Lista de risco
+  const listaEl = document.getElementById('dvRiskyLista');
+  if (!listaEl) return;
+  if (!riskyList.length) {
+    listaEl.innerHTML = '<div class="empty">Nenhum cliente com +120 dias de atraso e compras em 2026.</div>';
+    return;
+  }
+  const dLabel = d => d >= 365 ? Math.floor(d/30)+'m' : d+'d';
+  const rBadge = d => d >= 365
+    ? '<span class="badge badge-overdue">Crítico</span>'
+    : d >= 180
+      ? '<span class="badge" style="background:rgba(217,119,6,.25);color:#FBBF24">Alto</span>'
+      : '<span class="badge badge-today">Médio</span>';
+
+  listaEl.innerHTML = `<div class="list-card">${riskyList.map((r,i) => `
+    <div class="list-item">
+      <div style="min-width:0;flex:1">
+        <div class="li-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i+1}. ${r.name}</div>
+        <div class="li-sub">${r.count} título${r.count>1?'s':''} · ${dLabel(r.maxDays)} de atraso ${rBadge(r.maxDays)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;padding-left:10px">
+        <div class="li-val c-danger">${fmtK2(r.total)}</div>
+        <div class="li-val-sub">em atraso</div>
+      </div>
+    </div>`).join('')}</div>`;
+}
 </script>
 </body>
 </html>
