@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://js.hcaptcha.com/1/api.js?onload=onHcaptchaLoad" async defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="dmpay-version.js?v=v05061230"></script>
+  <script src="dmpay-version.js?v=v05061253"></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/mfa.js"></script>
@@ -225,12 +225,26 @@
     }
 
     window.DMPAY_LOGIN = (function(){
+      var _modo = null; // 'totp' | 'email'
+      var _emailPendente = null;
+
       async function finalizar(){
         const s = await DMPAY.session(true);
         const _isPa2 = s.company && s.company.id === window.DMPAY_CONFIG.PLATFORM_COMPANY_ID;
         location.replace(_isPa2 ? 'admin.html' : s.company && s.company.cnpj ? DMPAY.postLoginRedirect() : 'wizard.html');
       }
-      function mostrarMfa(){
+      function _setSubtitulo(modo, email){
+        const sub = document.querySelector('#panel-mfa .sub');
+        if (modo === 'email'){
+          sub.innerHTML = 'Enviamos um código de 6 dígitos pro seu e-mail<br><b>' + (email || '') + '</b>';
+        } else {
+          sub.textContent = 'Digite o código de 6 dígitos do seu app autenticador (Google Authenticator, Authy, etc).';
+        }
+      }
+      function mostrarMfa(modo, email){
+        _modo = modo;
+        _emailPendente = email || null;
+        _setSubtitulo(modo, email);
         document.getElementById('panel-login').classList.remove('active');
         document.getElementById('panel-login').style.display = 'none';
         document.querySelectorAll('.tabs')[0] && (document.querySelectorAll('.tabs')[0].style.display = 'none');
@@ -241,6 +255,7 @@
       }
       async function cancelarMfa(){
         try { await sb.auth.signOut(); } catch(e){}
+        _modo = null; _emailPendente = null;
         document.getElementById('panel-mfa').style.display = 'none';
         document.getElementById('panel-mfa').classList.remove('active');
         document.getElementById('panel-login').style.display = '';
@@ -249,7 +264,9 @@
         const btnLogin = document.querySelector('#form-login button[type=submit]');
         if (btnLogin) btnLogin.disabled = false;
       }
-      return { finalizar: finalizar, mostrarMfa: mostrarMfa, cancelarMfa: cancelarMfa };
+      function getModo(){ return _modo; }
+      function getEmail(){ return _emailPendente; }
+      return { finalizar, mostrarMfa, cancelarMfa, getModo, getEmail };
     })();
 
     document.getElementById('form-login').addEventListener('submit', async function(e) {
@@ -264,11 +281,30 @@
           hcaptcha.reset(_loginCaptchaId);
         }
         const fd = new FormData(e.target);
-        await DMPAY.signIn(fd.get('email'), fd.get('password'), captchaToken);
-        // Se tem MFA ativo, AAL fica em aal1 e nextLevel='aal2' — desvia pro panel MFA
+        const email = fd.get('email');
+        await DMPAY.signIn(email, fd.get('password'), captchaToken);
+
+        // Verifica método preferido (profiles.mfa_method)
+        const metodo = await DMPAY_MFA.getMethod();
+
+        if (metodo === 'email'){
+          // Mata sessão (aal1 não é suficiente) e manda OTP por e-mail
+          try { await sb.auth.signOut(); } catch(_) {}
+          await DMPAY_MFA.sendEmailOtp(email);
+          DMPAY_LOGIN.mostrarMfa('email', email);
+          return;
+        }
+
+        if (metodo === 'totp'){
+          // AAL fica em aal1 e nextLevel='aal2' — desvia pro painel TOTP
+          DMPAY_LOGIN.mostrarMfa('totp', email);
+          return;
+        }
+
+        // Sem 2FA — mas se tiver factor TOTP cadastrado por algum motivo, ainda exigir
         const precisa = await DMPAY_MFA.precisaElevar();
         if (precisa){
-          DMPAY_LOGIN.mostrarMfa();
+          DMPAY_LOGIN.mostrarMfa('totp', email);
           return;
         }
         await DMPAY_LOGIN.finalizar();
@@ -285,10 +321,22 @@
       if (code.length !== 6){ showAlert('Digite os 6 dígitos.'); return; }
       btn.disabled = true;
       try {
-        await DMPAY_MFA.challenge(code);
+        const modo = DMPAY_LOGIN.getModo();
+        if (modo === 'email'){
+          await DMPAY_MFA.verifyEmailOtp(DMPAY_LOGIN.getEmail(), code);
+        } else {
+          await DMPAY_MFA.challenge(code);
+        }
         await DMPAY_LOGIN.finalizar();
       } catch(err){
-        showAlert(err.message === 'Invalid TOTP code entered' ? 'Código incorreto. Tente o próximo do app.' : err.message);
+        var msg = err.message;
+        if (msg === 'Invalid TOTP code entered' || /invalid.*token|otp.*invalid|incorrect/i.test(msg)){
+          msg = 'Código incorreto ou expirado.';
+        }
+        if (/expired/i.test(err.message || '')){
+          msg = 'Código expirado. Faça login de novo pra receber outro.';
+        }
+        showAlert(msg);
         btn.disabled = false;
         document.getElementById('mfa-code').value = '';
         document.getElementById('mfa-code').focus();

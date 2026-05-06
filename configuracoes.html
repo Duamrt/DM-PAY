@@ -213,7 +213,7 @@
       .form-row-2,.form-row-3{grid-template-columns:1fr}
     }
   </style>
-  <script src="dmpay-version.js?v=v05061230"></script>
+  <script src="dmpay-version.js?v=v05061253"></script>
   <script src="dmpay-mobile.js" defer></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
@@ -791,22 +791,60 @@
                 .seg-factors b{color:var(--text)}
               </style>
 
-              <div class="seg-card" id="seg-card-status">
+              <style>
+                .seg-options{display:grid;gap:10px;margin-bottom:16px}
+                .seg-opt{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:.15s;background:var(--bg-card)}
+                .seg-opt:hover{border-color:var(--accent-soft);background:var(--bg-hover)}
+                .seg-opt.selected{border-color:var(--accent);background:var(--accent-soft)}
+                .seg-opt .seg-opt-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;background:var(--bg-soft);color:var(--text-muted)}
+                .seg-opt.selected .seg-opt-icon{background:var(--accent);color:white}
+                .seg-opt-body{flex:1;min-width:0}
+                .seg-opt-title{font-size:14px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+                .seg-opt-title .seg-opt-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--success-soft);color:var(--success);text-transform:uppercase;letter-spacing:.06em}
+                .seg-opt-title .seg-opt-tag.warn{background:var(--warn-soft);color:var(--warn)}
+                .seg-opt-desc{font-size:12.5px;color:var(--text-muted);line-height:1.5}
+                .seg-opt-radio{width:20px;height:20px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;margin-top:9px;position:relative;background:var(--bg-card)}
+                .seg-opt.selected .seg-opt-radio{border-color:var(--accent)}
+                .seg-opt.selected .seg-opt-radio::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--accent)}
+              </style>
+
+              <div class="seg-options">
+                <div class="seg-opt" id="opt-none" onclick="DMPAY_SEG.escolher(null)">
+                  <div class="seg-opt-radio"></div>
+                  <div class="seg-opt-icon"><i data-lucide="shield-off"></i></div>
+                  <div class="seg-opt-body">
+                    <div class="seg-opt-title">Sem 2FA</div>
+                    <div class="seg-opt-desc">Login só com e-mail e senha. Mais rápido, menos seguro. Não recomendado se sua conta tem dados financeiros.</div>
+                  </div>
+                </div>
+
+                <div class="seg-opt" id="opt-email" onclick="DMPAY_SEG.escolher('email')">
+                  <div class="seg-opt-radio"></div>
+                  <div class="seg-opt-icon"><i data-lucide="mail"></i></div>
+                  <div class="seg-opt-body">
+                    <div class="seg-opt-title">Código por e-mail <span class="seg-opt-tag">recomendado</span></div>
+                    <div class="seg-opt-desc">Todo login envia um código de 6 dígitos pro seu e-mail. Sem instalar app. Mais simples pra equipe não-técnica.</div>
+                  </div>
+                </div>
+
+                <div class="seg-opt" id="opt-totp" onclick="DMPAY_SEG.escolher('totp')">
+                  <div class="seg-opt-radio"></div>
+                  <div class="seg-opt-icon"><i data-lucide="key-round"></i></div>
+                  <div class="seg-opt-body">
+                    <div class="seg-opt-title">App autenticador (TOTP) <span class="seg-opt-tag warn">avançado</span></div>
+                    <div class="seg-opt-desc">Código gerado no Google Authenticator/Authy/1Password. Mais seguro (funciona offline, não depende de e-mail), mas exige instalar app.</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Box do enroll TOTP (aparece quando escolhe 'totp' e ainda não confirmou) -->
+              <div class="seg-card" id="seg-card-totp" style="display:none">
                 <div class="seg-card-head">
-                  <i data-lucide="key-round" style="color:var(--accent)"></i>
-                  <h3>Autenticação em 2 fatores (TOTP)</h3>
-                  <span class="seg-pill off" id="seg-pill-status">desativada</span>
+                  <i data-lucide="qr-code" style="color:var(--accent)"></i>
+                  <h3>Configurar app autenticador</h3>
+                  <span class="seg-pill off" id="seg-pill-totp">pendente</span>
                 </div>
-                <p id="seg-card-desc">Sua conta está protegida apenas pela senha. Ative o 2FA pra exigir um código do seu aplicativo autenticador todo login.</p>
                 <div class="seg-factors" id="seg-factors-list" style="display:none"></div>
-                <div class="seg-actions">
-                  <button class="btn btn-primary" id="btn-mfa-enroll" onclick="DMPAY_SEG.iniciarEnroll()">
-                    <i data-lucide="shield-plus"></i> Ativar 2FA
-                  </button>
-                  <button class="btn btn-danger" id="btn-mfa-unenroll" style="display:none" onclick="DMPAY_SEG.desativar()">
-                    <i data-lucide="shield-off"></i> Desativar 2FA
-                  </button>
-                </div>
 
                 <div class="seg-enroll" id="seg-enroll">
                   <div class="seg-step">
@@ -838,8 +876,8 @@
                   <i data-lucide="info" style="color:var(--text-muted)"></i>
                   <h3>Como funciona</h3>
                 </div>
-                <p>Depois de ativar, todo login no DM Pay vai pedir um código de 6 dígitos do seu app autenticador, além da senha. Sem o celular, ninguém entra — mesmo sabendo a senha.</p>
-                <p style="margin:0;color:var(--warn);font-size:12px"><i data-lucide="alert-triangle" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Importante: guarde o código secreto num lugar seguro caso perca o celular. Sem ele e sem o app, recuperar acesso vira manual.</p>
+                <p id="seg-info-text">Escolha um método acima. Depois de ativar, todo login no DM Pay vai pedir um código de 6 dígitos além da senha. Sem o segundo fator, ninguém entra — mesmo sabendo a senha.</p>
+                <p style="margin:0;color:var(--warn);font-size:12px"><i data-lucide="alert-triangle" style="width:14px;height:14px;display:inline-block;vertical-align:middle"></i> Se perder acesso ao e-mail (método e-mail) ou ao celular (método app), a recuperação é manual via suporte. Não troque de e-mail sem desativar 2FA antes.</p>
               </div>
             </div>
           </div>
@@ -992,51 +1030,67 @@
     // ===== Segurança / MFA =====
     window.DMPAY_SEG = (function(){
       var _factorIdEnroll = null;
+      var _metodoAtual = null;
+
+      function _selecionarOpt(metodo){
+        ['none','email','totp'].forEach(function(m){
+          const id = 'opt-' + (m === 'none' ? 'none' : m);
+          const el = document.getElementById(id);
+          if (!el) return;
+          const sel = (metodo === null && m === 'none') || metodo === m;
+          el.classList.toggle('selected', sel);
+        });
+      }
 
       async function carregar(){
         try {
-          const factors = await DMPAY_MFA.listFactors();
-          const ativos = factors.totp.filter(f => f.status === 'verified');
+          _metodoAtual = await DMPAY_MFA.getMethod();
+          _selecionarOpt(_metodoAtual);
+
           const status = document.getElementById('seg-status');
-          const pill = document.getElementById('seg-pill-status');
-          const desc = document.getElementById('seg-card-desc');
-          const list = document.getElementById('seg-factors-list');
-          const btnEnr = document.getElementById('btn-mfa-enroll');
-          const btnUn = document.getElementById('btn-mfa-unenroll');
           const tabBadge = document.getElementById('seg-tab-badge');
           const tabCheck = document.getElementById('seg-tab-check');
+          const cardTotp = document.getElementById('seg-card-totp');
+          const factorsList = document.getElementById('seg-factors-list');
 
-          if (ativos.length){
-            status.textContent = 'Ativo';
+          if (_metodoAtual === 'email'){
+            status.textContent = 'Por e-mail';
             status.className = 'status ok';
-            pill.textContent = 'ativada';
-            pill.className = 'seg-pill on';
-            desc.textContent = 'Sua conta está protegida com 2FA. Todo login pede um código do seu app autenticador.';
-            list.style.display = '';
-            list.innerHTML = ativos.map(f => '<div>📱 <b>' + (f.friendly_name || 'Autenticador') + '</b> · ativado em ' + new Date(f.created_at).toLocaleDateString('pt-BR') + '</div>').join('');
-            btnEnr.style.display = 'none';
-            btnUn.style.display = '';
-            btnUn.dataset.factorId = ativos[0].id;
             tabBadge.style.display = 'none';
             tabCheck.style.display = '';
+            cardTotp.style.display = 'none';
+          } else if (_metodoAtual === 'totp'){
+            status.textContent = 'Por app';
+            status.className = 'status ok';
+            tabBadge.style.display = 'none';
+            tabCheck.style.display = '';
+            // Mostra factor cadastrado, esconde enroll
+            const factors = await DMPAY_MFA.listFactors();
+            const ativos = factors.totp.filter(f => f.status === 'verified');
+            cardTotp.style.display = '';
+            document.getElementById('seg-pill-totp').textContent = 'configurado';
+            document.getElementById('seg-pill-totp').className = 'seg-pill on';
+            if (ativos.length){
+              factorsList.style.display = '';
+              factorsList.innerHTML = ativos.map(f => '<div>📱 <b>' + (f.friendly_name || 'Autenticador') + '</b> · ativado em ' + new Date(f.created_at).toLocaleDateString('pt-BR') + '</div>').join('');
+            }
+            document.getElementById('seg-enroll').classList.remove('show');
           } else {
-            status.textContent = 'Inativo';
+            status.textContent = 'Desativado';
             status.className = 'status';
-            pill.textContent = 'desativada';
-            pill.className = 'seg-pill off';
-            desc.textContent = 'Sua conta está protegida apenas pela senha. Ative o 2FA pra exigir um código do seu aplicativo autenticador todo login.';
-            list.style.display = 'none';
-            btnEnr.style.display = '';
-            btnUn.style.display = 'none';
             tabBadge.style.display = '';
             tabCheck.style.display = 'none';
+            cardTotp.style.display = 'none';
           }
 
-          // Limpa qualquer enroll pendente
-          const pendentes = factors.totp.filter(f => f.status === 'unverified');
-          for (const f of pendentes){
-            try { await DMPAY_MFA.unenroll(f.id); } catch(e){ console.warn('limpeza enroll pendente', e); }
-          }
+          // Limpa factors TOTP unverified pendentes
+          try {
+            const factors = await DMPAY_MFA.listFactors();
+            const pendentes = factors.totp.filter(f => f.status === 'unverified');
+            for (const f of pendentes){
+              try { await DMPAY_MFA.unenroll(f.id); } catch(e){}
+            }
+          } catch(e){ console.warn('[seg] limpeza pendentes', e); }
         } catch(err){
           console.error('[seg] carregar', err);
           document.getElementById('seg-status').textContent = 'Erro';
@@ -1044,16 +1098,61 @@
         if (window.lucide) lucide.createIcons();
       }
 
+      async function escolher(metodo){
+        // metodo: null | 'email' | 'totp'
+        if (metodo === _metodoAtual && metodo !== 'totp'){
+          // já é o atual, não faz nada (TOTP pode reentrar pra reconfigurar)
+          return;
+        }
+
+        if (metodo === null){
+          // Desativar
+          if (_metodoAtual !== null){
+            const ok = confirm('Desativar 2FA? Sua conta volta a ser protegida apenas pela senha.');
+            if (!ok) return;
+          }
+          try {
+            await DMPAY_MFA.disable();
+            await carregar();
+            if (window.showSaved) showSaved();
+          } catch(err){
+            alert('Erro ao desativar: ' + err.message);
+          }
+          return;
+        }
+
+        if (metodo === 'email'){
+          // Ativa imediatamente — não precisa de enroll, é só preferência
+          try {
+            // Se vinha do TOTP, limpa factors antes
+            if (_metodoAtual === 'totp'){
+              const factors = await DMPAY_MFA.listFactors();
+              for (const f of factors.totp){
+                try { await DMPAY_MFA.unenroll(f.id); } catch(e){}
+              }
+            }
+            await DMPAY_MFA.setMethod('email');
+            await carregar();
+            if (window.showSaved) showSaved();
+            alert('2FA por e-mail ativado. No próximo login, depois da senha, você vai receber um código de 6 dígitos no seu inbox.');
+          } catch(err){
+            alert('Erro: ' + err.message);
+          }
+          return;
+        }
+
+        if (metodo === 'totp'){
+          // Mostra fluxo de QR — só consolida em 'totp' depois do confirmar
+          document.getElementById('seg-card-totp').style.display = '';
+          await iniciarEnroll();
+          return;
+        }
+      }
+
       async function iniciarEnroll(){
-        const enrollDiv = document.getElementById('seg-enroll');
-        const btnEnr = document.getElementById('btn-mfa-enroll');
-        btnEnr.disabled = true;
         try {
           const r = await DMPAY_MFA.enroll();
           _factorIdEnroll = r.factorId;
-          // QR pode vir como SVG inline (<svg...>) ou data URL (data:image/svg+xml;utf8,<svg xmlns="..." ...>)
-          // Data URLs SVG do Supabase contêm aspas duplas — concatenar via innerHTML quebra o atributo src.
-          // Solução: criar <img> com setAttribute.
           const qrBox = document.getElementById('seg-qr');
           qrBox.innerHTML = '';
           if (r.qrSvg.indexOf('<svg') === 0) {
@@ -1067,12 +1166,14 @@
           document.getElementById('seg-secret').textContent = r.secret;
           document.getElementById('seg-code').value = '';
           document.getElementById('seg-error').classList.remove('show');
-          enrollDiv.classList.add('show');
-          document.getElementById('seg-code').focus();
+          document.getElementById('seg-enroll').classList.add('show');
+          document.getElementById('seg-card-totp').style.display = '';
+          if (window.lucide) lucide.createIcons();
+          setTimeout(function(){ document.getElementById('seg-code').focus(); }, 100);
         } catch(err){
           alert('Erro ao iniciar: ' + err.message);
-        } finally {
-          btnEnr.disabled = false;
+          // Volta seleção pro que tava
+          _selecionarOpt(_metodoAtual);
         }
       }
 
@@ -1089,6 +1190,7 @@
         btn.disabled = true;
         try {
           await DMPAY_MFA.verifyEnroll(_factorIdEnroll, code);
+          await DMPAY_MFA.setMethod('totp');
           _factorIdEnroll = null;
           document.getElementById('seg-enroll').classList.remove('show');
           await carregar();
@@ -1107,20 +1209,10 @@
           _factorIdEnroll = null;
         }
         document.getElementById('seg-enroll').classList.remove('show');
-      }
-
-      async function desativar(){
-        const btn = document.getElementById('btn-mfa-unenroll');
-        const confirma = confirm('Desativar 2FA? Sua conta volta a ser protegida apenas pela senha.');
-        if (!confirma) return;
-        btn.disabled = true;
-        try {
-          await DMPAY_MFA.unenroll(btn.dataset.factorId);
-          await carregar();
-        } catch(err){
-          alert('Erro: ' + err.message);
-        } finally {
-          btn.disabled = false;
+        // Volta seleção pro método atual
+        _selecionarOpt(_metodoAtual);
+        if (_metodoAtual !== 'totp'){
+          document.getElementById('seg-card-totp').style.display = 'none';
         }
       }
 
@@ -1130,7 +1222,6 @@
         catch(e){ alert('Copie manualmente: ' + txt); }
       }
 
-      // Carrega quando a aba Segurança é aberta pela primeira vez
       var _carregado = false;
       const _origSelTab = window.selTab;
       window.selTab = function(id, el){
@@ -1140,11 +1231,10 @@
           carregar();
         }
       };
-      // Também carrega no boot pra atualizar badge da tab
       window.addEventListener('dmpay-sb-ready', carregar, { once: true });
       if (window.sb) carregar();
 
-      return { iniciarEnroll, confirmar, cancelarEnroll, desativar, copiarSegredo };
+      return { escolher, iniciarEnroll, confirmar, cancelarEnroll, copiarSegredo };
     })();
   </script>
   <script src="js/configuracoes-bancos.js" defer></script>
