@@ -6,5 +6,5 @@ posthog.init('phc_CtiNTixDvDa6Dd5BdyY2EByA3Z6AzUhomCjmEcb2kJ4f', {
   person_profiles: 'identified_only',
   autocapture: true,
   capture_pageview: true,
-  session_recording: { maskAllInputs: true }
+  session_recording: { maskAllInputs: true, maskTextSelector: '*' }
 });
