@@ -4,8 +4,8 @@
     {
       "name": "dmpay",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-s", ".", "-l", "5678"],
-      "port": 5678
+      "runtimeArgs": ["serve", "-s", ".", "-l", "5679"],
+      "port": 5679
     }
   ]
 }
