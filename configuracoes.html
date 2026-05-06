@@ -213,7 +213,7 @@
       .form-row-2,.form-row-3{grid-template-columns:1fr}
     }
   </style>
-  <script src="dmpay-version.js?v=v05060848"></script>
+  <script src="dmpay-version.js?v=v05061221"></script>
   <script src="dmpay-mobile.js" defer></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
@@ -1051,10 +1051,19 @@
         try {
           const r = await DMPAY_MFA.enroll();
           _factorIdEnroll = r.factorId;
-          // QR vem como SVG inline ou data URL
+          // QR pode vir como SVG inline (<svg...>) ou data URL (data:image/svg+xml;utf8,<svg xmlns="..." ...>)
+          // Data URLs SVG do Supabase contêm aspas duplas — concatenar via innerHTML quebra o atributo src.
+          // Solução: criar <img> com setAttribute.
           const qrBox = document.getElementById('seg-qr');
-          if (r.qrSvg.startsWith('data:')) qrBox.innerHTML = '<img src="' + r.qrSvg + '" alt="QR Code 2FA">';
-          else qrBox.innerHTML = r.qrSvg;
+          qrBox.innerHTML = '';
+          if (r.qrSvg.indexOf('<svg') === 0) {
+            qrBox.innerHTML = r.qrSvg;
+          } else {
+            const img = document.createElement('img');
+            img.alt = 'QR Code 2FA';
+            img.src = r.qrSvg;
+            qrBox.appendChild(img);
+          }
           document.getElementById('seg-secret').textContent = r.secret;
           document.getElementById('seg-code').value = '';
           document.getElementById('seg-error').classList.remove('show');
