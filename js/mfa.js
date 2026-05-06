@@ -39,7 +39,18 @@ window.DMPAY_MFA = (function() {
 
   async function enroll() {
     await _ready();
-    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'DM Pay - ' + new Date().toISOString().slice(0, 10) });
+    // Limpa factors pendurados (unverified) antes de criar novo — evita colisão de friendlyName
+    try {
+      const lf = await sb.auth.mfa.listFactors();
+      const pendentes = ((lf.data && lf.data.all) || []).filter(function(f){ return f.status === 'unverified'; });
+      for (var i = 0; i < pendentes.length; i++) {
+        try { await sb.auth.mfa.unenroll({ factorId: pendentes[i].id }); }
+        catch(e){ console.warn('[mfa] unenroll pendente falhou', pendentes[i].id, e); }
+      }
+    } catch(e){ console.warn('[mfa] limpeza pré-enroll falhou', e); }
+    // Nome único por timestamp completo — nunca colide
+    const friendlyName = 'DM Pay - ' + Date.now();
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: friendlyName });
     if (error) throw error;
     return {
       factorId: data.id,
