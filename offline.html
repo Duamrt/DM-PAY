@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3B82F6">
+  <title>Sem conexão · DM Pay</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27><rect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%233B82F6%27/><text x=%2716%27 y=%2721%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-weight=%27800%27 font-size=%2712%27>DM</text></svg>">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      background:linear-gradient(180deg,#F9FAFB 0%,#EEF2FF 100%);
+      color:#111827;
+      display:grid;place-items:center;
+      padding:24px;
+      -webkit-font-smoothing:antialiased;
+    }
+    .card{
+      background:#fff;
+      border:1px solid #E5E7EB;
+      border-radius:16px;
+      padding:32px 24px;
+      max-width:380px;width:100%;
+      text-align:center;
+      box-shadow:0 20px 50px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
+    }
+    .icon{
+      width:64px;height:64px;
+      margin:0 auto 20px;
+      border-radius:16px;
+      background:linear-gradient(135deg,#3B82F6,#60A5FA);
+      color:#fff;
+      display:grid;place-items:center;
+      font-size:28px;font-weight:800;
+      box-shadow:0 8px 24px -4px rgba(59,130,246,.4);
+    }
+    h1{font-size:20px;font-weight:600;margin-bottom:8px;letter-spacing:-.01em}
+    p{color:#6B7280;font-size:14px;line-height:1.5;margin-bottom:20px}
+    .status{
+      display:inline-flex;align-items:center;gap:6px;
+      background:#FEF3C7;color:#92400E;
+      font-size:12px;font-weight:500;
+      padding:5px 10px;border-radius:999px;
+      margin-bottom:20px;
+    }
+    .status-dot{width:6px;height:6px;border-radius:50%;background:#F59E0B;animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    button{
+      width:100%;
+      background:#2563EB;color:#fff;border:0;
+      padding:12px 18px;border-radius:10px;
+      font-size:14px;font-weight:600;cursor:pointer;
+      font-family:inherit;
+      transition:.15s;
+    }
+    button:hover{background:#1D4ED8}
+    button:active{transform:scale(.98)}
+    .small{font-size:12px;color:#9CA3AF;margin-top:14px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">DM</div>
+    <div class="status"><span class="status-dot"></span>Sem conexão</div>
+    <h1>Você está offline</h1>
+    <p>Não conseguimos contatar o servidor. Verifique sua conexão e tente novamente — seus dados estão seguros.</p>
+    <button onclick="location.reload()">Tentar de novo</button>
+    <div class="small" id="last-sync"></div>
+  </div>
+  <script>
+    // Tenta voltar automaticamente quando a rede voltar
+    window.addEventListener('online', () => location.reload());
+    // Mostra última versão cacheada
+    if ('caches' in window) {
+      caches.keys().then(keys => {
+        const dm = keys.find(k => k.startsWith('dmpay'));
+        if (dm) document.getElementById('last-sync').textContent = 'Versão local: ' + dm.replace('dmpay-mobile-','');
+      });
+    }
+  </script>
+</body>
+</html>

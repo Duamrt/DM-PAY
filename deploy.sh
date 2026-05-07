@@ -14,6 +14,9 @@ sed -i "s/DMPAY_VERSION = 'v[^']*'/DMPAY_VERSION = '${VERSION}'/" dmpay-version.
 # Atualiza ?v= do script tag dmpay-version.js em todos os HTMLs (evita loop de reload por cache)
 find . -name "*.html" -not -path "./.git/*" -exec sed -i "s|dmpay-version\.js[^\"']*|dmpay-version.js?v=${VERSION}|g" {} \;
 
+# Cache-bust também o sentry-init.js (mesma versão)
+find . -name "*.html" -not -path "./.git/*" -exec sed -i "s|js/sentry-init\.js[^\"']*|js/sentry-init.js?v=${VERSION}|g" {} \;
+
 git add -A
 git commit -m "${VERSION} ${MSG}"
 git push origin dev
