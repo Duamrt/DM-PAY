@@ -130,9 +130,29 @@ def sql_connect(cfg) -> pyodbc.Connection:
     return cn
 
 
+def _supabase_creds(cfg):
+    """Retorna (url, service_key) preferindo variáveis de ambiente.
+
+    Fonte da verdade (em ordem):
+      1. Env vars DMSYNC_SUPABASE_URL / DMSYNC_SUPABASE_SECRET_KEY
+      2. Seção [supabase] do config.ini (legacy — mantém compatibilidade)
+
+    Mover a chave pra env var tira ela do arquivo plaintext do projeto.
+    No Windows: `setx DMSYNC_SUPABASE_SECRET_KEY "sb_secret_..."` (User scope).
+    """
+    url = os.environ.get("DMSYNC_SUPABASE_URL") or cfg.get("supabase", "url", fallback="").strip() or None
+    key = os.environ.get("DMSYNC_SUPABASE_SECRET_KEY") or cfg.get("supabase", "service_role_key", fallback="").strip() or None
+    if not url or not key:
+        sys.exit("Credenciais Supabase ausentes. Defina env vars DMSYNC_SUPABASE_URL e DMSYNC_SUPABASE_SECRET_KEY (preferido) ou preencha config.ini [supabase].")
+    legacy_key = cfg.get("supabase", "service_role_key", fallback="").strip()
+    if legacy_key and not os.environ.get("DMSYNC_SUPABASE_SECRET_KEY"):
+        LOG.warning("[security] service_role_key ainda em config.ini (plaintext). Migre para env var DMSYNC_SUPABASE_SECRET_KEY e limpe a chave do arquivo.")
+    return url, key
+
+
 def sb_request(cfg, method, path, params=None, json_body=None, prefer=None):
-    base = cfg["supabase"]["url"].rstrip("/")
-    key = cfg["supabase"]["service_role_key"]
+    base, key = _supabase_creds(cfg)
+    base = base.rstrip("/")
     url = f"{base}/rest/v1/{path}"
     headers = {
         "apikey": key,
