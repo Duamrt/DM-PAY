@@ -224,8 +224,8 @@
     @media (max-width:600px){body{grid-template-columns:1fr}.sidebar{display:none}.kpi-grid{grid-template-columns:repeat(2,1fr)}.drawer{width:100%}.cond-grid{grid-template-columns:1fr}}
   </style>
   <script src="https://browser.sentry-cdn.com/10.51.0/bundle.replay.min.js" integrity="sha384-Ep6YoHS44q8X5C4rquklASg21nwJksP31hvIKkeg3h5F/dfA+mYz0liIh8lwBrQm" crossorigin="anonymous"></script>
-  <script src="js/sentry-init.js?v=v05070638"></script>
-  <script src="dmpay-version.js?v=v05070638"></script>
+  <script src="js/sentry-init.js?v=v05101253"></script>
+  <script src="dmpay-version.js?v=v05101253"></script>
   <script src="dmpay-mobile.js" defer></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
@@ -611,19 +611,21 @@
         tbody.innerHTML = '<tr><td colspan="6" style="padding:48px 16px;text-align:center;color:var(--text-muted)">Nenhum fornecedor cadastrado ainda.</td></tr>';
         return;
       }
+      const esc = s => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       tbody.innerHTML = data.map(f => {
+        const cnpjLimpo = (f.cnpj || '').replace(/\D/g, '');
         const doc = f.tipo_pessoa === 'PF'
-          ? (f.cnpj ? '(CPF)' : 'PF s/ doc')
-          : (f.cnpj ? f.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : '—');
+          ? (cnpjLimpo ? '(CPF)' : 'PF s/ doc')
+          : (cnpjLimpo ? cnpjLimpo.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : '—');
         const badge = f.tipo_pessoa === 'PF'
           ? '<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:4px;padding:1px 5px;font-weight:600;margin-left:4px">PF</span>'
           : '';
         return `<tr>
           <td>
-            <div style="font-weight:500">${f.legal_name}${badge}</div>
-            <div class="forn-cnpj">${doc}${f.observacao ? ' · ' + f.observacao : ''}</div>
+            <div style="font-weight:500">${esc(f.legal_name)}${badge}</div>
+            <div class="forn-cnpj">${esc(doc)}${f.observacao ? ' · ' + esc(f.observacao) : ''}</div>
           </td>
-          <td style="color:var(--text-muted);font-size:12px">${f.city || '—'}</td>
+          <td style="color:var(--text-muted);font-size:12px">${esc(f.city) || '—'}</td>
           <td style="color:var(--text-muted);font-size:12px">—</td>
           <td class="num">—</td>
           <td class="ctr">—</td>

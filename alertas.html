@@ -286,8 +286,8 @@
 </div>
 
   <script src="https://browser.sentry-cdn.com/10.51.0/bundle.replay.min.js" integrity="sha384-Ep6YoHS44q8X5C4rquklASg21nwJksP31hvIKkeg3h5F/dfA+mYz0liIh8lwBrQm" crossorigin="anonymous"></script>
-  <script src="js/sentry-init.js?v=v05070638"></script>
-<script src="dmpay-version.js?v=v05070638"></script>
+  <script src="js/sentry-init.js?v=v05101253"></script>
+<script src="dmpay-version.js?v=v05101253"></script>
 <script src="dmpay-mobile.js" defer></script>
 <script src="js/supabase.js"></script>
 <script src="js/auth.js"></script>
@@ -381,17 +381,18 @@
       if (window.lucide) lucide.createIcons();
       return;
     }
+    const esc = s => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     tbody.innerHTML = rows.map(c => `
-      <div class="table-row" onclick="openDrawer('${c.customer_id}')">
+      <div class="table-row" onclick="openDrawer('${esc(c.customer_id)}')">
         <div>
-          <div class="cust-name">${c.name}</div>
-          ${c.collection_notes ? `<div class="cust-note">${c.collection_notes}</div>` : ''}
+          <div class="cust-name">${esc(c.name)}</div>
+          ${c.collection_notes ? `<div class="cust-note">${esc(c.collection_notes)}</div>` : ''}
         </div>
         <div class="val-red">R$ ${fmt(c.total)}</div>
         <div>${daysBadge(c.max_days)}</div>
         <div class="boleto-count">${(c.boleto_count || c.boletos.length)} boleto${(c.boleto_count || c.boletos.length) > 1 ? 's' : ''}</div>
         <div>${statusBadge(c.collection_status)}</div>
-        <div><button class="btn-icon" onclick="event.stopPropagation();openDrawer('${c.customer_id}')"><i data-lucide="chevron-right"></i></button></div>
+        <div><button class="btn-icon" onclick="event.stopPropagation();openDrawer('${esc(c.customer_id)}')"><i data-lucide="chevron-right"></i></button></div>
       </div>`).join('');
     if (window.lucide) lucide.createIcons();
   }
@@ -498,7 +499,7 @@
           return `
             <div class="boleto-item">
               <div>
-                <div class="boleto-desc">${b.description || 'Boleto'}</div>
+                <div class="boleto-desc">${esc(b.description || 'Boleto')}</div>
                 <div class="boleto-meta">Venceu ${b.due_date.split('-').reverse().join('/')} · ${dias}d em atraso</div>
               </div>
               <div class="boleto-val">R$ ${fmt(b.amount)}</div>

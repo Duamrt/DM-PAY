@@ -77,7 +77,6 @@ serve(async (req) => {
     });
   }
 
-  // Dono/admin só cria na própria empresa
   const isPlatformAdmin = caller.company_id === MASTER_COMPANY;
   if (!isPlatformAdmin && caller.company_id !== company_id) {
     return new Response(JSON.stringify({ error: "Acesso negado" }), {
@@ -88,26 +87,45 @@ serve(async (req) => {
   const validRoles = ["admin", "financeiro", "viewer"];
   const memberRole = validRoles.includes(role) ? role : "viewer";
 
-  // 1. Criar usuário no Auth
+  const emailLower = String(email).trim().toLowerCase();
+
+  // 1. Adiciona email na allowlist (one-shot consumida pelo trigger block_public_signup).
+  // Sem essa linha o próximo createUser é bloqueado por public_signup_disabled.
+  const { error: allowErr } = await admin.from("dmp_signup_allowlist")
+    .upsert({ email_lower: emailLower, added_by: user.id }, { onConflict: "email_lower" });
+  if (allowErr) {
+    return new Response(JSON.stringify({ error: "Falha ao autorizar email: " + allowErr.message }), {
+      status: 500, headers: { "Content-Type": "application/json", ...CORS },
+    });
+  }
+
+  // 2. Cria usuário no Auth.
+  // app_metadata.invited_by_admin sinaliza pro handle_new_user pular criação de empresa
+  // (Edge Function controla company_id+role no upsert do profile abaixo).
   const { data: authData, error: createErr } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
+    app_metadata: { invited_by_admin: true },
   });
   if (createErr) {
+    // Failsafe: limpa allowlist se createUser falhou (trigger só consome se INSERT chegou)
+    await admin.from("dmp_signup_allowlist").delete().eq("email_lower", emailLower);
     return new Response(JSON.stringify({ error: createErr.message }), {
       status: 400, headers: { "Content-Type": "application/json", ...CORS },
     });
   }
 
-  // 2. Criar profile vinculado à empresa
-  const { error: profErr } = await admin.from("profiles").insert({
+  // 3. Upsert profile vinculado à empresa.
+  // Usa upsert (em vez de insert) como defesa em profundidade: se o trigger por algum motivo
+  // criar profile prematuramente, este upsert sobrescreve com company_id+role corretos.
+  const { error: profErr } = await admin.from("profiles").upsert({
     id:         authData.user.id,
     name:       name || null,
     email,
     company_id,
     role:       memberRole,
-  });
+  }, { onConflict: "id" });
   if (profErr) {
     await admin.auth.admin.deleteUser(authData.user.id);
     return new Response(JSON.stringify({ error: profErr.message }), {

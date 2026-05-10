@@ -13,3 +13,8 @@ dist/
 build/
 .vscode/
 .idea/
+
+# Relatorios de auditoria de seguranca (rejeitos locais, nao subir pro repo publico)
+AUDIT-DMPAY-*.md
+AUDIT-DMPAY-*.mda
+REVIEW-ARQUITETURA-DMPAY.md

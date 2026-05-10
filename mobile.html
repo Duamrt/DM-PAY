@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://browser.sentry-cdn.com/10.51.0/bundle.replay.min.js" integrity="sha384-Ep6YoHS44q8X5C4rquklASg21nwJksP31hvIKkeg3h5F/dfA+mYz0liIh8lwBrQm" crossorigin="anonymous"></script>
-  <script src="js/sentry-init.js?v=v05070638"></script>
-<script src="dmpay-version.js?v=v05070638"></script>
+  <script src="js/sentry-init.js?v=v05101253"></script>
+<script src="dmpay-version.js?v=v05101253"></script>
 <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js', {updateViaCache:'none'});
 // Se a página continuar invisível em 5s, redireciona pro login
 setTimeout(()=>{if(document.documentElement.style.visibility==='hidden')location.href='login.html?redirect=mobile.html';},5000);
@@ -654,11 +654,12 @@ async function loadSangria() {
   const el = document.getElementById('svSangrias');
   if (!el) return;
   if (!DATA.sangrias.length) { el.innerHTML='<div class="empty">Nenhuma sangria hoje.</div>'; return; }
+  const esc = s => s == null ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   el.innerHTML = `<div class="list-card">${DATA.sangrias.map(r=>`
     <div class="list-item">
       <div>
-        <div class="li-name" style="color:var(--danger)">${r.operator||'Operador'}</div>
-        <div class="li-sub">${r.notes||'Retirada de caixa'}</div>
+        <div class="li-name" style="color:var(--danger)">${esc(r.operator||'Operador')}</div>
+        <div class="li-sub">${esc(r.notes||'Retirada de caixa')}</div>
       </div>
       <div class="li-val c-danger">−${fmt(r.amount)}</div>
     </div>`).join('')}
