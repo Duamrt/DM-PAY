@@ -212,8 +212,8 @@
     @media (max-width:600px){body{grid-template-columns:1fr}.sidebar{display:none}}
   </style>
   <script src="https://browser.sentry-cdn.com/10.51.0/bundle.replay.min.js" integrity="sha384-Ep6YoHS44q8X5C4rquklASg21nwJksP31hvIKkeg3h5F/dfA+mYz0liIh8lwBrQm" crossorigin="anonymous"></script>
-  <script src="js/sentry-init.js?v=v05120659"></script>
-  <script src="dmpay-version.js?v=v05120659"></script>
+  <script src="js/sentry-init.js?v=v05120704"></script>
+  <script src="dmpay-version.js?v=v05120704"></script>
   <script src="dmpay-mobile.js" defer></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
@@ -264,7 +264,10 @@
     <header class="topbar">
       <div class="breadcrumb"><b>Dashboard</b></div>
       <div class="topbar-actions">
-        <button class="icon-btn" onclick="toggleTheme()" title="Tema"><i data-lucide="moon"></i></button>
+        <button class="icon-btn" onclick="toggleTheme()" aria-label="Alternar tema">
+          <i data-lucide="sun" class="theme-icon-dark" style="display:none"></i>
+          <i data-lucide="moon" class="theme-icon-light"></i>
+        </button>
         <button class="icon-btn"><i data-lucide="help-circle"></i></button>
         <div class="avatar"></div>
       </div>
@@ -413,13 +416,22 @@
   </div>
 
   <script>
+    function syncThemeIcons() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const sun = document.querySelector('.theme-icon-dark');
+      const moon = document.querySelector('.theme-icon-light');
+      if (sun) sun.style.display = isDark ? '' : 'none';
+      if (moon) moon.style.display = isDark ? 'none' : '';
+    }
     function toggleTheme() {
       const h = document.documentElement;
       const next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       h.setAttribute('data-theme', next);
       localStorage.setItem('dmpay-theme', next);
+      syncThemeIcons();
       setTimeout(renderChart, 30);
     }
+    syncThemeIcons();
     const saved = localStorage.getItem('dmpay-theme');
     if (saved) document.documentElement.setAttribute('data-theme', saved);
 
