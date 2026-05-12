@@ -219,7 +219,8 @@
     const vencRows = document.querySelectorAll('.venc-row');
     vencRows.forEach((row, i) => {
       const p = proximos[i];
-      if (!p) { row.style.display = 'none'; return; }
+      if (!p) { row.style.display = 'none'; row.classList.remove('skel'); return; }
+      row.classList.remove('skel');
       row.style.display = '';
       const [y,m,d] = p.due_date.split('-');
       const dt = new Date(p.due_date + 'T00:00:00');
