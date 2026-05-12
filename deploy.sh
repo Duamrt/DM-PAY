@@ -73,6 +73,12 @@ find . -name "*.html" -not -path "./.git/*" -exec sed -i "s|dmpay-version\.js[^\
 find . -name "*.html" -not -path "./.git/*" -exec sed -i "s|js/sentry-init\.js[^\"']*|js/sentry-init.js?v=${VERSION}|g" {} \;
 
 git add -A
+
+# Pre-deploy check — varre diff staged contra secrets/SQL destrutivo/RLS aberta
+if [ "$SKIP_CHECK" -ne 1 ] && [ -f "$HOME/.claude/scripts/pre-deploy-check.sh" ]; then
+  bash "$HOME/.claude/scripts/pre-deploy-check.sh" || exit 1
+fi
+
 git commit -m "${VERSION} ${MSG}"
 git push origin dev
 

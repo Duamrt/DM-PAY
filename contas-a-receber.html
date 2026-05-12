@@ -11,12 +11,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@1.14.0/dist/umd/lucide.min.js" integrity="sha384-jB6ZXxyEV94yzTxgLMvrwwNbn/pTTqwrMDI+v8FV5o5FnId/yn3DJwSdrDujU9A7" crossorigin="anonymous"></script>
   <script src="https://browser.sentry-cdn.com/10.51.0/bundle.replay.min.js" integrity="sha384-Ep6YoHS44q8X5C4rquklASg21nwJksP31hvIKkeg3h5F/dfA+mYz0liIh8lwBrQm" crossorigin="anonymous"></script>
-  <script src="js/sentry-init.js?v=v05101253"></script>
-  <script src="dmpay-version.js?v=v05101253"></script>
+  <script src="js/sentry-init.js?v=v05120656"></script>
+  <script src="dmpay-version.js?v=v05120656"></script>
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/audit.js"></script>
   <script src="js/auth-guard.js"></script>
+  <script src="dmpay-mobile.js" defer></script>
   <script src="js/contas-receber.js" defer></script>
   <script src="js/export-excel.js" defer></script>
   <style>
@@ -106,7 +107,7 @@
     .status-chip.active{background:var(--accent);color:white;border-color:var(--accent)}
     .status-chip .cnt{font-weight:600;opacity:.85}
 
-    .table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .table-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow-x:auto;overflow-y:hidden}
     table{width:100%;border-collapse:collapse;font-size:13px}
     th{font-size:10.5px;font-weight:600;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:12px 16px;background:var(--bg-soft);border-bottom:1px solid var(--border);white-space:nowrap}
     th.num{text-align:right}
