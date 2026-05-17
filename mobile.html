@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://browser.sentry-cdn.com/10.51.0/bundle.replay.min.js" integrity="sha384-Ep6YoHS44q8X5C4rquklASg21nwJksP31hvIKkeg3h5F/dfA+mYz0liIh8lwBrQm" crossorigin="anonymous"></script>
-  <script src="js/sentry-init.js?v=v05120706"></script>
-<script src="dmpay-version.js?v=v05120706"></script>
+  <script src="js/sentry-init.js?v=v05171204"></script>
+<script src="dmpay-version.js?v=v05171204"></script>
 <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js', {updateViaCache:'none'});
 // Se a página continuar invisível em 5s, redireciona pro login
 setTimeout(()=>{if(document.documentElement.style.visibility==='hidden')location.href='login.html?redirect=mobile.html';},5000);
@@ -185,6 +185,31 @@ div[style*="monospace"]{display:none!important}
   padding:36px 20px;text-align:center;color:var(--text-muted);font-size:13px;font-weight:500;
 }
 
+/* CARD ALERTA — Fluxo de caixa torto (boletos de fornecedor sem baixa) */
+.caixa-torto-card{
+  background:linear-gradient(135deg,#DC2626 0%,#F97316 100%);
+  border-radius:18px;padding:20px;margin-bottom:18px;color:#fff;position:relative;overflow:hidden;
+  box-shadow:0 12px 40px -10px rgba(220,38,38,.45);
+}
+.caixa-torto-card::before{
+  content:'';position:absolute;top:-40%;right:-15%;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.18),transparent 60%);pointer-events:none;
+}
+.ct-icon{font-size:22px;margin-bottom:6px;position:relative;line-height:1}
+.ct-label{font-size:10.5px;font-weight:700;letter-spacing:.08em;opacity:.85;margin-bottom:6px;position:relative;text-transform:uppercase}
+.ct-value{font-size:22px;font-weight:700;letter-spacing:-0.02em;line-height:1.15;margin-bottom:10px;position:relative}
+.ct-detail{font-size:12.5px;line-height:1.55;opacity:.95;margin-bottom:14px;position:relative}
+.ct-detail strong{font-weight:700}
+.ct-action{
+  background:rgba(255,255,255,.22);color:#fff;border:none;
+  padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;
+  width:100%;cursor:pointer;letter-spacing:-0.01em;
+  backdrop-filter:blur(8px);position:relative;
+  transition:all 150ms;font-family:inherit;
+}
+.ct-action:active{background:rgba(255,255,255,.32);transform:scale(.98)}
+
 /* CRESCIMENTO YoY — Mercury hero */
 .yoy-hero{
   background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 100%);
@@ -281,6 +306,20 @@ div[style*="monospace"]{display:none!important}
 <div class="content-area">
 <!-- VIEW: RESUMO -->
 <div class="view active" id="viewResumo">
+  <!-- CARD ALERTA: Fluxo de caixa torto (boletos de fornecedor sem baixa) -->
+  <div class="caixa-torto-card" id="caixaTortoCard" style="display:none">
+    <div class="ct-icon">💰</div>
+    <div class="ct-label">Fluxo de caixa pode estar torto</div>
+    <div class="ct-value">R$ <span id="ctTotalCompact">—</span> podem já estar pagos</div>
+    <div class="ct-detail">
+      <span id="ctCount">—</span> boletos de fornecedor vencidos sem baixa no sistema.<br>
+      <strong id="ctUserName">Operador</strong> não registra pagamentos há <span id="ctDias">—</span> dias.
+    </div>
+    <button class="ct-action" type="button" onclick="falarComOperador()">
+      📱 Falar com <span id="ctActionName">operador</span>
+    </button>
+  </div>
+
   <div class="kpi-grid">
     <div class="kpi-card" onclick="irPara('viewVendas')">
       <div class="kpi-label">Vendas hoje</div>
@@ -327,7 +366,7 @@ div[style*="monospace"]{display:none!important}
     <div class="yoy-trend-title">Últimos meses — comparativo anual</div>
     <div id="yoyBars"><div style="color:var(--text-muted);font-size:12px">carregando…</div></div>
     <div class="yoy-proj-row">
-      <div class="yoy-proj-label">🔮 Projeção 2027</div>
+      <div class="yoy-proj-label">🔮 Estimativa 2027</div>
       <div class="yoy-proj-val" id="yoyProjVal">—</div>
     </div>
   </div>
@@ -520,8 +559,58 @@ waitAuth(() => {
   const tag = document.getElementById('brandTag');
   if (tag) tag.textContent = window.DMPAY_COMPANY?.trade_name || window.DMPAY_COMPANY?.legal_name || 'DM Pay';
   atualizarDataLabel();
-  Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado(), loadYoY()]);
+  Promise.all([loadVendas(), loadCaixas(), loadSangria(), loadReceber(), loadRecebido(), loadPagar(), loadFiado(), loadYoY(), loadCaixaTorto()]);
 });
+
+/* ── CAIXA TORTO (boletos de fornecedor sem baixa) ── */
+function fmtCompact(v) {
+  const n = Number(v || 0);
+  if (n >= 1000000) return (n/1000000).toFixed(1).replace('.',',') + ' mi';
+  if (n >= 1000) return Math.round(n/1000).toLocaleString('pt-BR') + ' mil';
+  return Math.round(n).toString();
+}
+
+function capitalize(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+async function loadCaixaTorto() {
+  try {
+    const { data, error } = await sb.rpc('get_payables_situation', { p_company_id: CID });
+    if (error) { console.warn('get_payables_situation', error); return; }
+    const r = data && data[0];
+    const card = document.getElementById('caixaTortoCard');
+    if (!card) return;
+    if (!r || !r.vencidos_count || r.vencidos_count === 0) { card.style.display = 'none'; return; }
+    DATA.caixaTorto = r;
+    const primeiroNome = capitalize((r.operador_name || 'operador').split(' ')[0]);
+    document.getElementById('ctTotalCompact').textContent = fmtCompact(r.vencidos_total);
+    document.getElementById('ctCount').textContent = Number(r.vencidos_count).toLocaleString('pt-BR');
+    document.getElementById('ctDias').textContent = r.dias_sem_baixa ?? '?';
+    document.getElementById('ctUserName').textContent = primeiroNome;
+    document.getElementById('ctActionName').textContent = primeiroNome;
+    card.style.display = 'block';
+  } catch(e) { console.warn('loadCaixaTorto erro', e); }
+}
+
+function falarComOperador() {
+  const r = DATA.caixaTorto;
+  if (!r) return;
+  const raw = (r.operador_phone || '').replace(/\D/g, '');
+  if (!raw) {
+    alert('Telefone do operador não cadastrado. Configure em Alertas > Destinatários.');
+    return;
+  }
+  // Normaliza pra formato internacional E.164 brasileiro
+  let phone = raw;
+  if (!phone.startsWith('55')) phone = '55' + phone;
+  const primeiroNome = capitalize((r.operador_name || 'operador').split(' ')[0]);
+  const totalFmt = Number(r.vencidos_total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const msg = `${primeiroNome}, tem ${r.vencidos_count} boletos de fornecedor vencidos sem baixa (R$ ${totalFmt}). Você não dá baixa há ${r.dias_sem_baixa} dias. Atualiza aí, meu fluxo de caixa tá todo torto.`;
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
 
 /* ── VENDAS ── */
 async function loadVendas() {
