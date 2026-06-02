@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://browser.sentry-cdn.com/10.51.0/bundle.replay.min.js" integrity="sha384-Ep6YoHS44q8X5C4rquklASg21nwJksP31hvIKkeg3h5F/dfA+mYz0liIh8lwBrQm" crossorigin="anonymous"></script>
-  <script src="js/sentry-init.js?v=v06021423"></script>
-<script src="dmpay-version.js?v=v06021423"></script>
+  <script src="js/sentry-init.js?v=v06021623"></script>
+<script src="dmpay-version.js?v=v06021623"></script>
 <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js', {updateViaCache:'none'});
 // Se a página continuar invisível em 5s, redireciona pro login
 setTimeout(()=>{if(document.documentElement.style.visibility==='hidden')location.href='login.html?redirect=mobile.html';},5000);
@@ -504,7 +504,7 @@ async function reloadVendasView(d) {
   const elF = document.getElementById('svFormas');
   if(elF) elF.innerHTML = (pos.length+neg.length)===0
     ? '<div class="empty">Sem vendas neste dia.</div>'
-    : `<div class="list-card">${[...pos,...neg].map(([k,v])=>`<div class="list-item"><div class="li-name">${nomeForma(k)}</div><div class="li-val ${v<0||k==='troco'?'c-danger':'c-success'}">${fmt(v)}</div></div>`).join('')}</div>`;
+    : `<div class="list-card">${[...pos,...neg].map(([k,v])=>`<div class="list-item"><div class="li-name">${esc(nomeForma(k))}</div><div class="li-val ${v<0||k==='troco'?'c-danger':'c-success'}">${fmt(v)}</div></div>`).join('')}</div>`;
   // sangrias
   const sang = sRes.data || [];
   const totSang = sang.reduce((s,r)=>s+Number(r.amount||0),0);
@@ -665,7 +665,7 @@ function renderVendas() {
     : `<div class="list-card">${todasFormas.map(([k,v])=>{
         const isNeg = v < 0 || k==='troco';
         return `<div class="list-item">
-          <div class="li-name">${nomeForma(k)}</div>
+          <div class="li-name">${esc(nomeForma(k))}</div>
           <div class="li-val ${isNeg?'c-danger':'c-success'}">${fmt(v)}</div>
         </div>`;
       }).join('')}</div>`;
@@ -678,14 +678,14 @@ function renderVendas() {
         return `<div class="pdv-card">
           <div class="pdv-head" onclick="togglePdv('pdvops-${i}')">
             <div>
-              <div class="pdv-nome">${p.nome}</div>
+              <div class="pdv-nome">${esc(p.nome)}</div>
               <div class="pdv-cupons">${p.cupons} cupons</div>
             </div>
             <div class="pdv-total">${fmt(p.total)}</div>
           </div>
           ${ops.length ? `<div class="pdv-ops" id="pdvops-${i}">${ops.map(op=>`
             <div class="op-row">
-              <span class="op-nome">${op.nome}</span>
+              <span class="op-nome">${esc(op.nome)}</span>
               <span class="op-val">${fmt(op.total)}</span>
             </div>`).join('')}</div>` : ''}
         </div>`;
