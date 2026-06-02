@@ -139,6 +139,7 @@
 
   } catch(e) {
     console.error('[DMPAY guard]', e);
-    html.style.visibility = ''; // restaura em erro — não travar a tela
+    // Erro no guard (Supabase offline, config ausente, etc.) — não revelar HTML protegido
+    location.replace('login.html?err=guard');
   }
 })();
