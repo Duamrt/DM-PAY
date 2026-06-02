@@ -17,8 +17,8 @@ SaaS B2B de controle financeiro para mercados, farmácias, autopeças.
 |---|---|
 | Frontend | HTML + CSS + JS vanilla (sem framework) |
 | Backend | Supabase (PostgreSQL) — projeto `ufxldjdppaonskxhmosi` |
-| Deploy | `./deploy.sh "mensagem"` → GitHub Pages (branch `main`) |
-| Branches | `dev` → `main` (merge automático após validar) |
+| Deploy | `./deploy.sh "mensagem"` — commita em `dev`, depois força `main = dev` (cache busting automático) |
+| Branches | `dev` é a fonte da verdade. `main` é espelho de produção sincronizado pelo `deploy.sh`. **Nunca commitar direto em `main`** |
 | Repo local | `~/dmpay/` e `~/OneDrive/Documentos/DM PAY/` (Codex) |
 | URL produção | `dmpayapp.com.br` |
 | Preview | `https://duamrt.github.io/DM-PAY/` |

@@ -1,5 +1,6 @@
 -- Onda 0 Mikael (2026-05-17): RPC que alimenta o card "Fluxo de Caixa Torto"
 -- na home mobile. Foi aplicada via SQL direto — versionada aqui retroativamente.
+-- Só authenticated pode chamar; anon e PUBLIC bloqueados explicitamente.
 CREATE OR REPLACE FUNCTION public.get_payables_situation(
   p_company_id uuid,
   p_today date DEFAULT CURRENT_DATE
@@ -90,3 +91,6 @@ BEGIN
     v_name;
 END;
 $function$;
+
+REVOKE EXECUTE ON FUNCTION public.get_payables_situation(uuid, date) FROM PUBLIC, anon;
+GRANT  EXECUTE ON FUNCTION public.get_payables_situation(uuid, date) TO   authenticated;
