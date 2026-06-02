@@ -14,7 +14,8 @@
     const efetivo = window.DMPAY_DIAUTIL.proximo(iso);
     return Math.max(Math.round((HOJE - efetivo) / 86400000), 0);
   }
-  function ymThis(){ return HOJE.toISOString().slice(0,7); }
+  function localISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function ymThis(){ return HOJE.getFullYear()+'-'+String(HOJE.getMonth()+1).padStart(2,'0'); }
 
   let _initTries = 0, _initDone = false;
   async function init() {
@@ -46,7 +47,7 @@
     const fim30 = new Date(HOJE); fim30.setDate(fim30.getDate() + 30);
 
     const inicio30 = new Date(HOJE); inicio30.setDate(inicio30.getDate() - 30);
-    const inicio30iso = inicio30.toISOString().slice(0,10);
+    const inicio30iso = localISO(inicio30);
 
     // Platform admin sem view-as: sem filtro (vê todos os tenants)
     // Com view-as ativo: DMPAY_COMPANY já foi sobrescrito pro tenant — isPlatformAdmin=false, filtra normalmente
@@ -55,7 +56,7 @@
     // Receivables: apenas open/overdue (received não é usado no dashboard),
     // com lookback de 2 anos pra capturar inadimplência antiga sem trazer tudo
     const inicio2y = new Date(HOJE); inicio2y.setFullYear(inicio2y.getFullYear() - 2);
-    const inicio2yISO = inicio2y.toISOString().slice(0, 10);
+    const inicio2yISO = localISO(inicio2y);
 
     const [pagsR, pagsPaidR, recsR, recsReceivedR, salesR, sangR] = await Promise.all([
       qPay(sb.from('payables').select('id, amount, due_date, paid_at, status, description, suppliers(legal_name)'))
@@ -133,10 +134,10 @@
 
     // === VENDAS REAIS (daily_sales agregado) ===
     const ontem = new Date(HOJE); ontem.setDate(ontem.getDate() - 1);
-    const ontemIso = ontem.toISOString().slice(0,10);
+    const ontemIso = localISO(ontem);
     const inicioSemana = new Date(HOJE); inicioSemana.setDate(inicioSemana.getDate() - 7);
-    const inicioSemanaIso = inicioSemana.toISOString().slice(0,10);
-    const inicioMes = new Date(HOJE.getFullYear(), HOJE.getMonth(), 1).toISOString().slice(0,10);
+    const inicioSemanaIso = localISO(inicioSemana);
+    const inicioMes = localISO(new Date(HOJE.getFullYear(), HOJE.getMonth(), 1));
 
     const vendeuOntem = SALES.filter(s => s.sale_date === ontemIso).reduce((s,v) => s + Number(v.amount), 0);
     const vendeuSemana = SALES.filter(s => s.sale_date >= inicioSemanaIso).reduce((s,v) => s + Number(v.amount), 0);
@@ -256,7 +257,7 @@
       const labels30 = []; const fat30 = []; const rec30 = []; const sai30 = [];
       for (let i = 29; i >= 0; i--) {
         const d = new Date(HOJE); d.setDate(d.getDate() - i);
-        const iso = d.toISOString().slice(0,10);
+        const iso = localISO(d);
         labels30.push(d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}));
         // Faturado = vendas geradas (a_prazo e à vista), exclui 'recebimento'
         const faturadoDia = SALES.filter(s => s.sale_date === iso && s.payment_method !== 'recebimento').reduce((s,v)=>s+Number(v.amount), 0);
