@@ -27,7 +27,7 @@ window.DMPAY = (function() {
     if (!user) { _session = { user: null, profile: null, company: null }; return _session; }
     const { data: profile } = await sb
       .from('profiles')
-      .select('*, companies(*)')
+      .select('id, name, email, role, permissions, phone, avatar_url, company_id, mfa_method, companies(id, cnpj, legal_name, trade_name, plan, status, trial_until, city, state, logo_url, phone, email, whatsapp, dias_atraso, bloqueado_em, asaas_customer_id)')
       .eq('id', user.id)
       .maybeSingle();
     _session = {
@@ -66,7 +66,7 @@ window.DMPAY = (function() {
     // acessar meu-plano.html (pra regularizar) ou sair (signOut). Platform admin escapa.
     // 'suspensa' é setado pelo cron asaas-checar-atrasos quando dias_atraso > GRACE_DAYS (7)
     const PAGINAS_LIVRES_BLOQUEIO = ['meu-plano.html', 'login.html', 'wizard.html'];
-    const STATUS_BLOQUEIO = ['bloqueado', 'suspensa'];
+    const STATUS_BLOQUEIO = ['suspensa', 'cancelada'];
     if (!isPlatformAdmin && s.company && STATUS_BLOQUEIO.includes(s.company.status) && !PAGINAS_LIVRES_BLOQUEIO.includes(path)) {
       console.warn('[DMPAY] empresa com status "' + s.company.status + '" — redirecionando pra meu-plano');
       location.replace('meu-plano.html');
@@ -122,8 +122,9 @@ window.DMPAY = (function() {
   function postLoginRedirect() {
     const target = sessionStorage.getItem('dmpay-redirect');
     sessionStorage.removeItem('dmpay-redirect');
-    if (!target || target.startsWith('http') || target.startsWith('//')) return 'dashboard.html';
-    return target;
+    // aceita só paths relativos seguros — rejeita esquemas (http, javascript, data), // e chars de controle
+    if (target && /^[/a-zA-Z0-9._?=&%#-]+$/.test(target) && !target.startsWith('//')) return target;
+    return 'dashboard.html';
   }
 
   return {

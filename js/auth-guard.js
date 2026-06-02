@@ -3,6 +3,7 @@
 (async function() {
   const html = document.documentElement;
   html.style.visibility = 'hidden';
+  try {
 
   const session = await DMPAY.requireAuth();
   if (!session) return;
@@ -19,7 +20,7 @@
 
   if (_va) {
     // Busca dados completos do tenant alvo
-    const { data: _vaCo } = await sb.from('companies').select('*').eq('id', _va.id).maybeSingle();
+    const { data: _vaCo } = await sb.from('companies').select('id, cnpj, legal_name, trade_name, plan, status, trial_until, city, state, logo_url, phone, email, whatsapp, dias_atraso, bloqueado_em, asaas_customer_id').eq('id', _va.id).maybeSingle();
     if (_vaCo) {
       // Seta DMPAY_COMPANY como o tenant — páginas que aguardam esse valor verão Mercadinho direto
       window.DMPAY_COMPANY = _vaCo;
@@ -77,8 +78,8 @@
   menu.className = 'dmp-usermenu';
   menu.innerHTML = `
     <div class="dmp-usermenu-head">
-      <div class="dmp-usermenu-name">${session.profile.name || '—'}${isPlatformAdmin ? '<span class="dmp-pa-badge">master</span>' : ''}</div>
-      <div class="dmp-usermenu-email">${session.user.email}</div>
+      <div class="dmp-usermenu-name">${esc(session.profile.name || '—')}${isPlatformAdmin ? '<span class="dmp-pa-badge">master</span>' : ''}</div>
+      <div class="dmp-usermenu-email">${esc(session.user.email)}</div>
       <div class="dmp-usermenu-comp">${_va ? '<span aria-hidden="true">👁</span> suporte: ' : 'empresa: '}<b>${esc(displayCompany?.trade_name || displayCompany?.legal_name || '—')}</b></div>
     </div>
     ${isPlatformAdmin ? `<button class="dmp-usermenu-item" onclick="sessionStorage.removeItem('dmpay-view-as');location.href='admin.html'" style="color:var(--accent,#7C3AED)">
@@ -134,5 +135,10 @@
   });
 
   if (window.lucide) lucide.createIcons();
-  html.style.visibility = '';
+
+  } catch(e) {
+    console.error('[DMPAY guard]', e);
+  } finally {
+    html.style.visibility = '';
+  }
 })();
