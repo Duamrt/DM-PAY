@@ -12,7 +12,8 @@
   let CATEGORIES_CACHE = {}; // id -> {name, color}
 
   // ==================== UTILS ====================
-  function isoToday(){ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
+  function fmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function isoToday(){ return fmtDate(new Date()); }
   function diffDays(iso) {
     if (!iso) return 0;
     const [y,m,d] = String(iso).slice(0,10).split('-').map(Number);
@@ -58,7 +59,7 @@
     // Query simples (sem embed de expense_categories — join ambíguo podia travar).
     // Pegamos abertas + pagas dos últimos 3 meses pra KPI "pago no mês" bater.
     const janela = new Date(HOJE); janela.setMonth(janela.getMonth() - 3);
-    const janelaISO = janela.toISOString().slice(0,10);
+    const janelaISO = fmtDate(janela);
     const [abertasR, pagasR] = await Promise.all([
       sb.from('payables')
         .select('*, tipo_lancamento, pago_por, suppliers(legal_name, trade_name, cnpj), invoices(nf_number, series)')
@@ -463,7 +464,7 @@
             { value: 'loteria',   label: 'Lotérica' },
             { value: 'terceiros', label: 'Terceiros' }
           ], value: '' },
-        { key: 'paid_at', label: 'Data do pagamento *', type: 'date', value: new Date().toISOString().slice(0,10) }
+        { key: 'paid_at', label: 'Data do pagamento *', type: 'date', value: isoToday() }
       ],
       submitLabel: 'Confirmar',
       cancelLabel: 'Cancelar',
@@ -656,7 +657,6 @@
   }
 
   // ── Despesa Variável ─────────────────────────────────────────────────────
-  const DESP_VAR_CAT_ID = '7cee9d58-7d58-4559-a8ea-9de07a449aab';
 
   async function openCreateDespVar() {
     const suppliers = await loadSuppliers();
@@ -716,6 +716,10 @@
     const fullDesc = nf ? `NF ${nf} - ${desc}` : desc;
     try {
       const _dvCat = Object.values(CATEGORIES_CACHE).find(c => c.name === 'Despesa Variável');
+      if (!_dvCat) {
+        await _ui.alert({ title: 'Categoria não encontrada', desc: 'Crie a categoria "Despesa Variável" em Configurações antes de usar este lançamento.', danger: true });
+        btn.disabled = false; return;
+      }
       const payload = {
         company_id:      window.DMPAY_COMPANY.id,
         supplier_id:     supId,
@@ -723,7 +727,7 @@
         amount:          +valStr,
         due_date:        due,
         tipo_lancamento: 'despesa',
-        category_id:     _dvCat ? _dvCat.id : DESP_VAR_CAT_ID,
+        category_id:     _dvCat.id,
         notes:           data !== due ? `Emissão: ${data}` : null,
         status:          'open',
         created_by:      window.DMPAY_USER?.id || null
