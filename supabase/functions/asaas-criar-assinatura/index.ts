@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     }
 
     const nd = new Date(); nd.setDate(nd.getDate() + 7);
-    const ndi = nd.toISOString().slice(0, 10);
+    const ndi = nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0')+'-'+String(nd.getDate()).padStart(2,'0');
 
     const sub = await asaas("/subscriptions", {
       method: "POST",

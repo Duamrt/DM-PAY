@@ -1,11 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
 const ALLOWED_ORIGINS = [
   "https://dmpayapp.com.br",
   "https://www.dmpayapp.com.br",
-  "http://localhost:3000",
-  "http://localhost:5173",
+  "https://duamrt.github.io",
 ];
 
 function corsHeaders(req: Request) {
@@ -20,7 +18,7 @@ function corsHeaders(req: Request) {
 
 const MASTER_COMPANY = "aaaa0001-0000-0000-0000-000000000001";
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   const CORS = corsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS });

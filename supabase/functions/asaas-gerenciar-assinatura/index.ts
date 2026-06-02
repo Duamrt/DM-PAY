@@ -1,20 +1,21 @@
 // asaas-gerenciar-assinatura (DM Pay)
 // Input: { action: "cancelar" | "proxima_cobranca", assinatura_id }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { corsHeaders as _buildCors } from "../_shared/cors.ts";
 const ASAAS_BASE = Deno.env.get("ASAAS_BASE_URL") ?? "https://sandbox.asaas.com/api/v3";
 const ASAAS_KEY = Deno.env.get("ASAAS_API_KEY") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
 const PLATFORM_ID = "aaaa0001-0000-0000-0000-000000000001";
-const corsHeaders = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
-function json(b:unknown,s=200){return new Response(JSON.stringify(b),{status:s,headers:{...corsHeaders,"content-type":"application/json"}});}
 async function asaas(path:string,init:RequestInit={}){
   const res=await fetch(`${ASAAS_BASE}${path}`,{...init,headers:{...(init.headers||{}),"access_token":ASAAS_KEY,"content-type":"application/json","User-Agent":"DMPay/1.0"}});
   const text=await res.text();const data=text?JSON.parse(text):{};
   if(!res.ok)throw new Error(`Asaas ${res.status}: ${text}`);return data;
 }
 Deno.serve(async(req)=>{
-  if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});
+  const cors=_buildCors(req);
+  function json(b:unknown,s=200){return new Response(JSON.stringify(b),{status:s,headers:{...cors,"content-type":"application/json"}});}
+  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
   if(req.method!=="POST")return json({error:"method_not_allowed"},405);
   const jwt=(req.headers.get("authorization")??"").replace("Bearer ","");
   if(!jwt)return json({error:"unauthorized"},401);
@@ -24,7 +25,7 @@ Deno.serve(async(req)=>{
   const body=await req.json().catch(()=>({}));
   const {action,assinatura_id}=body;
   if(!action||!assinatura_id)return json({error:"missing_fields"},400);
-  const {data:a}=await sb.from("subscriptions").select("*").eq("id",assinatura_id).single();
+  const {data:a}=await sb.from("subscriptions").select("id,company_id,asaas_subscription_id,status,plan,valor").eq("id",assinatura_id).single();
   if(!a)return json({error:"assinatura_not_found"},404);
   const {data:perfil}=await sb.from("profiles").select("company_id,role").eq("id",u.user.id).single();
   const isPlatformAdmin=perfil?.company_id===PLATFORM_ID&&perfil?.role==="dono";
