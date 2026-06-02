@@ -6,7 +6,7 @@
   try {
 
   const session = await DMPAY.requireAuth();
-  if (!session) return;
+  if (!session) return; // redirect já iniciado — manter oculto
 
   window.DMPAY_USER    = session.user;
   window.DMPAY_PROFILE = session.profile;
@@ -20,7 +20,7 @@
 
   if (_va) {
     // Busca dados completos do tenant alvo
-    const { data: _vaCo } = await sb.from('companies').select('id, cnpj, legal_name, trade_name, plan, status, trial_until, city, state, logo_url, phone, email, whatsapp, dias_atraso, bloqueado_em, asaas_customer_id').eq('id', _va.id).maybeSingle();
+    const { data: _vaCo } = await sb.from('companies').select('id, cnpj, legal_name, trade_name, plan, status, trial_until, city, state, logo_url, phone, email, whatsapp, dias_atraso, bloqueado_em').eq('id', _va.id).maybeSingle();
     if (_vaCo) {
       // Seta DMPAY_COMPANY como o tenant — páginas que aguardam esse valor verão Mercadinho direto
       window.DMPAY_COMPANY = _vaCo;
@@ -135,10 +135,10 @@
   });
 
   if (window.lucide) lucide.createIcons();
+  html.style.visibility = ''; // só restaura com sessão válida e guard completo
 
   } catch(e) {
     console.error('[DMPAY guard]', e);
-  } finally {
-    html.style.visibility = '';
+    html.style.visibility = ''; // restaura em erro — não travar a tela
   }
 })();

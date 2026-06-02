@@ -27,7 +27,7 @@ window.DMPAY = (function() {
     if (!user) { _session = { user: null, profile: null, company: null }; return _session; }
     const { data: profile } = await sb
       .from('profiles')
-      .select('id, name, email, role, permissions, phone, avatar_url, company_id, mfa_method, companies(id, cnpj, legal_name, trade_name, plan, status, trial_until, city, state, logo_url, phone, email, whatsapp, dias_atraso, bloqueado_em, asaas_customer_id)')
+      .select('id, name, email, role, permissions, phone, avatar_url, company_id, companies(id, cnpj, legal_name, trade_name, plan, status, trial_until, city, state, logo_url, phone, email, whatsapp, dias_atraso, bloqueado_em)')
       .eq('id', user.id)
       .maybeSingle();
     _session = {
@@ -62,7 +62,7 @@ window.DMPAY = (function() {
         return null;
       }
     }
-    // Bloqueio por inadimplência: empresa com status 'bloqueado' ou 'suspensa' só pode
+    // Bloqueio por inadimplência: empresa com status 'suspensa' ou 'cancelada' só pode
     // acessar meu-plano.html (pra regularizar) ou sair (signOut). Platform admin escapa.
     // 'suspensa' é setado pelo cron asaas-checar-atrasos quando dias_atraso > GRACE_DAYS (7)
     const PAGINAS_LIVRES_BLOQUEIO = ['meu-plano.html', 'login.html', 'wizard.html'];
