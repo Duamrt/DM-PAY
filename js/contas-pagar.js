@@ -12,7 +12,7 @@
   let CATEGORIES_CACHE = {}; // id -> {name, color}
 
   // ==================== UTILS ====================
-  function isoToday(){ return new Date().toISOString().split('T')[0]; }
+  function isoToday(){ const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
   function diffDays(iso) {
     if (!iso) return 0;
     const [y,m,d] = String(iso).slice(0,10).split('-').map(Number);
@@ -112,7 +112,7 @@
       tbody.innerHTML = `<tr><td colspan="9" style="padding:60px 20px;text-align:center;color:var(--danger)">
         <i data-lucide="alert-triangle" style="width:32px;height:32px"></i>
         <div style="margin-top:12px;font-size:14px"><b>Falha ao carregar contas a pagar</b></div>
-        <div style="margin-top:6px;font-size:12px;color:var(--text-muted)">${msg}</div>
+        <div style="margin-top:6px;font-size:12px;color:var(--text-muted)">${esc(msg)}</div>
         <div style="margin-top:12px;font-size:11.5px;color:var(--text-soft)">Atualize a página ou contate o admin.</div>
       </td></tr>`;
       if (window.lucide) lucide.createIcons();
@@ -184,11 +184,11 @@
       return `
         <tr data-id="${p.id}" onclick="DMPAY_CP.openDrawer('${p.id}')">
           <td><span class="check" role="checkbox" aria-checked="false" tabindex="0" data-row="${p.id}" onclick="event.stopPropagation()"></span></td>
-          <td><div class="supplier"><span class="supplier-avatar tone-${tone(sup)}">${iniciais(sup)}</span><span class="supplier-name">${supShort}</span></div></td>
-          <td><span class="nf-badge" title="${p.description || ''}">${nfNum}</span></td>
+          <td><div class="supplier"><span class="supplier-avatar tone-${tone(sup)}">${iniciais(sup)}</span><span class="supplier-name">${esc(supShort)}</span></div></td>
+          <td><span class="nf-badge" title="${esc(p.description || '')}">${nfNum}</span></td>
           <td class="date">${brDate(p.invoices?.issue_date || p.created_at)}</td>
           <td class="date">${brDate(p.due_date)}</td>
-          <td>${cat}</td>
+          <td>${esc(cat)}</td>
           <td class="money">${fmtBRL(p.amount)}</td>
           <td><span class="badge ${b.cls}">${b.label(st.overdue)}</span></td>
           <td><button class="icon-btn" style="width:26px;height:26px;background:transparent;border:none" onclick="event.stopPropagation()"><i data-lucide="more-horizontal" class="icon" style="width:13px;height:13px"></i></button></td>
@@ -242,7 +242,7 @@
     const chip = document.querySelector('.count-chip');
     if (chip) chip.textContent = opens.length + ' em aberto';
     const sub = document.querySelector('.hero .sub');
-    if (sub) sub.innerHTML = `${window.DMPAY_COMPANY.trade_name || window.DMPAY_COMPANY.legal_name} · dados do banco · hoje ${brDate(isoToday())}`;
+    if (sub) sub.innerHTML = `${esc(window.DMPAY_COMPANY.trade_name || window.DMPAY_COMPANY.legal_name)} · dados do banco · hoje ${brDate(isoToday())}`;
   }
 
   function atualizaChips(visibleCount) {
@@ -390,8 +390,8 @@
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
           <div class="supplier-avatar tone-${tone(sup)}" style="width:44px;height:44px;font-size:15px;border-radius:10px">${iniciais(sup)}</div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:600">${sup}</div>
-            <div style="font-size:12px;color:var(--text-muted)">${p.expense_categories?.name || 'Sem categoria'}</div>
+            <div style="font-size:15px;font-weight:600">${esc(sup)}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${esc(p.expense_categories?.name || 'Sem categoria')}</div>
           </div>
           <span class="badge ${b.cls}">${b.label(st.overdue)}</span>
         </div>
@@ -403,7 +403,7 @@
         <div class="field-row"><span class="k">Vencimento</span><span class="v">${brDate(p.due_date)}</span></div>
         <div class="field-row"><span class="k">Forma</span><span class="v">${p.payment_method || '—'}</span></div>
         <div class="field-row"><span class="k">Criado em</span><span class="v">${brDate(p.created_at)}</span></div>
-        ${p._criado_por_nome ? `<div class="field-row"><span class="k">Lançado por</span><span class="v">${p._criado_por_nome}</span></div>` : ''}
+        ${p._criado_por_nome ? `<div class="field-row"><span class="k">Lançado por</span><span class="v">${esc(p._criado_por_nome)}</span></div>` : ''}
         ${p.paid_at ? `<div class="field-row"><span class="k">Pago em</span><span class="v">${brDate(p.paid_at)}</span></div>` : ''}
         ${p.boleto_line ? `<div class="field-row"><span class="k">Linha digitável</span><span class="v mono" style="font-size:11px">${p.boleto_line}</span></div>` : ''}
       </div>
@@ -715,6 +715,7 @@
     const btn = document.getElementById('dv-save'); btn.disabled = true;
     const fullDesc = nf ? `NF ${nf} - ${desc}` : desc;
     try {
+      const _dvCat = Object.values(CATEGORIES_CACHE).find(c => c.name === 'Despesa Variável');
       const payload = {
         company_id:      window.DMPAY_COMPANY.id,
         supplier_id:     supId,
@@ -722,7 +723,7 @@
         amount:          +valStr,
         due_date:        due,
         tipo_lancamento: 'despesa',
-        category_id:     DESP_VAR_CAT_ID,
+        category_id:     _dvCat ? _dvCat.id : DESP_VAR_CAT_ID,
         notes:           data !== due ? `Emissão: ${data}` : null,
         status:          'open',
         created_by:      window.DMPAY_USER?.id || null
