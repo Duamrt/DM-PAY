@@ -15,8 +15,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://browser.sentry-cdn.com/10.51.0/bundle.replay.min.js" integrity="sha384-Ep6YoHS44q8X5C4rquklASg21nwJksP31hvIKkeg3h5F/dfA+mYz0liIh8lwBrQm" crossorigin="anonymous"></script>
-  <script src="js/sentry-init.js?v=v05171204"></script>
-<script src="dmpay-version.js?v=v05171204"></script>
+  <script src="js/sentry-init.js?v=v06021423"></script>
+<script src="dmpay-version.js?v=v06021423"></script>
 <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js', {updateViaCache:'none'});
 // Se a página continuar invisível em 5s, redireciona pro login
 setTimeout(()=>{if(document.documentElement.style.visibility==='hidden')location.href='login.html?redirect=mobile.html';},5000);
@@ -510,7 +510,7 @@ async function reloadVendasView(d) {
   const totSang = sang.reduce((s,r)=>s+Number(r.amount||0),0);
   const elS = document.getElementById('svSangrias');
   if(elS) elS.innerHTML = !sang.length ? '<div class="empty">Nenhuma sangria.</div>'
-    : `<div class="list-card">${sang.map(r=>`<div class="list-item"><div><div class="li-name" style="color:var(--danger)">${r.operator||'Operador'}</div><div class="li-sub">${r.notes||'Retirada de caixa'}</div></div><div class="li-val c-danger">−${fmt(r.amount)}</div></div>`).join('')}<div class="list-item" style="border-top:1px solid var(--border-strong)"><div class="li-name" style="font-weight:700">Total sangrias</div><div class="li-val c-danger">−${fmt(totSang)}</div></div></div>`;
+    : `<div class="list-card">${sang.map(r=>`<div class="list-item"><div><div class="li-name" style="color:var(--danger)">${esc(r.operator||'Operador')}</div><div class="li-sub">${esc(r.notes||'Retirada de caixa')}</div></div><div class="li-val c-danger">−${fmt(r.amount)}</div></div>`).join('')}<div class="list-item" style="border-top:1px solid var(--border-strong)"><div class="li-name" style="font-weight:700">Total sangrias</div><div class="li-val c-danger">−${fmt(totSang)}</div></div></div>`;
   // caixas
   const pdvs = {};
   (cRes.data||[]).forEach(r=>{
@@ -524,7 +524,7 @@ async function reloadVendasView(d) {
   });
   const elCx = document.getElementById('svCaixas');
   if(elCx) elCx.innerHTML = Object.keys(pdvs).length===0 ? '<div class="empty">Nenhum caixa para este dia.</div>'
-    : Object.entries(pdvs).map(([pid,p],i)=>`<div class="pdv-card"><div class="pdv-head" onclick="togglePdv('pdv2-${i}')"><div><div class="pdv-nome">${p.nome}</div><div class="pdv-cupons">${p.cupons} cupons</div></div><div class="pdv-total">${fmt(p.total)}</div></div><div class="pdv-ops" id="pdv2-${i}">${Object.values(p.ops).map(op=>`<div class="op-row"><span class="op-nome">${op.nome}</span><span class="op-val">${fmt(op.total)}</span></div>`).join('')}</div></div>`).join('');
+    : Object.entries(pdvs).map(([pid,p],i)=>`<div class="pdv-card"><div class="pdv-head" onclick="togglePdv('pdv2-${i}')"><div><div class="pdv-nome">${esc(p.nome)}</div><div class="pdv-cupons">${p.cupons} cupons</div></div><div class="pdv-total">${fmt(p.total)}</div></div><div class="pdv-ops" id="pdv2-${i}">${Object.values(p.ops).map(op=>`<div class="op-row"><span class="op-nome">${esc(op.nome)}</span><span class="op-val">${fmt(op.total)}</span></div>`).join('')}</div></div>`).join('');
 }
 
 function navDate(delta) {
@@ -577,7 +577,7 @@ function capitalize(s) {
 
 async function loadCaixaTorto() {
   try {
-    const { data, error } = await sb.rpc('get_payables_situation', { p_company_id: CID });
+    const { data, error } = await sb.rpc('get_payables_situation', { p_company_id: CID, p_today: hoje() });
     if (error) { console.warn('get_payables_situation', error); return; }
     const r = data && data[0];
     const card = document.getElementById('caixaTortoCard');
@@ -607,7 +607,8 @@ function falarComOperador() {
   if (!phone.startsWith('55')) phone = '55' + phone;
   const primeiroNome = capitalize((r.operador_name || 'operador').split(' ')[0]);
   const totalFmt = Number(r.vencidos_total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const msg = `${primeiroNome}, tem ${r.vencidos_count} boletos de fornecedor vencidos sem baixa (R$ ${totalFmt}). Você não dá baixa há ${r.dias_sem_baixa} dias. Atualiza aí, meu fluxo de caixa tá todo torto.`;
+  const diasTxt = r.dias_sem_baixa != null ? `há ${r.dias_sem_baixa} dias` : 'sem registro recente de baixa';
+  const msg = `${primeiroNome}, tem ${r.vencidos_count} boletos de fornecedor vencidos sem baixa (R$ ${totalFmt}). Você não dá baixa ${diasTxt}. Atualiza aí, meu fluxo de caixa tá todo torto.`;
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
 }
@@ -880,7 +881,7 @@ function filtrarReceber(f, chipEl) {
     // lista simples para recebidos
     document.getElementById('srLista').innerHTML = `<div class="list-card">${lista.map(r=>`
       <div class="list-item">
-        <div><div class="li-name">${r.customers?.name||'Cliente'}</div><div class="li-sub">${fmtData(r.received_at?.substring(0,10))} <span class="badge badge-received">Recebido</span></div></div>
+        <div><div class="li-name">${esc(r.customers?.name||'Cliente')}</div><div class="li-sub">${fmtData(r.received_at?.substring(0,10))} <span class="badge badge-received">Recebido</span></div></div>
         <div><div class="li-val c-success">${fmt(r.amount)}</div></div>
       </div>`).join('')}</div>`;
     return;
@@ -909,7 +910,7 @@ function filtrarReceber(f, chipEl) {
     return `<div class="pdv-card">
       <div class="pdv-head" onclick="togglePdv('cli-${i}')">
         <div>
-          <div class="pdv-nome">${c.nome}</div>
+          <div class="pdv-nome">${esc(c.nome)}</div>
           <div class="pdv-cupons">${c.titulos.length} título${c.titulos.length>1?'s':''}${temAtrasado?' · <span style="color:var(--danger)">'+fmt(c.atrasado)+' atrasado</span>':''}</div>
         </div>
         <div class="pdv-total" style="color:${temAtrasado?'var(--danger)':'var(--warning)'}">${fmt(c.total)}</div>
@@ -971,7 +972,7 @@ function filtrarPagar(f, chipEl) {
     const badge = atrasado ? 'badge-overdue">Atrasado' : venceHoje ? 'badge-today">Hoje' : 'badge-open">Em aberto';
     const nome = r.suppliers?.trade_name||r.suppliers?.legal_name||r.description||'Fornecedor';
     return `<div class="list-item">
-      <div><div class="li-name">${nome}</div><div class="li-sub">${fmtData(r.due_date)} <span class="badge ${badge}</span></div></div>
+      <div><div class="li-name">${esc(nome)}</div><div class="li-sub">${fmtData(r.due_date)} <span class="badge ${badge}</span></div></div>
       <div><div class="li-val c-danger">${fmt(r.amount)}</div></div>
     </div>`;
   }).join('')}</div>`;
