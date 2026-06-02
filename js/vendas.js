@@ -1,6 +1,7 @@
 // DM Pay — Vendas com dados reais (daily_sales)
 (function() {
   const HOJE = new Date(); HOJE.setHours(0,0,0,0);
+  const HOJE_ISO = HOJE.getFullYear()+'-'+String(HOJE.getMonth()+1).padStart(2,'0')+'-'+String(HOJE.getDate()).padStart(2,'0');
   let MES = HOJE.getMonth();
   let ANO = HOJE.getFullYear();
   let MES_NUM = MES + 1;
@@ -99,8 +100,8 @@
       bd.innerHTML = itens.map(it => `
         <div class="drawer-row">
           <div>
-            <div class="drawer-row-name">${it.nome}</div>
-            <div class="drawer-row-meta">${it.meta}</div>
+            <div class="drawer-row-name">${esc(it.nome)}</div>
+            <div class="drawer-row-meta">${esc(it.meta)}</div>
           </div>
           <div class="drawer-row-val">R$ ${fmtBRLfull(it.valor)}</div>
         </div>
@@ -263,13 +264,13 @@
       if (payTitle) {
         const [yU, mU, dU] = ultimoDia.split('-');
         const dtLabel = `${dU}/${mU}`;
-        const hojeIso = HOJE.toISOString().slice(0,10);
+        const hojeIso = HOJE_ISO;
         const isHoje = ultimoDia === hojeIso;
         const sufixo = isHoje ? `<span style="color:var(--text-soft);font-weight:500">hoje · ${dtLabel}</span>` : `<span style="color:var(--warn);font-weight:500">último dia com venda · ${dtLabel}</span>`;
         payTitle.innerHTML = `<i data-lucide="wallet"></i> Formas de pagamento — ${sufixo} <span class="auto-tag"><i data-lucide="zap"></i>Auto · ${window._DMPAY_ERP_LABEL || 'iCommerce'}</span>`;
       }
       // Banner se último dia ≠ hoje (indica gap de sincronização / caixa fechado)
-      const hojeIso = HOJE.toISOString().slice(0,10);
+      const hojeIso = HOJE_ISO;
       if (ultimoDia !== hojeIso) {
         const diffMs = new Date(hojeIso + 'T00:00:00') - new Date(ultimoDia + 'T00:00:00');
         const diffDias = Math.floor(diffMs / 86400000);
@@ -306,7 +307,7 @@
         const cell = document.createElement('div');
         cell.className = 'hm-cell';
         cell.setAttribute('data-iso', iso);
-        if (iso === HOJE.toISOString().slice(0,10)) cell.classList.add('today');
+        if (iso === HOJE_ISO) cell.classList.add('today');
         if (!val) cell.classList.add('future');
         if (val) {
           const intensity = val/maxVal;
@@ -658,7 +659,7 @@ window.DMPAY_CAIXAS = (() => {
       <div class="pdv-row" onclick="DMPAY_CAIXAS.toggle('ops-${pdvId}')">
         <div class="pdv-row-head">
           <div class="pdv-badge">${i+1}</div>
-          <div class="pdv-nome">${p.nome}</div>
+          <div class="pdv-nome">${esc(p.nome)}</div>
           <div class="pdv-cupons">${p.cupons} cupons</div>
           <div class="pdv-total">${fmt(p.total)}</div>
         </div>
@@ -666,7 +667,7 @@ window.DMPAY_CAIXAS = (() => {
       <div class="pdv-ops" id="ops-${pdvId}">
         ${p.ops.sort((a,b) => b.total - a.total).map(op => `
           <div class="pdv-op-row">
-            <div class="pdv-op-nome">${op.nome}</div>
+            <div class="pdv-op-nome">${esc(op.nome)}</div>
             <div class="pdv-op-cupons">${op.cupons} cupons</div>
             <div class="pdv-op-val">${fmt(op.total)}</div>
           </div>
