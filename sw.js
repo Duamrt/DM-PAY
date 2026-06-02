@@ -1,6 +1,6 @@
 // DM Pay · Service Worker com precache de shell crítico + offline fallback.
 // Bumpe o CACHE quando alterar arquivos do shell.
-const CACHE = 'dmpay-mobile-v06021707';
+const CACHE = 'dmpay-mobile-v06021710';
 
 // Shell mínimo pro app abrir mesmo sem rede.
 const PRECACHE = [
